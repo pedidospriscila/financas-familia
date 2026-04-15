@@ -3,72 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Finanças B&P – Oficial</title>
+<title>Finanças Família – Bruno & Priscila</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* CSS TOTALMENTE REESCRITO PARA ESTABILIDADE */
+/* RESTAURANDO O ESTILO ORIGINAL */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0a0f1a;--bg2:#111827;--bg3:#1f2937;
-  --em:#10b981;--em2:#059669;--em3:#34d399;--em-dim:rgba(16, 185, 129, 0.1);
-  --txt:#f0fdf4;--txt2:#9ca3af;--brd:#374151;
-  --gold:#f59e0b;--danger:#ef4444;--radius:10px;
+  --em:#10b981;--em2:#059669;--em3:#34d399;--em-dim:#065f46;
+  --txt:#f0fdf4;--txt2:#9ca3af;--brd:#1f2937;
+  --gold:#f59e0b;--danger:#ef4444;--radius:12px;
 }
-html,body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px}
+html,body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;-webkit-text-size-adjust:100%}
+h2{font-size:1rem;font-weight:600;color:var(--em3);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+h2::before{content:'';width:3px;height:1em;background:var(--em);border-radius:2px;display:inline-block;flex-shrink:0}
 
-/* HEADER FIXO NO TOPO */
-.header{background:var(--bg2);border-bottom:1px solid var(--brd);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.app-title{font-size:1.1rem;font-weight:700;color:var(--em)}
+.header{background:linear-gradient(135deg,#0a1628 0%,#0d1f12 100%);border-bottom:1px solid var(--em-dim);padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;position:sticky;top:0;z-index:100}
+.app-title{font-size:1.2rem;font-weight:700;color:var(--em);letter-spacing:-.3px}
 
-/* BOTÃO CONFIG NO TOPO DIREITO */
 .btn-cfg-top {
   position: fixed; top: 12px; right: 12px; z-index: 1001;
-  background: var(--bg3); border: 1px solid var(--brd); color: var(--txt);
-  width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--bg3); border: 1px solid var(--em-dim); color: var(--txt);
+  width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
-/* ABAS DE NAVEGAÇÃO */
-.nav-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto}
-.tab{flex:1;min-width:80px;padding:15px 5px;text-align:center;font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer;border-bottom:3px solid transparent}
+.nav-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--brd);overflow-x:auto;scrollbar-width:none}
+.tab{flex:1;min-width:75px;padding:.75rem .5rem;text-align:center;font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .tab.active{color:var(--em);border-bottom-color:var(--em)}
 
-main{padding:15px;max-width:1100px;margin:0 auto}
+main{padding:1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
 
-/* CARDS DE RESUMO */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
-.card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:15px}
-.card-label{font-size:10px;color:var(--txt2);text-transform:uppercase;margin-bottom:5px}
-.card-val{font-size:1.2rem;font-weight:700}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:.875rem}
+.card-label{font-size:11px;color:var(--txt2);text-transform:uppercase;margin-bottom:.35rem}
+.card-val{font-size:1.15rem;font-weight:700;color:var(--em)}
 
-/* SEÇÕES E FORMULÁRIOS */
-.section{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:20px;margin-bottom:20px}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:11px;color:var(--txt2)}
-.field input{background:var(--bg3);border:1px solid var(--brd);border-radius:6px;color:var(--txt);padding:10px;font-size:14px;outline:none}
+.section{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;color:var(--txt2)}
+.field input{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;color:var(--txt);padding:9px 12px;font-size:14px;outline:none;width:100%}
 
-.btn-primary{background:var(--em);color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;width:100%;margin-top:10px}
+.btn-save,.btn-add{background:var(--em);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:.875rem}
+.add-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1rem;align-items:end}
 
-/* TABELAS - CORREÇÃO DE LAYOUT */
-.table-wrap{overflow-x:auto;width:100%;background:var(--bg3);border-radius:8px}
-table{width:100%;border-collapse:collapse;min-width:600px}
-th{text-align:left;padding:12px;font-size:11px;color:var(--txt2);text-transform:uppercase;background:rgba(0,0,0,0.2)}
-td{padding:12px;border-top:1px solid var(--brd);font-size:13px}
+.table-wrap{overflow-x:auto;border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{background:var(--bg3);color:var(--txt2);font-size:11px;padding:10px 12px;text-align:left;text-transform:uppercase}
+td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px}
 
-.btn-status{padding:5px 10px;border-radius:20px;border:none;font-size:10px;font-weight:700;cursor:pointer}
-.pago{background:var(--em-dim);color:var(--em3)}
-.pendente{background:rgba(245,158,11,0.1);color:var(--gold)}
+.btn-status{border:none;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.pago{background:#065f46;color:#34d399}
+.pendente{background:#78350f;color:#fcd34d}
 
-.chart-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:15px;margin-bottom:20px}
+.chart-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem}
 .chart-container{height:250px;width:100%}
 
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--em);color:#fff;padding:10px 25px;border-radius:30px;font-size:13px;opacity:0;z-index:9999;transition:0.4s}
-
-@media(max-width:600px){
-  .cards-grid{grid-template-columns:1fr 1fr}
-  .form-grid{grid-template-columns:1fr}
-}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--em);color:#fff;padding:10px 22px;border-radius:24px;opacity:0;transition:all .35s;z-index:9999}
 </style>
 </head>
 <body>
@@ -76,30 +68,30 @@ td{padding:12px;border-top:1px solid var(--brd);font-size:13px}
 <button class="btn-cfg-top" onclick="showTab('config')">⚙️</button>
 
 <div class="header">
-  <div class="app-title">💰 Finanças B&P</div>
+  <div class="app-title">💰 Finanças Família</div>
   <select id="mesSelect" onchange="mudarMes(this.value)" style="background:var(--bg3);color:#fff;border:1px solid var(--brd);padding:6px;border-radius:8px"></select>
 </div>
 
 <div class="nav-tabs">
-  <div class="tab active" onclick="showTab('resumo')">Resumo</div>
-  <div class="tab" onclick="showTab('receitas')">Receitas</div>
-  <div class="tab" onclick="showTab('despesas')">Despesas</div>
-  <div class="tab" onclick="showTab('aquisicoes')">Metas</div>
-  <div class="tab" onclick="showTab('graficos')">Gráficos</div>
+  <div class="tab active" onclick="showTab('resumo')">📊 Resumo</div>
+  <div class="tab" onclick="showTab('receitas')">💵 Receitas</div>
+  <div class="tab" onclick="showTab('despesas')">📋 Despesas</div>
+  <div class="tab" onclick="showTab('aquisicoes')">🎯 Metas</div>
+  <div class="tab" onclick="showTab('graficos')">📈 Gráficos</div>
 </div>
 
 <main>
   <div class="page active" id="page-resumo">
     <div class="cards-grid">
-      <div class="card"><div class="card-label">Receitas</div><div class="card-val" id="c_totalReceitas" style="color:var(--em)">R$ 0,00</div></div>
-      <div class="card"><div class="card-label">Gasto Real</div><div class="card-val" id="c_custoReal" style="color:var(--danger)">R$ 0,00</div></div>
-      <div class="card"><div class="card-label">Saldo</div><div class="card-val" id="c_saldoReal">R$ 0,00</div></div>
+      <div class="card"><div class="card-label">Total Receitas</div><div class="card-val" id="c_totalReceitas">R$ 0,00</div></div>
+      <div class="card"><div class="card-label">Custo Real (Pago)</div><div class="card-val" id="c_custoReal" style="color:var(--danger)">R$ 0,00</div></div>
+      <div class="card"><div class="card-label">Saldo Final</div><div class="card-val" id="c_saldoReal">R$ 0,00</div></div>
     </div>
   </div>
 
   <div class="page" id="page-receitas">
     <div class="section">
-      <h2>Entradas Mensais</h2>
+      <h2>Entradas do Mês</h2>
       <div class="form-grid">
         <div class="field"><label>Salário Bruno</label><input id="r_salarioBruno" type="number" step="0.01"></div>
         <div class="field"><label>Salário Priscila</label><input id="r_salarioPriscila" type="number" step="0.01"></div>
@@ -107,25 +99,25 @@ td{padding:12px;border-top:1px solid var(--brd);font-size:13px}
         <div class="field"><label>Extra Priscila</label><input id="r_rendaExtraPriscila" type="number" step="0.01"></div>
         <div class="field"><label>13º Salário</label><input id="r_decimoTerceiro" type="number" step="0.01"></div>
       </div>
-      <button class="btn-primary" onclick="salvarReceitas()">✓ Atualizar Receitas</button>
+      <button class="btn-save" onclick="salvarReceitas()">✓ Salvar Receitas</button>
     </div>
   </div>
 
   <div class="page" id="page-despesas">
     <div class="section">
       <h2>Nova Despesa</h2>
-      <div class="form-grid">
-        <div class="field"><label>Descrição</label><input id="d_nome" type="text" placeholder="Ex: Mercado"></div>
-        <div class="field"><label>Dia</label><input id="d_vencimento" type="number" placeholder="Ex: 10"></div>
+      <div class="add-form">
+        <div class="field"><label>Descrição</label><input id="d_nome" type="text"></div>
+        <div class="field"><label>Dia</label><input id="d_vencimento" type="number"></div>
         <div class="field"><label>Previsto</label><input id="d_custoPrevisto" type="number" step="0.01"></div>
         <div class="field"><label>Real (Pago)</label><input id="d_custoReal" type="number" step="0.01"></div>
+        <button class="btn-add" onclick="adicionarDespesa()">+ Adicionar</button>
       </div>
-      <button class="btn-primary" onclick="adicionarDespesa()">+ Adicionar Despesa</button>
     </div>
     <div class="section">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Descrição</th><th>Dia</th><th>Previsto</th><th>Real</th><th>Status</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Descrição</th><th>Dia</th><th>Previsto</th><th>Real</th><th>Status</th><th>Ação</th></tr></thead>
           <tbody id="despesasBody"></tbody>
         </table>
       </div>
@@ -134,28 +126,30 @@ td{padding:12px;border-top:1px solid var(--brd);font-size:13px}
 
   <div class="page" id="page-aquisicoes">
     <div class="section">
-        <h2>Metas / Compras Futuras</h2>
-        <div class="form-grid">
+        <h2>Metas / Sonhos</h2>
+        <div class="add-form">
             <div class="field"><label>Item</label><input id="a_nome" type="text"></div>
             <div class="field"><label>Valor Estimado</label><input id="a_valor" type="number"></div>
+            <button class="btn-add" onclick="adicionarMeta()">+ Salvar Meta</button>
         </div>
-        <button class="btn-primary" onclick="adicionarMeta()">Salvar Meta</button>
     </div>
     <div class="cards-grid" id="metasList"></div>
   </div>
 
   <div class="page" id="page-graficos">
     <div class="chart-card">
+        <h2>📊 Evolução: Receita vs Gasto Real</h2>
         <div class="chart-container"><canvas id="chartEvolucao"></canvas></div>
     </div>
     <div class="chart-card">
+        <h2>💰 Comparativo: Planejado vs Real (Mês Atual)</h2>
         <div class="chart-container"><canvas id="chartComparativo"></canvas></div>
     </div>
   </div>
 
   <div class="page" id="page-config">
     <div class="section">
-        <button class="btn-primary" style="background:var(--danger)" onclick="limparTudo()">🗑 Resetar Sistema</button>
+        <button class="btn-save" style="background:var(--danger)" onclick="limparTudo()">🗑 Resetar Banco de Dados</button>
     </div>
   </div>
 </main>
@@ -181,12 +175,13 @@ let allData = { meses: {} };
 let mesSelecionado = new Date().toISOString().slice(0,7);
 let charts = {};
 
-// GARANTE ESTRUTURA SEM CONFLITOS
+// FUNÇÃO DE SEGURANÇA: Garante que nada seja apagado ao criar uma nova pasta
 function getMes(m){ 
     if(!allData.meses) allData.meses = {};
-    if(!allData.meses[m]) allData.meses[m] = { receitas:{}, despesas:[], aquisicoes:[] };
-    if(!allData.meses[m].aquisicoes) allData.meses[m].aquisicoes = [];
+    if(!allData.meses[m]) allData.meses[m] = {};
+    if(!allData.meses[m].receitas) allData.meses[m].receitas = {};
     if(!allData.meses[m].despesas) allData.meses[m].despesas = [];
+    if(!allData.meses[m].aquisicoes) allData.meses[m].aquisicoes = [];
     return allData.meses[m]; 
 }
 
@@ -201,7 +196,7 @@ window.showTab = (n) => {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.getElementById('page-'+n).classList.add('active');
-    document.querySelector(`.tab[onclick*="${n}"]`).classList.add('active');
+    document.querySelector(`.tab[onclick*="${n}"]`)?.classList.add('active');
     if(n==='graficos') setTimeout(renderGraficos, 200);
 };
 
@@ -211,24 +206,25 @@ function render(){
     document.getElementById('c_custoReal').textContent = 'R$ '+totalReal(mesSelecionado).toLocaleString('pt-BR');
     document.getElementById('c_saldoReal').textContent = 'R$ '+(totalRec(mesSelecionado)-totalReal(mesSelecionado)).toLocaleString('pt-BR');
 
-    document.getElementById('r_salarioBruno').value = d.receitas.salarioBruno || '';
-    document.getElementById('r_salarioPriscila').value = d.receitas.salarioPriscila || '';
-    document.getElementById('r_rendaExtraBruno').value = d.receitas.rendaExtraBruno || '';
-    document.getElementById('r_rendaExtraPriscila').value = d.receitas.rendaExtraPriscila || '';
-    document.getElementById('r_decimoTerceiro').value = d.receitas.decimoTerceiro || '';
+    const r = d.receitas;
+    document.getElementById('r_salarioBruno').value = r.salarioBruno || '';
+    document.getElementById('r_salarioPriscila').value = r.salarioPriscila || '';
+    document.getElementById('r_rendaExtraBruno').value = r.rendaExtraBruno || '';
+    document.getElementById('r_rendaExtraPriscila').value = r.rendaExtraPriscila || '';
+    document.getElementById('r_decimoTerceiro').value = r.decimoTerceiro || '';
 
-    document.getElementById('despesasBody').innerHTML = d.despesas.map((x,i)=>`
+    document.getElementById('despesasBody').innerHTML = (d.despesas||[]).map((x,i)=>`
         <tr>
             <td>${x.nome}</td>
             <td>${x.vencimento||'-'}</td>
             <td>${parseFloat(x.custoPrevisto||0).toLocaleString('pt-BR')}</td>
             <td>${parseFloat(x.custoReal||0).toLocaleString('pt-BR')}</td>
             <td><button class="btn-status ${x.pago?'pago':'pendente'}" onclick="togglePago(${i})">${x.pago?'Pago':'Pendente'}</button></td>
-            <td><button style="background:none; border:none; color:red; cursor:pointer" onclick="removerDesp(${i})">✕</button></td>
+            <td><button style="border:none; background:none; color:red; cursor:pointer" onclick="removerDesp(${i})">✕</button></td>
         </tr>
     `).join('');
 
-    document.getElementById('metasList').innerHTML = d.aquisicoes.map((m,i)=>`
+    document.getElementById('metasList').innerHTML = (d.aquisicoes||[]).map((m,i)=>`
         <div class="card">
             <div class="card-label">${m.nome}</div>
             <div class="card-val" style="color:var(--gold)">R$ ${parseFloat(m.valor||0).toLocaleString('pt-BR')}</div>
@@ -248,9 +244,15 @@ function renderGraficos(){
     const ctxE = document.getElementById('chartEvolucao').getContext('2d');
     charts.ev = new Chart(ctxE, {
         type:'line', data: { labels: ultimos.map(m=>m.split('-')[1]+'/'+m.split('-')[0].slice(2)),
-        datasets: [{ label: 'Receitas', data: ultimos.map(m=>totalRec(m)), borderColor: '#10b981', tension: 0.4 },
-        { label: 'Gastos', data: ultimos.map(m=>totalReal(m)), borderColor: '#ef4444', tension: 0.4 }]
-        }, options: { maintainAspectRatio: false }
+        datasets: [{ label: 'Entradas', data: ultimos.map(m=>totalRec(m)), borderColor: '#10b981', tension: 0.4 },
+        { label: 'Saídas Reais', data: ultimos.map(m=>totalReal(m)), borderColor: '#ef4444', tension: 0.4 }]
+        }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } } }
+    });
+    const ctxC = document.getElementById('chartComparativo').getContext('2d');
+    charts.comp = new Chart(ctxC, {
+        type:'bar', data: { labels: ['Previsto', 'Real'],
+        datasets: [{ data: [totalPrev(mesSelecionado), totalReal(mesSelecionado)], backgroundColor: ['#f59e0b', '#10b981'] }]
+        }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
 }
 
@@ -261,14 +263,18 @@ window.salvarReceitas = () => {
     d.receitas.rendaExtraBruno = document.getElementById('r_rendaExtraBruno').value;
     d.receitas.rendaExtraPriscila = document.getElementById('r_rendaExtraPriscila').value;
     d.receitas.decimoTerceiro = document.getElementById('r_decimoTerceiro').value;
-    save(); toast("Salvo!");
+    save(); toast("Receitas Atualizadas!");
 };
 
 window.adicionarDespesa = () => {
     const d = getMes(mesSelecionado);
     const n = document.getElementById('d_nome').value, p = document.getElementById('d_custoPrevisto').value;
     if(!n||!p) return;
-    d.despesas.push({ nome:n, custoPrevisto:p, vencimento:document.getElementById('d_vencimento').value, custoReal:document.getElementById('d_custoReal').value, pago: parseFloat(document.getElementById('d_custoReal').value) > 0 });
+    d.despesas.push({ 
+        nome:n, custoPrevisto:p, vencimento:document.getElementById('d_vencimento').value, 
+        custoReal:document.getElementById('d_custoReal').value,
+        pago: parseFloat(document.getElementById('d_custoReal').value) > 0 
+    });
     save(); document.getElementById('d_nome').value=''; document.getElementById('d_custoPrevisto').value='';
 };
 
