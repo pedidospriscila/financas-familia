@@ -329,9 +329,15 @@ const firebaseConfig = {
   appId: "1:518857787321:web:cb068e5ad95482517c8033"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const dbRef = ref(db, 'financas');
+let app, db, dbRef;
+try {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+  dbRef = ref(db, 'financas');
+} catch(e) {
+  console.error('Firebase init error:', e);
+  document.getElementById('syncStatus').textContent = '❌ Erro Firebase';
+}
 
 // ============ STATE ============
 let allData = { meses: {} };
@@ -376,28 +382,35 @@ function saveData(){
 // ============ FIREBASE LISTENER ============
 // Só atualiza a UI quando os dados chegam do Firebase, MAS não sobrescreve campos
 // de receita que o usuário está editando no momento
-onValue(dbRef, snap => {
-  const data = snap.val();
-  if(data){
-    allData = data;
-    if(!allData.meses) allData.meses = {};
+// Timeout de segurança: se em 8s não conectar, mostra erro
+const fbTimeout = setTimeout(() => {
+  if(!fbReady){
+    document.getElementById('syncStatus').textContent = '❌ Sem conexão';
+    document.getElementById('syncStatus').style.color = 'var(--danger)';
+    buildMesSelect(); renderAll();
   }
+}, 8000);
+
+onValue(dbRef, snap => {
+  clearTimeout(fbTimeout);
+  const data = snap.val();
+  if(data){ allData = data; if(!allData.meses) allData.meses = {}; }
   if(!fbReady){
     fbReady = true;
-    buildMesSelect();
-    renderAll();
+    buildMesSelect(); renderAll();
     document.getElementById('syncStatus').textContent = '☁️ Firebase';
     document.getElementById('syncStatus').style.color = 'var(--em)';
   } else {
-    // Atualiza tudo EXCETO os inputs de receita se o usuário estiver com foco neles
-    renderCards();
-    renderResumo();
-    if(!campoReceitaAtivo()){
-      renderReceitas();
-    }
-    renderDespesas();
-    renderAquisicoes();
+    renderCards(); renderResumo();
+    if(!campoReceitaAtivo()) renderReceitas();
+    renderDespesas(); renderAquisicoes();
   }
+}, err => {
+  clearTimeout(fbTimeout);
+  console.error('Firebase error:', err.code);
+  document.getElementById('syncStatus').textContent = '❌ ' + err.code;
+  document.getElementById('syncStatus').style.color = 'var(--danger)';
+  if(!fbReady){ buildMesSelect(); renderAll(); }
 });
 
 function campoReceitaAtivo(){
