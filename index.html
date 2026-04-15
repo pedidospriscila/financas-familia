@@ -86,10 +86,6 @@ td{padding:10px;border-top:1px solid var(--brd);font-size:13px}
       <div class="card"><div class="card-label">Custo Real</div><div class="card-val" id="c_custoReal" style="color:var(--danger)">R$ 0,00</div></div>
       <div class="card"><div class="card-label">Saldo Final</div><div class="card-val" id="c_saldoReal">R$ 0,00</div></div>
     </div>
-    <div class="section">
-        <h2>Controle Mensal</h2>
-        <div id="statusResumo">Selecione o mês para ver os detalhes.</div>
-    </div>
   </div>
 
   <div class="page" id="page-receitas">
@@ -141,7 +137,7 @@ td{padding:10px;border-top:1px solid var(--brd);font-size:13px}
 
   <div class="page" id="page-graficos">
     <div class="chart-card">
-        <h2>📊 Tendência Mensal (Receita vs Gasto)</h2>
+        <h2>📊 Tendência Mensal</h2>
         <div class="chart-container"><canvas id="chartEvolucao"></canvas></div>
     </div>
     <div class="chart-card">
@@ -152,8 +148,6 @@ td{padding:10px;border-top:1px solid var(--brd);font-size:13px}
 
   <div class="page" id="page-config">
     <div class="section">
-        <h2>Sistema e Dados</h2>
-        <button class="btn-primary" style="margin-bottom:10px" onclick="exportarBackup()">Baixar Backup</button>
         <button class="btn-primary" style="background:var(--danger)" onclick="limparTudo()">Apagar Dados Firebase</button>
     </div>
   </div>
@@ -180,8 +174,13 @@ let allData = { meses: {} };
 let mesSelecionado = new Date().toISOString().slice(0,7);
 let charts = {};
 
+// FUNÇÃO CHAVE: Garante que todas as categorias existam sem apagar as outras
 function getMes(m){ 
-    if(!allData.meses[m]) allData.meses[m] = { receitas:{}, despesas:[], aquisicoes:[] };
+    if(!allData.meses) allData.meses = {};
+    if(!allData.meses[m]) allData.meses[m] = {};
+    if(!allData.meses[m].receitas) allData.meses[m].receitas = {};
+    if(!allData.meses[m].despesas) allData.meses[m].despesas = [];
+    if(!allData.meses[m].aquisicoes) allData.meses[m].aquisicoes = [];
     return allData.meses[m]; 
 }
 
@@ -189,7 +188,6 @@ function totalRec(m){
     const r = getMes(m).receitas;
     return (parseFloat(r.salarioBruno)||0)+(parseFloat(r.salarioPriscila)||0)+(parseFloat(r.rendaExtraBruno)||0)+(parseFloat(r.rendaExtraPriscila)||0)+(parseFloat(r.decimoTerceiro)||0);
 }
-
 function totalReal(m){ return (getMes(m).despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+(parseFloat(d.custoReal||d.custoPrevisto)||0),0); }
 function totalPrev(m){ return (getMes(m).despesas||[]).reduce((s,d)=>s+(parseFloat(d.custoPrevisto)||0),0); }
 
@@ -207,15 +205,12 @@ function render(){
     document.getElementById('c_custoReal').textContent = 'R$ '+totalReal(mesSelecionado).toLocaleString('pt-BR');
     document.getElementById('c_saldoReal').textContent = 'R$ '+(totalRec(mesSelecionado)-totalReal(mesSelecionado)).toLocaleString('pt-BR');
 
-    // Preencher Inputs de Receitas
-    const r = d.receitas;
-    document.getElementById('r_salarioBruno').value = r.salarioBruno || '';
-    document.getElementById('r_salarioPriscila').value = r.salarioPriscila || '';
-    document.getElementById('r_rendaExtraBruno').value = r.rendaExtraBruno || '';
-    document.getElementById('r_rendaExtraPriscila').value = r.rendaExtraPriscila || '';
-    document.getElementById('r_decimoTerceiro').value = r.decimoTerceiro || '';
+    document.getElementById('r_salarioBruno').value = d.receitas.salarioBruno || '';
+    document.getElementById('r_salarioPriscila').value = d.receitas.salarioPriscila || '';
+    document.getElementById('r_rendaExtraBruno').value = d.receitas.rendaExtraBruno || '';
+    document.getElementById('r_rendaExtraPriscila').value = d.receitas.rendaExtraPriscila || '';
+    document.getElementById('r_decimoTerceiro').value = d.receitas.decimoTerceiro || '';
 
-    // Tabela de Despesas
     document.getElementById('despesasBody').innerHTML = (d.despesas||[]).map((x,i)=>`
         <tr>
             <td>${x.nome}</td>
@@ -227,7 +222,6 @@ function render(){
         </tr>
     `).join('');
 
-    // Metas
     document.getElementById('metasList').innerHTML = (d.aquisicoes||[]).map((m,i)=>`
         <div class="card">
             <div class="card-label">${m.nome}</div>
@@ -245,52 +239,45 @@ function renderGraficos(){
         date.setMonth(date.getMonth()-i);
         ultimos.push(date.toISOString().slice(0,7));
     }
-
     const ctxE = document.getElementById('chartEvolucao').getContext('2d');
     charts.ev = new Chart(ctxE, {
         type:'line',
         data: {
             labels: ultimos.map(m=>m.split('-')[1]+'/'+m.split('-')[0].slice(2)),
             datasets: [
-                { label: 'Receitas', data: ultimos.map(m=>totalRec(m)), borderColor: '#10b981', tension: 0.4, fill: false },
-                { label: 'Gasto Real', data: ultimos.map(m=>totalReal(m)), borderColor: '#ef4444', tension: 0.4, fill: false }
+                { label: 'Receitas', data: ultimos.map(m=>totalRec(m)), borderColor: '#10b981', tension: 0.4 },
+                { label: 'Gasto Real', data: ultimos.map(m=>totalReal(m)), borderColor: '#ef4444', tension: 0.4 }
             ]
         },
-        options: { maintainAspectRatio: false, plugins:{ legend:{ labels:{color:'#9ca3af'} } } }
+        options: { maintainAspectRatio: false }
     });
-
     const ctxC = document.getElementById('chartComparativo').getContext('2d');
     charts.comp = new Chart(ctxC, {
         type:'bar',
         data: {
             labels: ['Planejado', 'Realizado'],
-            datasets: [{ 
-                label: 'R$', 
-                data: [totalPrev(mesSelecionado), totalReal(mesSelecionado)], 
-                backgroundColor: ['#f59e0b', '#10b981'],
-                borderRadius: 8
-            }]
+            datasets: [{ data: [totalPrev(mesSelecionado), totalReal(mesSelecionado)], backgroundColor: ['#f59e0b', '#10b981'] }]
         },
-        options: { maintainAspectRatio: false, plugins:{ legend:{ display: false } } }
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
 }
 
 window.salvarReceitas = () => {
-    const r = getMes(mesSelecionado).receitas;
-    r.salarioBruno = document.getElementById('r_salarioBruno').value;
-    r.salarioPriscila = document.getElementById('r_salarioPriscila').value;
-    r.rendaExtraBruno = document.getElementById('r_rendaExtraBruno').value;
-    r.rendaExtraPriscila = document.getElementById('r_rendaExtraPriscila').value;
-    r.decimoTerceiro = document.getElementById('r_decimoTerceiro').value;
-    save(); toast("Receitas Atualizadas!");
+    const d = getMes(mesSelecionado);
+    d.receitas.salarioBruno = document.getElementById('r_salarioBruno').value;
+    d.receitas.salarioPriscila = document.getElementById('r_salarioPriscila').value;
+    d.receitas.rendaExtraBruno = document.getElementById('r_rendaExtraBruno').value;
+    d.receitas.rendaExtraPriscila = document.getElementById('r_rendaExtraPriscila').value;
+    d.receitas.decimoTerceiro = document.getElementById('r_decimoTerceiro').value;
+    save(); toast("Salvo!");
 };
 
 window.adicionarDespesa = () => {
+    const d = getMes(mesSelecionado);
     const n = document.getElementById('d_nome').value, p = document.getElementById('d_custoPrevisto').value;
     if(!n||!p) return;
-    getMes(mesSelecionado).despesas.push({ 
-        nome:n, 
-        custoPrevisto:p, 
+    d.despesas.push({ 
+        nome:n, custoPrevisto:p, 
         vencimento:document.getElementById('d_vencimento').value, 
         custoReal:document.getElementById('d_custoReal').value,
         pago: parseFloat(document.getElementById('d_custoReal').value) > 0
@@ -299,37 +286,28 @@ window.adicionarDespesa = () => {
     document.getElementById('d_nome').value=''; document.getElementById('d_custoPrevisto').value='';
 };
 
+window.adicionarMeta = () => {
+    const d = getMes(mesSelecionado);
+    const n = document.getElementById('a_nome').value, v = document.getElementById('a_valor').value;
+    if(!n||!v) return;
+    d.aquisicoes.push({ nome:n, valor:v });
+    save();
+    document.getElementById('a_nome').value=''; document.getElementById('a_valor').value='';
+};
+
 window.togglePago = (i) => {
     const d = getMes(mesSelecionado).despesas[i];
     d.pago = !d.pago;
     if(d.pago && !d.custoReal) d.custoReal = d.custoPrevisto;
     save();
 };
-
 window.removerDesp = (i) => { getMes(mesSelecionado).despesas.splice(i,1); save(); };
-window.adicionarMeta = () => {
-    const n = document.getElementById('a_nome').value, v = document.getElementById('a_valor').value;
-    if(!n||!v) return;
-    getMes(mesSelecionado).aquisicoes.push({ nome:n, valor:v });
-    save();
-};
 window.removerMeta = (i) => { getMes(mesSelecionado).aquisicoes.splice(i,1); save(); };
 
 function save(){ set(dbRef, allData); }
 onValue(dbRef, snap => { if(snap.val()) allData = snap.val(); render(); });
-
 window.mudarMes = (v) => { mesSelecionado = v; render(); };
-window.exportarBackup = () => {
-    const blob = new Blob([JSON.stringify(allData)], {type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = 'backup_financas.json'; a.click();
-};
-window.limparTudo = () => { if(confirm("Apagar tudo permanentemente?")) { allData={meses:{}}; save(); } };
-
-function toast(m){ 
-    const t=document.getElementById('toast'); t.textContent=m; t.style.opacity=1; 
-    setTimeout(()=>t.style.opacity=0, 2000); 
-}
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.opacity=1; setTimeout(()=>t.style.opacity=0, 2000); }
 
 const sel = document.getElementById('mesSelect');
 for(let i=-6; i<=6; i++){
