@@ -22,6 +22,28 @@ h2::before{content:'';width:3px;height:1em;background:var(--em);border-radius:2p
 .app-title{font-size:1.2rem;font-weight:700;color:var(--em);letter-spacing:-.3px}
 .app-sub{font-size:11px;color:var(--txt2);margin-top:1px}
 .header-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+
+/* NOVO: Ícone de Configurações no canto superior */
+.btn-cfg-top {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1001;
+  background: var(--bg3);
+  border: 1px solid var(--em-dim);
+  color: var(--txt);
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.btn-cfg-top:active { transform: scale(0.9); background: var(--em-dim); }
+
 .sync-badge{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--em-dim);background:var(--bg2);white-space:nowrap}
 select.mes-sel{background:var(--bg3);color:var(--txt);border:1px solid var(--em-dim);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;outline:none;-webkit-appearance:none}
 .btn-hd{background:transparent;border:1px solid var(--em-dim);color:var(--em3);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .2s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
@@ -122,6 +144,8 @@ canvas{max-height:220px!important}
 </head>
 <body>
 
+<button class="btn-cfg-top" onclick="showTab('config')" title="Configurações">⚙️</button>
+
 <div class="header">
   <div class="header-left">
     <div class="logo">💰</div>
@@ -145,12 +169,10 @@ canvas{max-height:220px!important}
   <div class="tab" onclick="showTab('despesas')"><span class="tab-icon">📋</span>Despesas</div>
   <div class="tab" onclick="showTab('aquisicoes')"><span class="tab-icon">🎯</span>Metas</div>
   <div class="tab" onclick="showTab('graficos')"><span class="tab-icon">📈</span>Gráficos</div>
-  <div class="tab" onclick="showTab('config')"><span class="tab-icon">⚙️</span>Config</div>
-</div>
+  </div>
 
 <main>
 
-<!-- RESUMO -->
 <div class="page active" id="page-resumo">
   <div class="cards-grid">
     <div class="card"><div class="card-label">Total Receitas</div><div class="card-val big" id="c_totalReceitas">R$ 0,00</div></div>
@@ -173,7 +195,6 @@ canvas{max-height:220px!important}
   </div>
 </div>
 
-<!-- RECEITAS -->
 <div class="page" id="page-receitas">
   <div class="section">
     <h2>Receitas do Mês</h2>
@@ -199,7 +220,6 @@ canvas{max-height:220px!important}
   </div>
 </div>
 
-<!-- DESPESAS -->
 <div class="page" id="page-despesas">
   <div class="copy-bar">
     <div class="copy-bar-info"><strong>📋 Copiar despesas de outro mês</strong><br>Aproveite lançamentos recorrentes sem redigitar tudo.</div>
@@ -237,7 +257,6 @@ canvas{max-height:220px!important}
   </div>
 </div>
 
-<!-- METAS -->
 <div class="page" id="page-aquisicoes">
   <div class="section">
     <h2>Nova Meta / Aquisição</h2>
@@ -266,19 +285,16 @@ canvas{max-height:220px!important}
   </div>
 </div>
 
-<!-- GRÁFICOS -->
 <div class="page" id="page-graficos">
   <div class="graficos-grid">
-    <div class="grafico-card"><div class="grafico-titulo">Composição das Despesas</div><canvas id="chartPizza"></canvas></div>
     <div class="grafico-card"><div class="grafico-titulo">Visão Geral Financeira</div><canvas id="chartBarra"></canvas></div>
+    <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte</div><canvas id="chartReceitas"></canvas></div>
   </div>
   <div class="graficos-grid">
-    <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte</div><canvas id="chartReceitas"></canvas></div>
     <div class="grafico-card"><div class="grafico-titulo">Previsto vs Real</div><canvas id="chartComparativo"></canvas></div>
   </div>
 </div>
 
-<!-- CONFIG -->
 <div class="page" id="page-config">
   <div class="backup-section">
     <h2>Backup & Dados</h2>
@@ -296,7 +312,6 @@ canvas{max-height:220px!important}
 
 </main>
 
-<!-- MODAL COPIAR -->
 <div class="modal-overlay" id="modalCopiar" style="display:none">
   <div class="modal-box">
     <div class="modal-title">📋 Copiar para <span id="modal_destino"></span></div>
@@ -343,8 +358,6 @@ try {
 let allData = { meses: {} };
 let mesSelecionado = new Date().toISOString().slice(0,7);
 let filtroAq = 'todos';
-// Flag: bloqueia re-render dos inputs de receita enquanto usuário está digitando
-let salvandoReceitas = false;
 let fbReady = false;
 
 const MES_NOMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -380,9 +393,6 @@ function saveData(){
 }
 
 // ============ FIREBASE LISTENER ============
-// Só atualiza a UI quando os dados chegam do Firebase, MAS não sobrescreve campos
-// de receita que o usuário está editando no momento
-// Timeout de segurança: se em 8s não conectar, mostra erro
 const fbTimeout = setTimeout(() => {
   if(!fbReady){
     document.getElementById('syncStatus').textContent = '❌ Sem conexão';
@@ -407,7 +417,6 @@ onValue(dbRef, snap => {
   }
 }, err => {
   clearTimeout(fbTimeout);
-  console.error('Firebase error:', err.code);
   document.getElementById('syncStatus').textContent = '❌ ' + err.code;
   document.getElementById('syncStatus').style.color = 'var(--danger)';
   if(!fbReady){ buildMesSelect(); renderAll(); }
@@ -437,8 +446,11 @@ window.showTab=function(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['resumo','receitas','despesas','aquisicoes','graficos','config'];
-  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  const tabs=['resumo','receitas','despesas','aquisicoes','graficos'];
+  const tabIndex = tabs.indexOf(name);
+  if(tabIndex !== -1) {
+    document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+  }
   if(name==='graficos') setTimeout(renderGraficos,100);
 };
 
@@ -489,7 +501,6 @@ function renderResumo(){
 }
 
 function renderReceitas(){
-  // Só preenche campos que NÃO estão com foco (usuário editando)
   const r=getDados().receitas;
   const map={r_salarioBruno:'salarioBruno',r_salarioPriscila:'salarioPriscila',r_rendaExtraBruno:'rendaExtraBruno',r_rendaExtraPriscila:'rendaExtraPriscila',r_decimoTerceiro:'decimoTerceiro'};
   Object.entries(map).forEach(([elId,key])=>{
@@ -573,13 +584,10 @@ function renderAquisicoes(){
 // ============ GRÁFICOS ============
 let charts={};
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-const GP=['#10b981','#059669','#34d399','#6ee7b7','#a7f3d0','#065f46','#047857','#0d9488','#14b8a6','#2dd4bf'];
 
 function renderGraficos(){
   const d=getDados();
-  destroyChart('pizza');
-  const ctxP=document.getElementById('chartPizza');
-  if(ctxP&&d.despesas.length>0) charts['pizza']=new Chart(ctxP,{type:'doughnut',data:{labels:d.despesas.map(x=>x.nome),datasets:[{data:d.despesas.map(x=>num(x.custoPrevisto)),backgroundColor:GP.slice(0,d.despesas.length),borderColor:'#111827',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{color:'#d1fae5',font:{size:11},boxWidth:12}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}});
+  // GRÁFICO PIZZA REMOVIDO DA LÓGICA
   destroyChart('barra');
   const ctxB=document.getElementById('chartBarra');
   if(ctxB) charts['barra']=new Chart(ctxB,{type:'bar',data:{labels:['Receitas','Prev.','Real','Saldo P.','Saldo R.'],datasets:[{data:[totalReceitas(),totalCustoPrevisto(),totalCustoReal(),Math.max(0,saldoPrevisto()),Math.max(0,saldoReal())],backgroundColor:['#10b981','#f59e0b','#ef4444','#3b82f6','#10b981'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:'#6ee7b7',callback:v=>v.toLocaleString('pt-BR')},grid:{color:'#1f2937'}},x:{ticks:{color:'#6ee7b7'},grid:{display:false}}}}});
