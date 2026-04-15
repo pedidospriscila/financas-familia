@@ -6,7 +6,7 @@
 <title>Finanças Família – Bruno & Priscila</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* RESTAURANDO O ESTILO ORIGINAL */
+/* CSS ORIGINAL PRESERVADO */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0a0f1a;--bg2:#111827;--bg3:#1f2937;
@@ -17,10 +17,9 @@
 html,body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;-webkit-text-size-adjust:100%}
 h2{font-size:1rem;font-weight:600;color:var(--em3);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
 h2::before{content:'';width:3px;height:1em;background:var(--em);border-radius:2px;display:inline-block;flex-shrink:0}
-
 .header{background:linear-gradient(135deg,#0a1628 0%,#0d1f12 100%);border-bottom:1px solid var(--em-dim);padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;position:sticky;top:0;z-index:100}
-.app-title{font-size:1.2rem;font-weight:700;color:var(--em);letter-spacing:-.3px}
 
+/* ÍCONE DE CONFIG NO TOPO DIREITO */
 .btn-cfg-top {
   position: fixed; top: 12px; right: 12px; z-index: 1001;
   background: var(--bg3); border: 1px solid var(--em-dim); color: var(--txt);
@@ -59,7 +58,6 @@ td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px}
 
 .chart-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem}
 .chart-container{height:250px;width:100%}
-
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--em);color:#fff;padding:10px 22px;border-radius:24px;opacity:0;transition:all .35s;z-index:9999}
 </style>
 </head>
@@ -68,7 +66,10 @@ td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px}
 <button class="btn-cfg-top" onclick="showTab('config')">⚙️</button>
 
 <div class="header">
-  <div class="app-title">💰 Finanças Família</div>
+  <div style="display:flex; align-items:center; gap:10px">
+    <div style="background:var(--em-dim); width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center">💰</div>
+    <div><div class="app-title">Finanças Família</div><div style="font-size:10px; color:var(--txt2)">Bruno & Priscila</div></div>
+  </div>
   <select id="mesSelect" onchange="mudarMes(this.value)" style="background:var(--bg3);color:#fff;border:1px solid var(--brd);padding:6px;border-radius:8px"></select>
 </div>
 
@@ -85,7 +86,7 @@ td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px}
     <div class="cards-grid">
       <div class="card"><div class="card-label">Total Receitas</div><div class="card-val" id="c_totalReceitas">R$ 0,00</div></div>
       <div class="card"><div class="card-label">Custo Real (Pago)</div><div class="card-val" id="c_custoReal" style="color:var(--danger)">R$ 0,00</div></div>
-      <div class="card"><div class="card-label">Saldo Final</div><div class="card-val" id="c_saldoReal">R$ 0,00</div></div>
+      <div class="card"><div class="card-label">Saldo Real</div><div class="card-val" id="c_saldoReal">R$ 0,00</div></div>
     </div>
   </div>
 
@@ -117,7 +118,7 @@ td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px}
     <div class="section">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Descrição</th><th>Dia</th><th>Previsto</th><th>Real</th><th>Status</th><th>Ação</th></tr></thead>
+          <thead><tr><th>Descrição</th><th>Dia</th><th>Previsto</th><th>Real</th><th>Status</th><th>Ações</th></tr></thead>
           <tbody id="despesasBody"></tbody>
         </table>
       </div>
@@ -137,20 +138,12 @@ td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px}
   </div>
 
   <div class="page" id="page-graficos">
-    <div class="chart-card">
-        <h2>📊 Evolução: Receita vs Gasto Real</h2>
-        <div class="chart-container"><canvas id="chartEvolucao"></canvas></div>
-    </div>
-    <div class="chart-card">
-        <h2>💰 Comparativo: Planejado vs Real (Mês Atual)</h2>
-        <div class="chart-container"><canvas id="chartComparativo"></canvas></div>
-    </div>
+    <div class="chart-card"><h2>📈 Evolução Mensal</h2><div class="chart-container"><canvas id="chartEvolucao"></canvas></div></div>
+    <div class="chart-card"><h2>📊 Planejado vs Real</h2><div class="chart-container"><canvas id="chartComparativo"></canvas></div></div>
   </div>
 
   <div class="page" id="page-config">
-    <div class="section">
-        <button class="btn-save" style="background:var(--danger)" onclick="limparTudo()">🗑 Resetar Banco de Dados</button>
-    </div>
+    <div class="section"><button class="btn-save" style="background:var(--danger)" onclick="limparTudo()">🗑 Resetar Sistema</button></div>
   </div>
 </main>
 
@@ -175,13 +168,11 @@ let allData = { meses: {} };
 let mesSelecionado = new Date().toISOString().slice(0,7);
 let charts = {};
 
-// FUNÇÃO DE SEGURANÇA: Garante que nada seja apagado ao criar uma nova pasta
 function getMes(m){ 
     if(!allData.meses) allData.meses = {};
-    if(!allData.meses[m]) allData.meses[m] = {};
-    if(!allData.meses[m].receitas) allData.meses[m].receitas = {};
-    if(!allData.meses[m].despesas) allData.meses[m].despesas = [];
+    if(!allData.meses[m]) allData.meses[m] = { receitas:{}, despesas:[], aquisicoes:[] };
     if(!allData.meses[m].aquisicoes) allData.meses[m].aquisicoes = [];
+    if(!allData.meses[m].despesas) allData.meses[m].despesas = [];
     return allData.meses[m]; 
 }
 
@@ -206,31 +197,20 @@ function render(){
     document.getElementById('c_custoReal').textContent = 'R$ '+totalReal(mesSelecionado).toLocaleString('pt-BR');
     document.getElementById('c_saldoReal').textContent = 'R$ '+(totalRec(mesSelecionado)-totalReal(mesSelecionado)).toLocaleString('pt-BR');
 
-    const r = d.receitas;
-    document.getElementById('r_salarioBruno').value = r.salarioBruno || '';
-    document.getElementById('r_salarioPriscila').value = r.salarioPriscila || '';
-    document.getElementById('r_rendaExtraBruno').value = r.rendaExtraBruno || '';
-    document.getElementById('r_rendaExtraPriscila').value = r.rendaExtraPriscila || '';
-    document.getElementById('r_decimoTerceiro').value = r.decimoTerceiro || '';
+    document.getElementById('r_salarioBruno').value = d.receitas.salarioBruno || '';
+    document.getElementById('r_salarioPriscila').value = d.receitas.salarioPriscila || '';
+    document.getElementById('r_rendaExtraBruno').value = d.receitas.rendaExtraBruno || '';
+    document.getElementById('r_rendaExtraPriscila').value = d.receitas.rendaExtraPriscila || '';
+    document.getElementById('r_decimoTerceiro').value = d.receitas.decimoTerceiro || '';
 
-    document.getElementById('despesasBody').innerHTML = (d.despesas||[]).map((x,i)=>`
-        <tr>
-            <td>${x.nome}</td>
-            <td>${x.vencimento||'-'}</td>
-            <td>${parseFloat(x.custoPrevisto||0).toLocaleString('pt-BR')}</td>
-            <td>${parseFloat(x.custoReal||0).toLocaleString('pt-BR')}</td>
-            <td><button class="btn-status ${x.pago?'pago':'pendente'}" onclick="togglePago(${i})">${x.pago?'Pago':'Pendente'}</button></td>
-            <td><button style="border:none; background:none; color:red; cursor:pointer" onclick="removerDesp(${i})">✕</button></td>
-        </tr>
-    `).join('');
+    document.getElementById('despesasBody').innerHTML = d.despesas.map((x,i)=>`
+        <tr><td>${x.nome}</td><td>${x.vencimento||'-'}</td><td>${parseFloat(x.custoPrevisto||0).toLocaleString('pt-BR')}</td><td>${parseFloat(x.custoReal||0).toLocaleString('pt-BR')}</td>
+        <td><button class="btn-status ${x.pago?'pago':'pendente'}" onclick="togglePago(${i})">${x.pago?'Pago':'Pendente'}</button></td>
+        <td><button style="border:none; background:none; color:red; cursor:pointer" onclick="removerDesp(${i})">✕</button></td></tr>`).join('');
 
-    document.getElementById('metasList').innerHTML = (d.aquisicoes||[]).map((m,i)=>`
-        <div class="card">
-            <div class="card-label">${m.nome}</div>
-            <div class="card-val" style="color:var(--gold)">R$ ${parseFloat(m.valor||0).toLocaleString('pt-BR')}</div>
-            <button onclick="removerMeta(${i})" style="font-size:10px; color:var(--txt2); border:none; background:none; cursor:pointer; margin-top:5px">✕ Remover</button>
-        </div>
-    `).join('');
+    document.getElementById('metasList').innerHTML = d.aquisicoes.map((m,i)=>`
+        <div class="card"><div class="card-label">${m.nome}</div><div class="card-val" style="color:var(--gold)">R$ ${parseFloat(m.valor||0).toLocaleString('pt-BR')}</div>
+        <button onclick="removerMeta(${i})" style="font-size:10px; color:var(--txt2); border:none; background:none; cursor:pointer; margin-top:5px">✕ Remover</button></div>`).join('');
 }
 
 function renderGraficos(){
@@ -244,13 +224,13 @@ function renderGraficos(){
     const ctxE = document.getElementById('chartEvolucao').getContext('2d');
     charts.ev = new Chart(ctxE, {
         type:'line', data: { labels: ultimos.map(m=>m.split('-')[1]+'/'+m.split('-')[0].slice(2)),
-        datasets: [{ label: 'Entradas', data: ultimos.map(m=>totalRec(m)), borderColor: '#10b981', tension: 0.4 },
+        datasets: [{ label: 'Receitas', data: ultimos.map(m=>totalRec(m)), borderColor: '#10b981', tension: 0.4 },
         { label: 'Saídas Reais', data: ultimos.map(m=>totalReal(m)), borderColor: '#ef4444', tension: 0.4 }]
         }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } } }
     });
     const ctxC = document.getElementById('chartComparativo').getContext('2d');
     charts.comp = new Chart(ctxC, {
-        type:'bar', data: { labels: ['Previsto', 'Real'],
+        type:'bar', data: { labels: ['Previsto', 'Realizado'],
         datasets: [{ data: [totalPrev(mesSelecionado), totalReal(mesSelecionado)], backgroundColor: ['#f59e0b', '#10b981'] }]
         }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
@@ -263,18 +243,14 @@ window.salvarReceitas = () => {
     d.receitas.rendaExtraBruno = document.getElementById('r_rendaExtraBruno').value;
     d.receitas.rendaExtraPriscila = document.getElementById('r_rendaExtraPriscila').value;
     d.receitas.decimoTerceiro = document.getElementById('r_decimoTerceiro').value;
-    save(); toast("Receitas Atualizadas!");
+    save(); toast("Salvo!");
 };
 
 window.adicionarDespesa = () => {
     const d = getMes(mesSelecionado);
     const n = document.getElementById('d_nome').value, p = document.getElementById('d_custoPrevisto').value;
     if(!n||!p) return;
-    d.despesas.push({ 
-        nome:n, custoPrevisto:p, vencimento:document.getElementById('d_vencimento').value, 
-        custoReal:document.getElementById('d_custoReal').value,
-        pago: parseFloat(document.getElementById('d_custoReal').value) > 0 
-    });
+    d.despesas.push({ nome:n, custoPrevisto:p, vencimento:document.getElementById('d_vencimento').value, custoReal:document.getElementById('d_custoReal').value, pago: parseFloat(document.getElementById('d_custoReal').value) > 0 });
     save(); document.getElementById('d_nome').value=''; document.getElementById('d_custoPrevisto').value='';
 };
 
