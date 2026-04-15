@@ -316,7 +316,7 @@ canvas{max-height:220px!important}
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 // ============ FIREBASE CONFIG ============
 const firebaseConfig = {
@@ -376,9 +376,7 @@ function mesAnterior(ym){ let [y,m]=ym.split('-').map(Number); m--; if(m<1){m=12
 
 // ============ FIREBASE SAVE ============
 function saveData(){
-  const mesPath = 'meses/' + mesSelecionado;
-  update(ref(db, 'financas/' + mesPath), getMesDados(mesSelecionado))
-    .catch(e=>console.error('Firebase save error:',e));
+  set(dbRef, allData).catch(e=>console.error('Firebase save error:',e));
 }
 
 // ============ FIREBASE LISTENER ============
