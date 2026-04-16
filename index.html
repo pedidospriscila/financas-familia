@@ -637,7 +637,7 @@ window.setFiltroAq = (f,btn) => {
 
 function renderAquisicoes(){
   const cont=document.getElementById('aquisicoesList'); if(!cont)return;
-  const aq=getDados().aquisicoes||[];
+  const aq=allData.aquisicoes||[];
   const total=aq.reduce((s,a)=>s+num(a.valor),0);
   const comp=aq.filter(a=>a.comprado).reduce((s,a)=>s+num(a.valor),0);
   setText('aq_total',fmt(total)); setText('aq_comprado',fmt(comp)); setText('aq_pendente',fmt(total-comp));
@@ -737,7 +737,7 @@ document.getElementById('btn_add_despesa').addEventListener('click', () => {
     const dados=getMes(mesKey);
     if(!dados.despesas) dados.despesas=[];
     const nomeParcela=parcelas>1?`${nome} (${p+1}/${parcelas})`:nome;
-    dados.despesas.push({id:uid(),nome:nomeParcela,vencimento:venc,custoPrevisto:num(prev),custoReal:p===0?custoReal:0,pago:p===0&&custoReal>0});
+    dados.despesas.push({id:uid(),nome:nomeParcela,vencimento:venc,custoPrevisto:num(prev),custoReal:p===0?custoReal:0,pago:false});
     m++; if(m>12){m=1;y++;}
   }
   ['d_nome','d_venc','d_previsto','d_real','d_parcelas'].forEach(id=>{document.getElementById(id).value='';});
@@ -750,9 +750,8 @@ document.getElementById('btn_add_meta').addEventListener('click', () => {
   const nome=document.getElementById('a_nome').value.trim();
   const valor=document.getElementById('a_valor').value;
   if(!nome||!valor){showToast('Preencha nome e valor',true);return;}
-  const dados=getMes(mesSelecionado);
-  if(!dados.aquisicoes) dados.aquisicoes=[];
-  dados.aquisicoes.push({id:uid(),nome,valor:num(valor),prio:document.getElementById('a_prio').value,obs:document.getElementById('a_obs').value.trim(),comprado:false});
+  if(!allData.aquisicoes) allData.aquisicoes=[];
+  allData.aquisicoes.push({id:uid(),nome,valor:num(valor),prio:document.getElementById('a_prio').value,obs:document.getElementById('a_obs').value.trim(),comprado:false});
   ['a_nome','a_valor','a_obs'].forEach(id=>{document.getElementById(id).value='';});
   saveData(); renderAquisicoes(); renderCards(); showToast('Meta adicionada!');
 });
@@ -779,7 +778,7 @@ window.removerDespesa = id => {
 
 
 window.editarMeta = id => {
-  const a=(getMes(mesSelecionado).aquisicoes||[]).find(x=>x.id===id);
+  const a=(allData.aquisicoes||[]).find(x=>x.id===id);
   if(!a)return;
   document.getElementById('em_nome').value=a.nome;
   document.getElementById('em_valor').value=a.valor;
@@ -791,7 +790,7 @@ window.editarMeta = id => {
 
 window.salvarEdicaoMeta = () => {
   const id=document.getElementById('modalEditMeta')._id;
-  const a=(getMes(mesSelecionado).aquisicoes||[]).find(x=>x.id===id);
+  const a=(allData.aquisicoes||[]).find(x=>x.id===id);
   if(!a)return;
   a.nome=document.getElementById('em_nome').value.trim()||a.nome;
   a.valor=num(document.getElementById('em_valor').value)||a.valor;
@@ -803,13 +802,13 @@ window.salvarEdicaoMeta = () => {
 window.fecharModalMeta = () => { document.getElementById('modalEditMeta').style.display='none'; };
 
 window.toggleComprado = id => {
-  const a=(getMes(mesSelecionado).aquisicoes||[]).find(x=>x.id===id);
+  const a=(allData.aquisicoes||[]).find(x=>x.id===id);
   if(a){a.comprado=!a.comprado;saveData();renderAquisicoes();showToast(a.comprado?'Comprado! ✅':'Desmarcado');}
 };
 
 window.removerMeta = id => {
   if(!confirm('Remover esta meta?'))return;
-  const m=getMes(mesSelecionado); m.aquisicoes=m.aquisicoes.filter(x=>x.id!==id);
+  allData.aquisicoes=(allData.aquisicoes||[]).filter(x=>x.id!==id);
   saveData(); renderAquisicoes(); renderCards(); showToast('Removida');
 };
 
@@ -877,20 +876,29 @@ const HISTORICO_EXCEL = {"meses":{"2026-03":{"receitas":{"salarioBruno":10000.0,
 window.importarHistorico = () => {
   if(!confirm('Importar histórico de Out/2023 a Mar/2026? Os dados existentes serão mantidos e os do histórico mesclados.')) return;
   let mesesAdicionados = 0, despesasAdicionadas = 0;
+  if(!allData.meses) allData.meses = {};
   Object.entries(HISTORICO_EXCEL.meses).forEach(([mes, dadosMes]) => {
-    if(!allData.meses) allData.meses = {};
     if(!allData.meses[mes]) {
-      allData.meses[mes] = dadosMes;
+      // Mês não existe: importa tudo
+      allData.meses[mes] = {
+        receitas: dadosMes.receitas,
+        despesas: dadosMes.despesas || [],
+        aquisicoes: []
+      };
       mesesAdicionados++;
       despesasAdicionadas += (dadosMes.despesas||[]).length;
     } else {
-      // Mescla receitas se zeradas
-      const r = allData.meses[mes].receitas;
-      const rh = dadosMes.receitas;
+      // Mês existe: mescla receitas se zeradas
+      const r = allData.meses[mes].receitas || {};
+      const rh = dadosMes.receitas || {};
       if(!r.salarioBruno && rh.salarioBruno) r.salarioBruno = rh.salarioBruno;
       if(!r.salarioPriscila && rh.salarioPriscila) r.salarioPriscila = rh.salarioPriscila;
-      // Mescla despesas que não existem
-      const nomesExist = new Set((allData.meses[mes].despesas||[]).map(d=>d.nome.toLowerCase()));
+      if(!r.rendaExtraBruno && rh.rendaExtraBruno) r.rendaExtraBruno = rh.rendaExtraBruno;
+      if(!r.decimoTerceiro && rh.decimoTerceiro) r.decimoTerceiro = rh.decimoTerceiro;
+      allData.meses[mes].receitas = r;
+      // Mescla despesas que não existem pelo nome
+      if(!allData.meses[mes].despesas) allData.meses[mes].despesas = [];
+      const nomesExist = new Set(allData.meses[mes].despesas.map(d=>d.nome.toLowerCase()));
       (dadosMes.despesas||[]).forEach(d => {
         if(!nomesExist.has(d.nome.toLowerCase())) {
           allData.meses[mes].despesas.push(d);
