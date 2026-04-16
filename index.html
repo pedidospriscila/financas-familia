@@ -9,15 +9,15 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0c;
-  --bg2:#111114;
-  --bg3:#1a1a1f;
-  --bg4:#222228;
-  --gold:#c9a84c;
-  --gold2:#e8c97a;
-  --gold3:#f5e4b0;
-  --gold-dim:#2a2010;
-  --gold-border:#3a2e12;
+  --bg:#0d0f14;
+  --bg2:#131720;
+  --bg3:#1c2130;
+  --bg4:#252b3a;
+  --gold:#b8963e;
+  --gold2:#d4a853;
+  --gold3:#edd98a;
+  --gold-dim:#1e1a0d;
+  --gold-border:#2e2410;
   --txt:#f2ede4;
   --txt2:#9a9488;
   --txt3:#5a5550;
@@ -36,7 +36,7 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
 .logo{width:36px;height:36px;background:linear-gradient(135deg,var(--gold-dim),var(--gold-border));border:1px solid var(--gold-border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .app-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold2);letter-spacing:.3px}
 .app-sub{font-size:11px;color:var(--txt3);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
-.header-right{display:flex;align-items:center;gap:.5rem}
+.header-right{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
 .sync-badge{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--gold-border);background:var(--bg3);color:var(--txt2);white-space:nowrap}
 .btn-hd{background:transparent;border:1px solid var(--gold-border);color:var(--gold);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .2s;white-space:nowrap;-webkit-tap-highlight-color:transparent;font-family:'Inter',sans-serif}
 .btn-hd:hover{background:var(--gold-dim);color:var(--gold2)}
@@ -173,7 +173,9 @@ canvas{max-height:220px!important}
 .btn-filtro{background:var(--bg3);color:var(--txt2);border:1px solid var(--bg4);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;font-family:'Inter',sans-serif}
 .btn-filtro.active{background:var(--gold-dim);color:var(--gold2);border-color:var(--gold-border)}
 
+.hd-hide-sm{display:inline-flex}
 @media(max-width:600px){
+  .hd-hide-sm{display:none!important}
   .header{padding:.75rem 1rem}
   main{padding:1rem}
   .app-title{font-size:1rem}
@@ -211,8 +213,8 @@ canvas{max-height:220px!important}
       </div>
     </div>
     <span class="sync-badge" id="syncStatus">⏳ Conectando</span>
-    <button class="btn-hd" onclick="exportarBackup()">⬇</button>
-    <button class="btn-hd" onclick="document.getElementById('inputBackup').click()">⬆</button>
+    <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
+    <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
     <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
     <input type="file" id="inputBackup" accept=".json" onchange="handleImport(event)">
   </div>
@@ -569,12 +571,12 @@ function renderPickerGrid(){
     const m = i+1;
     const v = pickerAno+'-'+(m<10?'0':'')+m;
     const ativo = pickerAno===cy && m===cm;
-    const fora = pickerAno < 2023 || pickerAno > 2030 || (pickerAno===2023 && m<10);
+    const fora = pickerAno < 2023 || pickerAno > 2040 || (pickerAno===2023 && m<10);
     return `<button onclick="selecionarMes('${v}')" style="background:${ativo?'var(--gold)':fora?'var(--bg3)':'var(--bg3)'};color:${ativo?'#0a0a0c':fora?'var(--txt3)':'var(--txt)'};border:1px solid ${ativo?'var(--gold)':'var(--brd)'};border-radius:8px;padding:6px 4px;font-size:12px;font-weight:${ativo?'700':'400'};cursor:${fora?'not-allowed':'pointer'};opacity:${fora?'.4':'1'};font-family:'Inter',sans-serif" ${fora?'disabled':''}>${nome}</button>`;
   }).join('');
 }
 
-window.mudaAno = function(d){ pickerAno = Math.max(2023, Math.min(2030, pickerAno+d)); renderPickerGrid(); };
+window.mudaAno = function(d){ pickerAno = Math.max(2023, Math.min(2040, pickerAno+d)); renderPickerGrid(); };
 
 window.selecionarMes = function(v){ mesSelecionado=v; togglePicker(); renderMesBtn(); renderAll(); };
 
@@ -667,7 +669,7 @@ function renderDespesas(){
     ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00'));
     setText('ft_dif','—'); return;
   }
-  const sorted=[...desp].sort((a,b)=>num(a.vencimento)-num(b.vencimento)||a.nome.localeCompare(b.nome));
+  const sorted=[...desp].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   tb.innerHTML=sorted.map(d=>{
     const pr=num(d.custoPrevisto),re=d.pago?num(d.custoReal||d.custoPrevisto):0;
     const dif=d.pago?pr-re:null;
@@ -876,6 +878,32 @@ window.removerMeta = id => {
   allData.aquisicoes=(allData.aquisicoes||[]).filter(x=>x.id!==id);
   saveData(); renderAquisicoes(); renderCards(); showToast('Removida');
 };
+
+
+window.editarDespesa = id => {
+  const d=(getMes(mesSelecionado).despesas||[]).find(x=>x.id===id);
+  if(!d)return;
+  document.getElementById('ed_nome').value=d.nome;
+  document.getElementById('ed_venc').value=d.vencimento||'';
+  document.getElementById('ed_previsto').value=d.custoPrevisto||'';
+  document.getElementById('ed_real').value=d.custoReal||'';
+  document.getElementById('modalEditDesp').style.display='flex';
+  document.getElementById('modalEditDesp')._id=id;
+};
+
+window.salvarEdicaoDesp = () => {
+  const id=document.getElementById('modalEditDesp')._id;
+  const d=(getMes(mesSelecionado).despesas||[]).find(x=>x.id===id);
+  if(!d)return;
+  const nome=document.getElementById('ed_nome').value.trim();
+  if(nome) d.nome=nome;
+  d.vencimento=document.getElementById('ed_venc').value;
+  d.custoPrevisto=num(document.getElementById('ed_previsto').value)||d.custoPrevisto;
+  d.custoReal=num(document.getElementById('ed_real').value);
+  saveData(); renderDespesas(); renderCards(); renderResumo(); fecharModalDesp(); showToast('Despesa atualizada!');
+};
+
+window.fecharModalDesp = () => { document.getElementById('modalEditDesp').style.display='none'; };
 
 // ============ COPIAR MÊS ============
 window.abrirModalCopiar = () => {
