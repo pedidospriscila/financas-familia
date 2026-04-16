@@ -197,7 +197,19 @@ canvas{max-height:220px!important}
     </div>
   </div>
   <div class="header-right">
-    <select class="field" style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--txt);padding:6px 10px;font-size:13px;cursor:pointer;outline:none;-webkit-appearance:none;font-family:'Inter',sans-serif" id="mesSelect" onchange="mudarMes(this.value)"></select>
+    <div style="position:relative">
+      <button id="mesBtn" onclick="togglePicker()" style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:6px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;min-width:110px;display:flex;align-items:center;gap:6px">
+        <span id="mesBtnLabel">Abr 2026</span><span style="font-size:10px;opacity:.7">▼</span>
+      </button>
+      <div id="mesPicker" style="display:none;position:absolute;top:40px;right:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:1rem;z-index:300;width:240px;box-shadow:0 8px 32px rgba(0,0,0,.6)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+          <button onclick="mudaAno(-1)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px;font-weight:700">‹</button>
+          <span id="anoLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:1rem;font-weight:700">2026</span>
+          <button onclick="mudaAno(1)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px;font-weight:700">›</button>
+        </div>
+        <div id="mesesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+      </div>
+    </div>
     <span class="sync-badge" id="syncStatus">⏳ Conectando</span>
     <button class="btn-hd" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd" onclick="document.getElementById('inputBackup').click()">⬆</button>
@@ -389,6 +401,24 @@ canvas{max-height:220px!important}
 </main>
 
 
+
+<!-- MODAL EDITAR DESPESA -->
+<div class="modal-overlay" id="modalEditDesp" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Editar Despesa</div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem">
+      <div class="field"><label>Nome</label><input id="ed_nome" type="text"></div>
+      <div class="field"><label>Dia Vencimento</label><input id="ed_venc" type="number" min="1" max="31" inputmode="numeric"></div>
+      <div class="field"><label>Custo Previsto</label><input id="ed_previsto" type="number" step="0.01" inputmode="decimal"></div>
+      <div class="field"><label>Custo Real</label><input id="ed_real" type="number" step="0.01" inputmode="decimal"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-ok" onclick="salvarEdicaoDesp()">✓ Salvar</button>
+      <button class="btn-modal-cancel" onclick="fecharModalDesp()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR META -->
 <div class="modal-overlay" id="modalEditMeta" style="display:none">
   <div class="modal-box">
@@ -514,15 +544,50 @@ onValue(dbRef, snap => {
 });
 
 // ============ MÊS SELECT ============
+let pickerAno = new Date().getFullYear();
+
 function buildMesSelect(){
-  const sel=document.getElementById('mesSelect');
-  let html='';
-  for(let y=2024;y<=2027;y++) for(let m=1;m<=12;m++){
-    const v=y+'-'+(m<10?'0':'')+m;
-    html+=`<option value="${v}">${MES[m-1]} ${y}</option>`;
-  }
-  sel.innerHTML=html; sel.value=mesSelecionado;
+  renderMesBtn();
+  renderPickerGrid();
 }
+
+function renderMesBtn(){
+  const [y,m] = mesSelecionado.split('-');
+  const el = document.getElementById('mesBtnLabel');
+  if(el) el.textContent = MES[parseInt(m)-1] + ' ' + y;
+  pickerAno = parseInt(y);
+  renderPickerGrid();
+}
+
+function renderPickerGrid(){
+  const al = document.getElementById('anoLabel');
+  if(al) al.textContent = pickerAno;
+  const grid = document.getElementById('mesesGrid');
+  if(!grid) return;
+  const [cy, cm] = mesSelecionado.split('-').map(Number);
+  grid.innerHTML = MES.map((nome, i) => {
+    const m = i+1;
+    const v = pickerAno+'-'+(m<10?'0':'')+m;
+    const ativo = pickerAno===cy && m===cm;
+    const fora = pickerAno < 2023 || pickerAno > 2030 || (pickerAno===2023 && m<10);
+    return `<button onclick="selecionarMes('${v}')" style="background:${ativo?'var(--gold)':fora?'var(--bg3)':'var(--bg3)'};color:${ativo?'#0a0a0c':fora?'var(--txt3)':'var(--txt)'};border:1px solid ${ativo?'var(--gold)':'var(--brd)'};border-radius:8px;padding:6px 4px;font-size:12px;font-weight:${ativo?'700':'400'};cursor:${fora?'not-allowed':'pointer'};opacity:${fora?'.4':'1'};font-family:'Inter',sans-serif" ${fora?'disabled':''}>${nome}</button>`;
+  }).join('');
+}
+
+window.mudaAno = function(d){ pickerAno = Math.max(2023, Math.min(2030, pickerAno+d)); renderPickerGrid(); };
+
+window.selecionarMes = function(v){ mesSelecionado=v; togglePicker(); renderMesBtn(); renderAll(); };
+
+window.togglePicker = function(){
+  const p=document.getElementById('mesPicker');
+  if(p){ p.style.display = p.style.display==='none'?'block':'none'; }
+};
+
+// Fechar picker ao clicar fora
+document.addEventListener('click', e=>{
+  const btn=document.getElementById('mesBtn'), p=document.getElementById('mesPicker');
+  if(p && btn && !btn.contains(e.target) && !p.contains(e.target)) p.style.display='none';
+});
 
 // ============ TABS ============
 window.showTab = name => {
@@ -568,7 +633,7 @@ function renderResumo(){
   if(br){br.style.width=pR+'%';br.className='progress-bar'+(pR>90?' danger':pR>70?' warn':'');}
   setText('pct_previsto',pP+'%'); setText('pct_real',pR+'%');
   const pl=document.getElementById('pendentes-list'); if(!pl)return;
-  const pend=(getDados().despesas||[]).filter(d=>!d.pago).sort((a,b)=>num(a.vencimento)-num(b.vencimento));
+  const pend=(getDados().despesas||[]).filter(d=>!d.pago).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   if(!pend.length){pl.innerHTML='<div class="empty"><div class="empty-icon">✦</div>Tudo em dia!</div>';return;}
   pl.innerHTML=pend.map(d=>`
     <div class="pendente-item">
@@ -615,7 +680,7 @@ function renderDespesas(){
       <td style="text-align:right;color:${dc}">${dif!==null?fmt(dif):'—'}</td>
       <td style="text-align:center;white-space:nowrap">
         <button onclick="togglePago('${d.id}')" class="btn-status ${d.pago?'pago':'pendente'}">${d.pago?'✓ Pago':'Pendente'}</button>
-        <button onclick="editarReal('${d.id}')" class="btn-del">✏</button>
+        <button onclick="editarDespesa('${d.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar">✏</button>
         <button onclick="removerDespesa('${d.id}')" class="btn-del">✕</button>
       </td>
     </tr>`;
@@ -713,7 +778,7 @@ function renderGraficos(){
 }
 
 // ============ AÇÕES ============
-window.mudarMes = v => { mesSelecionado=v; renderAll(); };
+window.mudarMes = v => { mesSelecionado=v; renderMesBtn(); renderAll(); };
 
 window.salvarReceitas = () => {
   const map={r_salarioBruno:'salarioBruno',r_salarioPriscila:'salarioPriscila',r_rendaExtraBruno:'rendaExtraBruno',r_rendaExtraPriscila:'rendaExtraPriscila',r_decimoTerceiro:'decimoTerceiro',r_valeAlim:'valeAlim'};
