@@ -1052,25 +1052,24 @@ function showToast(msg,err=false){
 (function(){
   // Hash SHA-256 da senha "familia2025" — troque aqui para mudar a senha
   // Para gerar um novo hash: https://emn178.github.io/online-tools/sha256.html
-  const SENHA_HASH = 'a8f5f167f44f4964e6c998dee827110c0fe68c6ce04c41dbab4ce57f54c57d6e';
+  // Senha: familia2025
+  // Para trocar: substitua SENHA_OK pela nova senha diretamente
+  const SENHA_OK = 'familia2025';
+  const SESSION_KEY = 'financas_auth_ok';
 
-  async function sha256(str){
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  function checarSessao(){
+    if(sessionStorage.getItem(SESSION_KEY) === '1'){
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appWrapper').style.display = 'block';
+    }
   }
+  checarSessao();
 
-  // Checar se já está autenticado (sessão)
-  if(sessionStorage.getItem('auth') === SENHA_HASH){
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appWrapper').style.display = 'block';
-  }
-
-  window.tentarLogin = async function(){
+  window.tentarLogin = function(){
     const input = document.getElementById('loginInput');
     const erro = document.getElementById('loginErro');
-    const hash = await sha256(input.value);
-    if(hash === SENHA_HASH){
-      sessionStorage.setItem('auth', SENHA_HASH);
+    if(input.value === SENHA_OK){
+      sessionStorage.setItem(SESSION_KEY, '1');
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appWrapper').style.display = 'block';
     } else {
