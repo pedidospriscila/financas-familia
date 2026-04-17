@@ -187,6 +187,69 @@ canvas{max-height:220px!important}
 }
 
 #appWrapper{display:none}
+
+/* TEMA CLARO */
+body.light{
+  --bg:#f5f3ee;--bg2:#ffffff;--bg3:#f0ede6;--bg4:#e8e4da;
+  --gold:#8a6c2a;--gold2:#6d5220;--gold3:#4a3810;
+  --gold-dim:#fdf3dc;--gold-border:#e8d49a;
+  --txt:#1a1612;--txt2:#5a5040;--txt3:#9a8870;
+  --em:#0a7a50;--em-dim:#d4f0e4;
+  --danger:#c0392b;--danger-dim:#fde8e6;
+  --brd:#e0d8c8;
+}
+body.light .header{background:#fff;border-bottom-color:#e8d49a}
+body.light .nav-tabs{background:#fff;border-bottom-color:#e8d49a}
+body.light .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+body.light #loginScreen{background:#f5f3ee}
+
+/* ALERTA BANNER */
+.alerta-banner{background:linear-gradient(135deg,#2a1205,#1a0a02);border:1px solid #c0392b;border-radius:10px;padding:.875rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem;animation:slideIn .3s ease}
+.alerta-banner.warn{background:linear-gradient(135deg,#1e1a0d,#141008);border-color:#b8963e}
+.alerta-icon{font-size:18px;flex-shrink:0}
+.alerta-txt{font-size:13px;color:var(--txt);line-height:1.4}
+.alerta-txt strong{color:#f87171}
+.alerta-banner.warn .alerta-txt strong{color:var(--gold2)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* FIXO/VARIAVEL badge */
+.badge-fixo{display:inline-block;background:#0a2040;color:#60a0e0;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.3px;margin-left:4px}
+.badge-var{display:inline-block;background:#1a0a30;color:#c084fc;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.3px;margin-left:4px}
+body.light .badge-fixo{background:#dbeafe;color:#1d4ed8}
+body.light .badge-var{background:#f3e8ff;color:#7e22ce}
+
+/* ANUAL */
+.anual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.anual-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:.875rem;cursor:pointer;transition:all .2s}
+.anual-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.anual-card.mes-atual{border-color:var(--gold);background:var(--gold-dim)}
+.anual-mes{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem}
+.anual-receita{font-size:13px;font-weight:600;color:var(--em);margin-bottom:2px}
+.anual-gasto{font-size:13px;font-weight:600;color:var(--danger)}
+.anual-saldo{font-size:.95rem;font-weight:700;font-family:'Playfair Display',serif;margin-top:.35rem}
+
+/* COMPARATIVO */
+.comp-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;background:var(--bg3);border-radius:8px;margin-bottom:.4rem;font-size:13px}
+.comp-nome{color:var(--txt);flex:1}
+.comp-val{font-weight:600;min-width:90px;text-align:right}
+.comp-diff{min-width:80px;text-align:right;font-size:12px;font-weight:600}
+
+/* TOGGLE TEMA */
+.tema-toggle{background:var(--bg3);border:1px solid var(--gold-border);border-radius:20px;padding:4px 6px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt2);-webkit-tap-highlight-color:transparent}
+
+/* NOTIF BADGE */
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* ALERT CONFIG */
+.alert-field{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg3);border-radius:10px;margin-bottom:.5rem}
+.alert-field label{font-size:13px;color:var(--txt);flex:1}
+.alert-field input[type=number]{background:var(--bg2);border:1px solid var(--brd);border-radius:8px;color:var(--txt);padding:6px 10px;font-size:13px;width:90px;outline:none;text-align:right}
+.alert-field input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold);cursor:pointer}
+
+@media(max-width:600px){
+  .anual-grid{grid-template-columns:1fr 1fr}
+  .hd-hide-sm{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -244,7 +307,11 @@ canvas{max-height:220px!important}
     <span class="sync-badge" id="syncStatus">⏳ Conectando</span>
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
-    <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
+    <button class="tema-toggle" onclick="toggleTema()" id="temaBtn" title="Alternar tema">🌙</button>
+    <div style="position:relative">
+      <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
+      <span id="notifBadge" class="notif-badge" style="display:none">!</span>
+    </div>
     <input type="file" id="inputBackup" accept=".json" onchange="handleImport(event)">
   </div>
 </div>
@@ -256,6 +323,7 @@ canvas{max-height:220px!important}
   <div class="tab" onclick="showTab('despesas')"><span class="tab-icon">◐</span>Despesas</div>
   <div class="tab" onclick="showTab('metas')"><span class="tab-icon">◎</span>Metas</div>
   <div class="tab" onclick="showTab('graficos')"><span class="tab-icon">◑</span>Gráficos</div>
+  <div class="tab" onclick="showTab('anual')"><span class="tab-icon">◇</span>Anual</div>
 </div>
 
 <main>
@@ -338,6 +406,12 @@ canvas{max-height:220px!important}
       <div class="field"><label>Previsto *</label><input id="d_previsto" type="number" placeholder="0,00" step="0.01" inputmode="decimal"></div>
       <div class="field"><label>Real</label><input id="d_real" type="number" placeholder="0,00" step="0.01" inputmode="decimal"></div>
       <div class="field"><label>Parcelas</label><input id="d_parcelas" type="number" placeholder="1" min="1" max="60" inputmode="numeric"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="d_tipo" style="background:var(--bg3);border:1px solid var(--brd);border-radius:8px;color:var(--txt);padding:10px 12px;font-size:14px;outline:none;width:100%">
+          <option value="variavel">Variável</option>
+          <option value="fixo">Fixo</option>
+        </select>
+      </div>
       <div class="field" style="justify-content:flex-end"><button class="btn-add" id="btn_add_despesa">+ Adicionar</button></div>
     </div>
   </div>
@@ -406,6 +480,36 @@ canvas{max-height:220px!important}
 </div>
 
 <!-- CONFIG -->
+
+<!-- ANUAL -->
+<div class="page" id="page-anual">
+  <div class="section" style="margin-bottom:1.25rem">
+    <div class="section-title">Resumo Anual</div>
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+      <button onclick="mudaAnoAnual(-1)" class="btn-add" style="padding:6px 14px">‹</button>
+      <span id="anoAnualLabel" style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold2);font-weight:700"></span>
+      <button onclick="mudaAnoAnual(1)" class="btn-add" style="padding:6px 14px">›</button>
+    </div>
+    <div class="anual-grid" id="anualGrid"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem" id="anualTotais"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Comparativo — Mês Atual vs Anterior</div>
+    <div id="comparativoContent"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Alertas do Mês</div>
+    <div id="alertasContent"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Despesas Fixas vs Variáveis</div>
+    <div id="fixoVarContent"></div>
+  </div>
+</div>
+
 <div class="page" id="page-config">
   <div class="cfg-section">
     <div class="section-title">Backup & Sincronização</div>
@@ -426,6 +530,32 @@ canvas{max-height:220px!important}
       <button class="btn-save" style="margin-top:0;background:var(--bg3);border:1px solid var(--gold-border);color:var(--gold2)" onclick="document.getElementById('inputBackup').click()">⬆ Importar JSON</button>
       <button class="btn-save" style="margin-top:0;background:var(--danger-dim);border:1px solid var(--danger);color:var(--danger)" onclick="limparDados()">🗑 Limpar Dados</button>
     </div>
+  </div>
+
+  <div class="cfg-section">
+    <div class="section-title">Alertas Automáticos</div>
+    <div class="cfg-info">Configure os limites para receber alertas visuais automáticos.</div>
+    <div class="alert-field">
+      <label>⚠️ Alertar quando custo real ultrapassar previsto em</label>
+      <input type="number" id="cfg_alerta_pct" value="20" min="1" max="100">
+      <span style="font-size:13px;color:var(--txt2)">%</span>
+    </div>
+    <div class="alert-field">
+      <label>🔴 Alertar quando saldo real ficar abaixo de</label>
+      <input type="number" id="cfg_alerta_saldo" value="500" min="0">
+      <span style="font-size:13px;color:var(--txt2)">R$</span>
+    </div>
+    <div class="alert-field">
+      <label>🔔 Notificações de vencimento (dias antes)</label>
+      <input type="number" id="cfg_notif_dias" value="3" min="1" max="15">
+      <span style="font-size:13px;color:var(--txt2)">dias</span>
+    </div>
+    <button class="btn-save" style="margin-top:.875rem" onclick="salvarConfigAlertas()">✓ Salvar configurações</button>
+  </div>
+
+  <div class="cfg-section">
+    <div class="section-title">Senha de Acesso</div>
+    <div class="cfg-info">Para alterar a senha, edite o arquivo index.html no GitHub e substitua o valor de <code style="background:var(--bg3);padding:2px 6px;border-radius:4px">SENHA_OK</code> pela nova senha.</div>
   </div>
 </div>
 
@@ -635,6 +765,7 @@ window.showTab = name => {
 // ============ RENDER ============
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
+  renderNotifBadge();
 }
 
 function renderCards(){
@@ -705,7 +836,7 @@ function renderDespesas(){
     const dif=d.pago?pr-re:null;
     const dc=dif===null?'var(--txt3)':dif>=0?'var(--em)':'var(--danger)';
     return `<tr class="tr-hover">
-      <td>${d.nome}</td>
+      <td>${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}</td>
       <td style="text-align:center;color:var(--txt3)">${d.vencimento||'—'}</td>
       <td style="text-align:right">${fmt(pr)}</td>
       <td style="text-align:right">${d.custoReal?fmt(d.custoReal):'—'}</td>
@@ -834,7 +965,8 @@ document.getElementById('btn_add_despesa').addEventListener('click', () => {
     const dados=getMes(mesKey);
     if(!dados.despesas) dados.despesas=[];
     const nomeParcela=parcelas>1?`${nome} (${p+1}/${parcelas})`:nome;
-    dados.despesas.push({id:uid(),nome:nomeParcela,vencimento:venc,custoPrevisto:num(prev),custoReal:p===0?custoReal:0,pago:false});
+    const tipoEl=document.getElementById('d_tipo');
+  dados.despesas.push({id:uid(),nome:nomeParcela,vencimento:venc,custoPrevisto:num(prev),custoReal:p===0?custoReal:0,pago:false,tipo:tipoEl?tipoEl.value:'variavel'});
     m++; if(m>12){m=1;y++;}
   }
   ['d_nome','d_venc','d_previsto','d_real','d_parcelas'].forEach(id=>{document.getElementById(id).value='';});
@@ -1081,8 +1213,305 @@ function showToast(msg,err=false){
   };
 })();
 
+
+// ============ TEMA CLARO/ESCURO ============
+let temaAtual = localStorage.getItem('tema') || 'dark';
+function aplicarTema(){
+  document.body.classList.toggle('light', temaAtual === 'light');
+  const btn = document.getElementById('temaBtn');
+  if(btn) btn.textContent = temaAtual === 'light' ? '🌙' : '☀️';
+}
+window.toggleTema = function(){
+  temaAtual = temaAtual === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('tema', temaAtual);
+  aplicarTema();
+};
+aplicarTema();
+
+// ============ CONFIG ALERTAS ============
+function getCfgAlertas(){
+  return {
+    pct: parseInt(localStorage.getItem('alerta_pct')||'20'),
+    saldo: parseInt(localStorage.getItem('alerta_saldo')||'500'),
+    dias: parseInt(localStorage.getItem('notif_dias')||'3')
+  };
+}
+window.salvarConfigAlertas = function(){
+  const pct = document.getElementById('cfg_alerta_pct');
+  const saldo = document.getElementById('cfg_alerta_saldo');
+  const dias = document.getElementById('cfg_notif_dias');
+  if(pct) localStorage.setItem('alerta_pct', pct.value);
+  if(saldo) localStorage.setItem('alerta_saldo', saldo.value);
+  if(dias) localStorage.setItem('notif_dias', dias.value);
+  showToast('Configurações salvas!');
+  renderAlertas();
+  renderNotifBadge();
+};
+function initCfgAlertas(){
+  const cfg = getCfgAlertas();
+  const p=document.getElementById('cfg_alerta_pct');
+  const s=document.getElementById('cfg_alerta_saldo');
+  const d=document.getElementById('cfg_notif_dias');
+  if(p) p.value=cfg.pct;
+  if(s) s.value=cfg.saldo;
+  if(d) d.value=cfg.dias;
+}
+
+// ============ ALERTAS AUTOMÁTICOS ============
+function renderAlertas(){
+  const el = document.getElementById('alertasContent');
+  if(!el) return;
+  const cfg = getCfgAlertas();
+  const dados = getDados();
+  const alertas = [];
+
+  // Saldo baixo
+  const sr = saldoReal();
+  if(sr < cfg.saldo){
+    alertas.push({tipo:'danger', icon:'🔴', msg:`Saldo real <strong>R$ ${sr.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong> está abaixo do limite de R$ ${cfg.saldo.toLocaleString('pt-BR')}`});
+  }
+
+  // Custo real ultrapassou previsto
+  const totPrev = totalCustoPrevisto();
+  const totReal = totalCustoReal();
+  if(totPrev > 0 && totReal > 0){
+    const diff = ((totReal - totPrev) / totPrev * 100);
+    if(diff > cfg.pct){
+      alertas.push({tipo:'danger', icon:'⚠️', msg:`Custo real ultrapassou o previsto em <strong>${diff.toFixed(1)}%</strong> (limite: ${cfg.pct}%)`});
+    }
+  }
+
+  // Despesas individuais que ultrapassaram
+  (dados.despesas||[]).filter(d=>d.pago && num(d.custoReal)>0).forEach(d=>{
+    const diff = (num(d.custoReal)-num(d.custoPrevisto))/num(d.custoPrevisto)*100;
+    if(diff > cfg.pct){
+      alertas.push({tipo:'warn', icon:'⚡', msg:`<strong>${d.nome}</strong> custou ${diff.toFixed(0)}% acima do previsto (${fmt(d.custoPrevisto)} → ${fmt(d.custoReal)})`});
+    }
+  });
+
+  // Vencimentos próximos
+  const hoje = new Date().getDate();
+  const diasAlert = cfg.dias;
+  (dados.despesas||[]).filter(d=>!d.pago && d.vencimento).forEach(d=>{
+    const venc = parseInt(d.vencimento);
+    const diff = venc - hoje;
+    if(diff >= 0 && diff <= diasAlert){
+      alertas.push({tipo:diff===0?'danger':'warn', icon:'🔔', msg:`<strong>${d.nome}</strong> vence ${diff===0?'hoje':'em '+diff+' dia(s)'} — ${fmt(d.custoPrevisto)}`});
+    }
+  });
+
+  if(alertas.length===0){
+    el.innerHTML='<div class="empty"><div class="empty-icon">✦</div>Nenhum alerta no momento. Tudo sob controle!</div>';
+    return;
+  }
+  el.innerHTML = alertas.map(a=>`
+    <div class="alerta-banner ${a.tipo==='warn'?'warn':''}">
+      <span class="alerta-icon">${a.icon}</span>
+      <div class="alerta-txt">${a.msg}</div>
+    </div>`).join('');
+}
+
+// ============ BADGE NOTIFICAÇÕES ============
+function renderNotifBadge(){
+  const badge = document.getElementById('notifBadge');
+  if(!badge) return;
+  const cfg = getCfgAlertas();
+  const dados = getDados();
+  const hoje = new Date().getDate();
+  let count = 0;
+
+  if(saldoReal() < cfg.saldo) count++;
+  const totPrev=totalCustoPrevisto(), totReal=totalCustoReal();
+  if(totPrev>0 && totReal>0 && ((totReal-totPrev)/totPrev*100) > cfg.pct) count++;
+  (dados.despesas||[]).filter(d=>!d.pago && d.vencimento).forEach(d=>{
+    if(parseInt(d.vencimento)-hoje <= cfg.dias && parseInt(d.vencimento)-hoje >= 0) count++;
+  });
+
+  badge.style.display = count > 0 ? 'flex' : 'none';
+  badge.textContent = count > 9 ? '9+' : count;
+}
+
+// ============ RESUMO ANUAL ============
+let anoAnual = new Date().getFullYear();
+window.mudaAnoAnual = function(d){ anoAnual += d; renderAnual(); };
+
+function renderAnual(){
+  const label = document.getElementById('anoAnualLabel');
+  if(label) label.textContent = anoAnual;
+  const grid = document.getElementById('anualGrid');
+  const totais = document.getElementById('anualTotais');
+  if(!grid) return;
+
+  const mesAtual = mesSelecionado;
+  let totalRecAnual=0, totalGastoAnual=0, totalSaldoAnual=0, mesesComDados=0;
+
+  grid.innerHTML = MES.map((nome,i)=>{
+    const m = i+1;
+    const key = anoAnual+'-'+(m<10?'0':'')+m;
+    const md = allData.meses && allData.meses[key];
+    const isAtual = key === mesAtual;
+
+    if(!md || (!md.receitas && !md.despesas?.length)){
+      return `<div class="anual-card" onclick="selecionarMes('${key}')">
+        <div class="anual-mes">${nome}</div>
+        <div style="font-size:12px;color:var(--txt3)">Sem dados</div>
+      </div>`;
+    }
+
+    const r = md.receitas||{};
+    const rec = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(r[k]),0);
+    const gasto = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+    const saldo = rec - gasto;
+
+    totalRecAnual+=rec; totalGastoAnual+=gasto; totalSaldoAnual+=saldo;
+    if(rec>0||gasto>0) mesesComDados++;
+
+    return `<div class="anual-card${isAtual?' mes-atual':''}" onclick="selecionarMes('${key}')">
+      <div class="anual-mes">${nome}</div>
+      <div class="anual-receita">↑ ${fmt(rec)}</div>
+      <div class="anual-gasto">↓ ${fmt(gasto)}</div>
+      <div class="anual-saldo" style="color:${saldo>=0?'var(--em)':'var(--danger)'}">${fmt(saldo)}</div>
+    </div>`;
+  }).join('');
+
+  if(totais){
+    totais.innerHTML = `
+      <div class="card"><div class="card-label">Total Receitas ${anoAnual}</div><div class="card-val" style="color:var(--em)">${fmt(totalRecAnual)}</div></div>
+      <div class="card"><div class="card-label">Total Gastos ${anoAnual}</div><div class="card-val" style="color:var(--danger)">${fmt(totalGastoAnual)}</div></div>
+      <div class="card"><div class="card-label">Saldo Acumulado</div><div class="card-val big" style="color:${totalSaldoAnual>=0?'var(--em)':'var(--danger)'}">${fmt(totalSaldoAnual)}</div></div>
+      <div class="card"><div class="card-label">Média Mensal Gasto</div><div class="card-val">${mesesComDados>0?fmt(totalGastoAnual/mesesComDados):'R$ 0,00'}</div></div>
+    `;
+  }
+}
+
+// ============ COMPARATIVO MÊS A MÊS ============
+function renderComparativo(){
+  const el = document.getElementById('comparativoContent');
+  if(!el) return;
+
+  const antKey = mesAnterior(mesSelecionado);
+  const mdAnt = allData.meses && allData.meses[antKey];
+  const mdAtual = getDados();
+
+  if(!mdAnt || !(mdAnt.despesas||[]).length){
+    el.innerHTML = '<div class="empty">Sem dados do mês anterior para comparar.</div>';
+    return;
+  }
+
+  const recAtual = totalReceitas();
+  const recAnt = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num((mdAnt.receitas||{})[k]),0);
+  const gastoAtual = totalCustoReal();
+  const gastoAnt = (mdAnt.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+  const saldoAtual = saldoReal();
+  const saldoAnt = recAnt - gastoAnt;
+
+  function diffStr(a, b){
+    const d = a - b;
+    const c = d >= 0 ? 'var(--em)' : 'var(--danger)';
+    const s = d >= 0 ? '+' : '';
+    return `<span style="color:${c}">${s}${fmt(d)}</span>`;
+  }
+
+  const mesAntNome = nomeMes(antKey);
+  el.innerHTML = `
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:.75rem">Comparando <strong style="color:var(--gold2)">${nomeMes(mesSelecionado)}</strong> com <strong style="color:var(--txt2)">${mesAntNome}</strong></div>
+    <div class="comp-row">
+      <div class="comp-nome">Receitas</div>
+      <div class="comp-val" style="color:var(--txt2)">${fmt(recAnt)}</div>
+      <div class="comp-val">${fmt(recAtual)}</div>
+      <div class="comp-diff">${diffStr(recAtual, recAnt)}</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-nome">Gastos reais</div>
+      <div class="comp-val" style="color:var(--txt2)">${fmt(gastoAnt)}</div>
+      <div class="comp-val">${fmt(gastoAtual)}</div>
+      <div class="comp-diff">${diffStr(-gastoAtual, -gastoAnt)}</div>
+    </div>
+    <div class="comp-row" style="background:var(--gold-dim)">
+      <div class="comp-nome" style="font-weight:700">Saldo</div>
+      <div class="comp-val" style="color:var(--txt2)">${fmt(saldoAnt)}</div>
+      <div class="comp-val" style="color:${saldoAtual>=0?'var(--em)':'var(--danger)'};font-weight:700">${fmt(saldoAtual)}</div>
+      <div class="comp-diff">${diffStr(saldoAtual, saldoAnt)}</div>
+    </div>
+    <div style="font-size:11px;color:var(--txt3);margin-top:.5rem;text-align:right">← ${mesAntNome} &nbsp;|&nbsp; ${nomeMes(mesSelecionado)} →</div>
+  `;
+}
+
+// ============ FIXAS vs VARIÁVEIS ============
+function renderFixoVar(){
+  const el = document.getElementById('fixoVarContent');
+  if(!el) return;
+  const desp = getDados().despesas||[];
+  const fixas = desp.filter(d=>d.tipo==='fixo');
+  const vars = desp.filter(d=>d.tipo!=='fixo');
+  const totFixo = fixas.reduce((s,d)=>s+num(d.custoPrevisto),0);
+  const totVar = vars.reduce((s,d)=>s+num(d.custoPrevisto),0);
+  const total = totFixo + totVar;
+  const pctFixo = total>0 ? Math.round(totFixo/total*100) : 0;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+      <div class="card"><div class="card-label">Fixas (${fixas.length})</div><div class="card-val" style="color:#60a0e0">${fmt(totFixo)}<span style="font-size:11px;color:var(--txt3);margin-left:4px">${pctFixo}%</span></div></div>
+      <div class="card"><div class="card-label">Variáveis (${vars.length})</div><div class="card-val" style="color:#c084fc">${fmt(totVar)}<span style="font-size:11px;color:var(--txt3);margin-left:4px">${100-pctFixo}%</span></div></div>
+    </div>
+    <div style="background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;margin-bottom:1rem">
+      <div style="height:100%;width:${pctFixo}%;background:linear-gradient(90deg,#60a0e0,#c084fc);border-radius:20px;transition:width .6s ease"></div>
+    </div>
+    ${fixas.length===0&&vars.length===0?'<div class="empty">Nenhuma despesa cadastrada. Ao adicionar despesas, marque o tipo (Fixo/Variável).</div>':''}
+    ${fixas.length>0?`<div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.4px">Fixas</div>${fixas.slice(0,5).map(d=>`<div class="comp-row"><div class="comp-nome">${d.nome}</div><span class="badge-fixo">FIXO</span><div class="comp-val">${fmt(d.custoPrevisto)}</div></div>`).join('')}`:''}
+    ${vars.length>0?`<div style="font-size:11px;color:var(--txt3);margin:.75rem 0 .4rem;text-transform:uppercase;letter-spacing:.4px">Variáveis</div>${vars.slice(0,5).map(d=>`<div class="comp-row"><div class="comp-nome">${d.nome}</div><span class="badge-var">VAR</span><div class="comp-val">${fmt(d.custoPrevisto)}</div></div>`).join('')}`:''}
+  `;
+}
+
+// ============ NOTIFICAÇÕES DO DIA ============
+function verificarNotificacoes(){
+  if(!('Notification' in window)) return;
+  const cfg = getCfgAlertas();
+  const hoje = new Date().getDate();
+  const dados = getDados();
+  const pendentes = (dados.despesas||[]).filter(d=>{
+    if(d.pago || !d.vencimento) return false;
+    const diff = parseInt(d.vencimento) - hoje;
+    return diff >= 0 && diff <= cfg.dias;
+  });
+  if(!pendentes.length) return;
+
+  if(Notification.permission === 'granted'){
+    pendentes.forEach(d=>{
+      const diff = parseInt(d.vencimento) - hoje;
+      new Notification('💰 Finanças Família', {
+        body: `${d.nome} vence ${diff===0?'hoje':'em '+diff+' dia(s)'} — ${fmt(d.custoPrevisto)}`,
+        icon: '💰'
+      });
+    });
+  } else if(Notification.permission !== 'denied'){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted') verificarNotificacoes();
+    });
+  }
+}
+
+// ============ PATCH showTab para anual ============
+const _showTabOrig = window.showTab;
+window.showTab = name => {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const tabs=['resumo','receitas','despesas','metas','graficos','anual','config'];
+  const idx=tabs.indexOf(name);
+  if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
+  if(name==='graficos') setTimeout(renderGraficos,100);
+  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); }
+  if(name==='config') initCfgAlertas();
+};
+
+// ============ PATCH renderDespesas para mostrar badge fixo/var ============
+const _renderDespOrig = renderDespesas;
+// (já vamos sobrescrever inline abaixo via patch do tipo no push)
+
 // ============ BOOT ============
 buildMesSelect();
+setTimeout(verificarNotificacoes, 2000);
 </script>
 </body>
 </html>
