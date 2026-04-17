@@ -185,12 +185,41 @@ canvas{max-height:220px!important}
   canvas{max-height:180px!important}
   .copy-bar{flex-direction:column;align-items:flex-start}
 }
+
+#appWrapper{display:none}
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
-<div class="header">
+
+<!-- TELA DE LOGIN -->
+<div id="loginScreen" style="position:fixed;inset:0;background:#0d0f14;display:flex;align-items:center;justify-content:center;z-index:9999;padding:1.5rem">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:2.5rem">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#1e1a0d,#2e2410);border:1px solid #2e2410;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 1.25rem">✦</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#d4a853;letter-spacing:.3px">Finanças</div>
+      <div style="font-size:12px;color:#5a5550;margin-top:4px;letter-spacing:.5px;text-transform:uppercase">Bruno & Priscila</div>
+    </div>
+    <div style="background:#131720;border:1px solid #2e2410;border-radius:16px;padding:2rem">
+      <div style="font-size:12px;color:#9a9488;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Senha de acesso</div>
+      <input id="loginInput" type="password" placeholder="Digite a senha..."
+        style="width:100%;background:#1c2130;border:1px solid #252b3a;border-radius:10px;color:#f2ede4;padding:12px 16px;font-size:16px;outline:none;font-family:'Inter',sans-serif;margin-bottom:.75rem;transition:border-color .2s"
+        onkeydown="if(event.key==='Enter') tentarLogin()"
+        onfocus="this.style.borderColor='#b8963e'"
+        onblur="this.style.borderColor='#252b3a'">
+      <button onclick="tentarLogin()"
+        style="width:100%;background:linear-gradient(135deg,#b8963e,#8a6c2a);color:#0d0f14;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.3px;transition:opacity .2s"
+        onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+        Entrar
+      </button>
+      <div id="loginErro" style="color:#dc4a3d;font-size:12px;text-align:center;margin-top:.75rem;opacity:0;transition:opacity .3s">Senha incorreta. Tente novamente.</div>
+    </div>
+    <div style="text-align:center;margin-top:1.5rem;font-size:11px;color:#3a3530">Acesso privado · Bruno & Priscila</div>
+  </div>
+</div>
+
+<div id="appWrapper"><div class="header">
   <div class="header-left">
     <div class="logo">✦</div>
     <div>
@@ -456,6 +485,7 @@ canvas{max-height:220px!important}
   </div>
 </div>
 
+</div><!-- /appWrapper -->
 <div id="toast"></div>
 
 <script type="module">
@@ -1016,6 +1046,41 @@ function showToast(msg,err=false){
   t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
   clearTimeout(t._to); t._to=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},2800);
 }
+
+
+// ============ LOGIN ============
+(function(){
+  // Hash SHA-256 da senha "familia2025" — troque aqui para mudar a senha
+  // Para gerar um novo hash: https://emn178.github.io/online-tools/sha256.html
+  const SENHA_HASH = 'a8f5f167f44f4964e6c998dee827110c0fe68c6ce04c41dbab4ce57f54c57d6e';
+
+  async function sha256(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // Checar se já está autenticado (sessão)
+  if(sessionStorage.getItem('auth') === SENHA_HASH){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appWrapper').style.display = 'block';
+  }
+
+  window.tentarLogin = async function(){
+    const input = document.getElementById('loginInput');
+    const erro = document.getElementById('loginErro');
+    const hash = await sha256(input.value);
+    if(hash === SENHA_HASH){
+      sessionStorage.setItem('auth', SENHA_HASH);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appWrapper').style.display = 'block';
+    } else {
+      erro.style.opacity = '1';
+      input.value = '';
+      input.focus();
+      setTimeout(()=>{ erro.style.opacity='0'; }, 3000);
+    }
+  };
+})();
 
 // ============ BOOT ============
 buildMesSelect();
