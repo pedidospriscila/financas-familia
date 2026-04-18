@@ -250,6 +250,24 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   .anual-grid{grid-template-columns:1fr 1fr}
   .hd-hide-sm{display:none!important}
 }
+
+.sync-dot-pulse{animation:syncpulse 1.2s ease-in-out infinite}
+@keyframes syncpulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+@media print{
+  #loginScreen,#appWrapper .header,#appWrapper .nav-tabs,
+  .btn-save,.btn-add,.btn-del,.btn-hd,.btn-cfg,.btn-copy,
+  .btn-filtro,.btn-status,.modal-overlay,#toast,.copy-bar,
+  #mesPicker,.tema-toggle,.sync-dot-pulse,
+  button{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  .page{display:block!important}
+  .card{border:1px solid #ccc!important;background:#f9f9f9!important}
+  .card-val{color:#000!important}
+  table{page-break-inside:avoid}
+  .section{page-break-inside:avoid;border:1px solid #ddd!important;background:#fff!important}
+  canvas{max-height:300px!important}
+}
 </style>
 </head>
 <body>
@@ -292,8 +310,8 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   </div>
   <div class="header-right">
     <div style="position:relative">
-      <button id="mesBtn" onclick="togglePicker()" style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:6px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;min-width:110px;display:flex;align-items:center;gap:6px">
-        <span id="mesBtnLabel">Abr 2026</span><span style="font-size:10px;opacity:.7">▼</span>
+      <button id="mesBtn" onclick="togglePicker()" style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:6px 10px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap">
+        <span id="mesBtnLabel">Abr 2026</span><span style="font-size:9px;opacity:.6">▼</span>
       </button>
       <div id="mesPicker" style="display:none;position:absolute;top:40px;right:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:1rem;z-index:300;width:240px;box-shadow:0 8px 32px rgba(0,0,0,.6)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
@@ -304,10 +322,10 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
         <div id="mesesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
       </div>
     </div>
-    <span class="sync-badge" id="syncStatus">⏳ Conectando</span>
+    <span id="syncStatus" title="Status Firebase" class="sync-dot-pulse" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;cursor:default"></span>
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
-    <button class="tema-toggle" onclick="toggleTema()" id="temaBtn" title="Alternar tema">🌙</button>
+    <button onclick="toggleTema()" id="temaBtn" title="Alternar tema" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">🌙</button>
     <div style="position:relative">
       <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
       <span id="notifBadge" class="notif-badge" style="display:none">!</span>
@@ -563,6 +581,28 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 
 
 
+
+<!-- MODAL PDF -->
+<div class="modal-overlay" id="modalPDF" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-title">📄 Exportar Relatório PDF</div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:1rem">Selecione os meses que deseja incluir no relatório.</div>
+    <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+      <span class="modal-sel-all" onclick="selTodosPDF(true)">Selecionar todos</span>
+      &nbsp;·&nbsp;
+      <span class="modal-sel-all" onclick="selTodosPDF(false)">Desmarcar</span>
+    </div>
+    <div id="pdfMesesLista" style="max-height:300px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;padding-right:4px"></div>
+    <div style="margin-top:1rem;padding:.75rem;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2)">
+      💡 O relatório abre em nova aba. Use <strong>Ctrl+P</strong> (ou compartilhar → imprimir) para salvar como PDF.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-ok" onclick="gerarPDF()">📄 Gerar PDF</button>
+      <button class="btn-modal-cancel" onclick="fecharModalPDF()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR DESPESA -->
 <div class="modal-overlay" id="modalEditDesp" style="display:none">
   <div class="modal-box">
@@ -680,8 +720,8 @@ function saveData(){
 // ============ FIREBASE LISTENER ============
 const fbTimeout = setTimeout(()=>{
   if(!fbReady){
-    setText('syncStatus','❌ Sem conexão');
-    setColor('syncStatus','var(--danger)');
+    {const sd=document.getElementById('syncStatus');if(sd){sd.style.background='#ef4444';sd.classList.remove('sync-dot-pulse');}}
+    document.getElementById('syncStatus').title='Sem conexão com Firebase';
     buildMesSelect(); renderAll();
   }
 }, 8000);
@@ -693,15 +733,15 @@ onValue(dbRef, snap => {
   if(!fbReady){
     fbReady=true;
     buildMesSelect(); renderAll();
-    setText('syncStatus','☁️ Online');
-    setColor('syncStatus','var(--em)');
+    {const sd=document.getElementById('syncStatus');if(sd){sd.style.background='#10b981';sd.classList.remove('sync-dot-pulse');}}
+    document.getElementById('syncStatus').title='Firebase conectado ✓';
   } else {
     renderAll();
   }
 }, err => {
   clearTimeout(fbTimeout);
-  setText('syncStatus','❌ '+err.code);
-  setColor('syncStatus','var(--danger)');
+  {const sd=document.getElementById('syncStatus');if(sd){sd.style.background='#ef4444';sd.classList.remove('sync-dot-pulse');}}
+  document.getElementById('syncStatus').title='Erro: '+err.code;
   if(!fbReady){ buildMesSelect(); renderAll(); }
 });
 
@@ -1186,7 +1226,7 @@ function showToast(msg,err=false){
   // Para gerar um novo hash: https://emn178.github.io/online-tools/sha256.html
   // Senha: familia2025
   // Para trocar: substitua SENHA_OK pela nova senha diretamente
-  const SENHA_OK = '341026';
+  const SENHA_OK = 'familia2025';
   const SESSION_KEY = 'financas_auth_ok';
 
   function checarSessao(){
@@ -1508,6 +1548,128 @@ window.showTab = name => {
 // ============ PATCH renderDespesas para mostrar badge fixo/var ============
 const _renderDespOrig = renderDespesas;
 // (já vamos sobrescrever inline abaixo via patch do tipo no push)
+
+
+// ============ EXPORTAR PDF ============
+window.abrirModalPDF = function(){
+  const lista = document.getElementById('pdfMesesLista');
+  if(!lista) return;
+  // Listar meses que têm dados
+  const mesesComDados = Object.keys(allData.meses||{}).sort().reverse();
+  if(!mesesComDados.length){ showToast('Nenhum dado para exportar',true); return; }
+  lista.innerHTML = mesesComDados.map(key=>{
+    const [y,m] = key.split('-');
+    return `<label style="display:flex;align-items:center;gap:.5rem;padding:.5rem;background:var(--bg3);border-radius:8px;cursor:pointer;font-size:13px">
+      <input type="checkbox" class="pdf-mes-check" data-key="${key}" checked style="accent-color:var(--gold);width:16px;height:16px">
+      ${MES[parseInt(m)-1]} ${y}
+    </label>`;
+  }).join('');
+  document.getElementById('modalPDF').style.display='flex';
+};
+
+window.selTodosPDF = sel => document.querySelectorAll('.pdf-mes-check').forEach(c=>c.checked=sel);
+window.fecharModalPDF = () => { document.getElementById('modalPDF').style.display='none'; };
+
+window.gerarPDF = function(){
+  const checks=[...document.querySelectorAll('.pdf-mes-check:checked')].map(c=>c.dataset.key);
+  if(!checks.length){ showToast('Selecione ao menos um mês',true); return; }
+
+  const win = window.open('','_blank');
+  if(!win){ showToast('Permita pop-ups para gerar o PDF',true); return; }
+
+  let html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Relatório Financeiro — Bruno & Priscila</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;font-size:13px;color:#1a1612;background:#fff;padding:24px}
+    h1{font-size:1.4rem;color:#6d5220;margin-bottom:4px}
+    h2{font-size:1rem;color:#6d5220;margin:20px 0 8px;border-bottom:2px solid #e8d49a;padding-bottom:4px}
+    h3{font-size:.85rem;color:#9a8870;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.4px}
+    .header-doc{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #e8d49a}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .card{background:#f9f6ef;border:1px solid #e8d49a;border-radius:8px;padding:10px;text-align:center}
+    .card-label{font-size:10px;color:#9a8870;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+    .card-val{font-size:1rem;font-weight:700;color:#6d5220}
+    .card-val.verde{color:#0a7a50}.card-val.vermelho{color:#c0392b}
+    table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px}
+    th{background:#f0ede6;color:#5a5040;font-weight:600;padding:7px 8px;text-align:left;border-bottom:1px solid #e8d49a;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+    td{padding:6px 8px;border-bottom:1px solid #f0ede6;vertical-align:middle}
+    tr:hover td{background:#fdf9f0}
+    .status-pago{color:#0a7a50;font-weight:600;font-size:11px}
+    .status-pend{color:#b8963e;font-weight:600;font-size:11px}
+    .mes-section{page-break-inside:avoid;margin-bottom:40px}
+    .badge-fixo{background:#dbeafe;color:#1d4ed8;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700}
+    .total-row td{font-weight:700;background:#f0ede6;border-top:2px solid #e8d49a}
+    @media print{body{padding:0} .mes-section{page-break-after:always}}
+  </style></head><body>
+  <div class="header-doc">
+    <div><h1>💰 Relatório Financeiro</h1><div style="color:#9a8870;font-size:12px">Bruno & Priscila · Gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div>
+    <div style="text-align:right;font-size:12px;color:#9a8870">${checks.length} mês(es) selecionado(s)</div>
+  </div>`;
+
+  checks.sort().reverse().forEach(key=>{
+    const md = allData.meses&&allData.meses[key];
+    if(!md) return;
+    const [y,m] = key.split('-');
+    const mesNome = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(m)-1]+' '+y;
+    const r = md.receitas||{};
+    const rec = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+(parseFloat(r[k])||0),0);
+    const desp = md.despesas||[];
+    const gasto = desp.filter(d=>d.pago).reduce((s,d)=>s+(parseFloat(d.custoReal||d.custoPrevisto)||0),0);
+    const previsto = desp.reduce((s,d)=>s+(parseFloat(d.custoPrevisto)||0),0);
+    const saldo = rec - gasto;
+    const fmtR = v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+    html += `<div class="mes-section">
+      <h2>${mesNome}</h2>
+      <h3>Receitas</h3>
+      <div class="cards">
+        <div class="card"><div class="card-label">Sal. Bruno</div><div class="card-val">${fmtR(r.salarioBruno)}</div></div>
+        <div class="card"><div class="card-label">Sal. Priscila</div><div class="card-val">${fmtR(r.salarioPriscila)}</div></div>
+        <div class="card"><div class="card-label">Extra Bruno</div><div class="card-val">${fmtR(r.rendaExtraBruno)}</div></div>
+        <div class="card"><div class="card-label">Extra Priscila</div><div class="card-val">${fmtR(r.rendaExtraPriscila)}</div></div>
+        <div class="card"><div class="card-label">13º Salário</div><div class="card-val">${fmtR(r.decimoTerceiro)}</div></div>
+        <div class="card"><div class="card-label">Total Receitas</div><div class="card-val verde">${fmtR(rec)}</div></div>
+      </div>
+      <h3>Resumo do Mês</h3>
+      <div class="cards">
+        <div class="card"><div class="card-label">Custo Previsto</div><div class="card-val">${fmtR(previsto)}</div></div>
+        <div class="card"><div class="card-label">Custo Real</div><div class="card-val vermelho">${fmtR(gasto)}</div></div>
+        <div class="card"><div class="card-label">Saldo Real</div><div class="card-val ${saldo>=0?'verde':'vermelho'}">${fmtR(saldo)}</div></div>
+      </div>`;
+
+    if(desp.length){
+      const sorted = [...desp].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+      html += `<h3>Despesas (${desp.length})</h3>
+      <table><thead><tr><th>Nome</th><th>Tipo</th><th>Venc.</th><th>Previsto</th><th>Real</th><th>Dif.</th><th>Status</th></tr></thead><tbody>`;
+      sorted.forEach(d=>{
+        const dif = d.pago ? (parseFloat(d.custoPrevisto)||0)-(parseFloat(d.custoReal)||0) : null;
+        html += `<tr>
+          <td>${d.nome}</td>
+          <td>${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':'Var.'}</td>
+          <td style="text-align:center">${d.vencimento||'—'}</td>
+          <td style="text-align:right">${fmtR(d.custoPrevisto)}</td>
+          <td style="text-align:right">${d.custoReal?fmtR(d.custoReal):'—'}</td>
+          <td style="text-align:right;color:${dif===null?'#999':dif>=0?'#0a7a50':'#c0392b'}">${dif!==null?fmtR(dif):'—'}</td>
+          <td><span class="${d.pago?'status-pago':'status-pend'}">${d.pago?'✓ Pago':'Pendente'}</span></td>
+        </tr>`;
+      });
+      const totPrev=desp.reduce((s,d)=>s+(parseFloat(d.custoPrevisto)||0),0);
+      const totReal=desp.filter(d=>d.pago).reduce((s,d)=>s+(parseFloat(d.custoReal||d.custoPrevisto)||0),0);
+      html += `</tbody><tfoot><tr class="total-row"><td colspan="3">TOTAL</td><td style="text-align:right">${fmtR(totPrev)}</td><td style="text-align:right">${fmtR(totReal)}</td><td colspan="2"></td></tr></tfoot></table>`;
+    }
+    html += '</div>';
+  });
+
+  html += `<div style="margin-top:24px;padding-top:12px;border-top:1px solid #e8d49a;font-size:11px;color:#9a8870;text-align:center">
+    Finanças Família · Bruno & Priscila · ${new Date().toLocaleDateString('pt-BR')}
+  </div></body></html>`;
+
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
+  fecharModalPDF();
+};
 
 // ============ BOOT ============
 buildMesSelect();
