@@ -268,6 +268,28 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   .section{page-break-inside:avoid;border:1px solid #ddd!important;background:#fff!important}
   canvas{max-height:300px!important}
 }
+
+/* META ECONOMIA */
+.meta-progress-wrap{background:var(--bg3);border-radius:20px;height:12px;overflow:hidden;margin:.5rem 0}
+.meta-progress-fill{height:100%;border-radius:20px;transition:width .8s ease;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.meta-progress-fill.bateu{background:linear-gradient(90deg,var(--em),#34d399)}
+.meta-progress-fill.perigo{background:linear-gradient(90deg,var(--danger),#f87171)}
+.meta-eco-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem}
+.meta-eco-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem}
+.meta-eco-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold2)}
+
+/* PATRIMÔNIO */
+.patri-section{background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem}
+.patri-stat{text-align:center;padding:.75rem}
+.patri-stat-val{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700}
+.patri-stat-label{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+
+/* FIXO VAR HISTÓRICO */
+.fv-bar-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+.fv-bar-mes{font-size:11px;color:var(--txt3);width:55px;flex-shrink:0}
+.fv-bar-outer{flex:1;background:var(--bg3);border-radius:20px;height:8px;overflow:hidden}
+.fv-bar-inner{height:100%;border-radius:20px;background:linear-gradient(90deg,#60a0e0,#c084fc)}
+.fv-bar-pct{font-size:11px;color:var(--txt2);width:35px;text-align:right;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -309,7 +331,19 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     </div>
   </div>
   <div class="header-right">
-    <select id="mesSelect" onchange="mudarMes(this.value)" style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:6px 10px;font-size:12px;cursor:pointer;outline:none;-webkit-appearance:none;font-family:'Inter',sans-serif;font-weight:600;max-width:110px"></select>
+    <div style="position:relative">
+      <button id="mesBtn" onclick="togglePicker(event)" style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:6px 10px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;-webkit-tap-highlight-color:transparent">
+        <span id="mesBtnLabel">Abr 2026</span><span style="font-size:9px;opacity:.6">▼</span>
+      </button>
+      <div id="mesPicker" style="display:none;position:fixed;top:60px;right:8px;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:1rem;z-index:500;width:260px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+          <button onclick="mudaAno(-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:700;-webkit-tap-highlight-color:transparent">‹</button>
+          <span id="anoLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:1.05rem;font-weight:700"></span>
+          <button onclick="mudaAno(1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:16px;font-weight:700;-webkit-tap-highlight-color:transparent">›</button>
+        </div>
+        <div id="mesesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+      </div>
+    </div>
     <span id="syncStatus" title="Status Firebase" class="sync-dot-pulse" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;cursor:default"></span>
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
@@ -500,6 +534,21 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem" id="anualTotais"></div>
   </div>
 
+  <!-- META DE ECONOMIA -->
+  <div class="meta-eco-card">
+    <div class="meta-eco-header">
+      <div class="meta-eco-title">🎯 Meta de Economia Mensal</div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:12px;color:var(--txt2)">Meta: R$</span>
+        <input id="metaEconomiaInput" type="number" min="0" step="100"
+          style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:5px 10px;font-size:14px;font-weight:700;width:120px;outline:none;text-align:right;font-family:'Playfair Display',serif"
+          onchange="salvarMetaEconomia()" placeholder="0,00">
+        <button onclick="salvarMetaEconomia()" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif">✓</button>
+      </div>
+    </div>
+    <div id="metaEconomiaDisplay"></div>
+  </div>
+
   <div class="section">
     <div class="section-title">Comparativo — Mês Atual vs Anterior</div>
     <div id="comparativoContent"></div>
@@ -513,6 +562,12 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   <div class="section">
     <div class="section-title">Despesas Fixas vs Variáveis</div>
     <div id="fixoVarContent"></div>
+  </div>
+
+  <div class="patri-section">
+    <div class="section-title">📈 Evolução do Patrimônio</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.25rem" id="patriStats"></div>
+    <div id="patriHistorico"></div>
   </div>
 </div>
 
@@ -573,17 +628,51 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 
 <!-- MODAL PDF -->
 <div class="modal-overlay" id="modalPDF" style="display:none">
-  <div class="modal-box" style="max-width:480px">
+  <div class="modal-box" style="max-width:420px">
     <div class="modal-title">📄 Exportar Relatório PDF</div>
-    <div style="font-size:12px;color:var(--txt2);margin-bottom:1rem">Selecione os meses que deseja incluir no relatório.</div>
-    <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
-      <span class="modal-sel-all" onclick="selTodosPDF(true)">Selecionar todos</span>
-      &nbsp;·&nbsp;
-      <span class="modal-sel-all" onclick="selTodosPDF(false)">Desmarcar</span>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:1.25rem">Escolha o período que deseja exportar.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+      <!-- Picker INÍCIO -->
+      <div>
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">De</div>
+        <div style="position:relative">
+          <button onclick="togglePickerPDF('inicio',event)" style="width:100%;background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:8px 12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent">
+            <span id="pdfInicioLabel">—</span><span style="font-size:9px;opacity:.6">▼</span>
+          </button>
+          <div id="pdfPickerInicio" style="display:none;position:absolute;top:42px;left:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:.875rem;z-index:600;width:220px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+              <button onclick="mudaAnoPDF('inicio',-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">‹</button>
+              <span id="pdfAnoInicioLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:.95rem;font-weight:700"></span>
+              <button onclick="mudaAnoPDF('inicio',1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">›</button>
+            </div>
+            <div id="pdfGridInicio" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Picker FIM -->
+      <div>
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">Até</div>
+        <div style="position:relative">
+          <button onclick="togglePickerPDF('fim',event)" style="width:100%;background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:8px 12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent">
+            <span id="pdfFimLabel">—</span><span style="font-size:9px;opacity:.6">▼</span>
+          </button>
+          <div id="pdfPickerFim" style="display:none;position:absolute;top:42px;right:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:.875rem;z-index:600;width:220px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+              <button onclick="mudaAnoPDF('fim',-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">‹</button>
+              <span id="pdfAnoFimLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:.95rem;font-weight:700"></span>
+              <button onclick="mudaAnoPDF('fim',1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">›</button>
+            </div>
+            <div id="pdfGridFim" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="pdfMesesLista" style="max-height:300px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;padding-right:4px"></div>
-    <div style="margin-top:1rem;padding:.75rem;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--txt2)">
-      💡 O relatório abre em nova aba. Use <strong>Ctrl+P</strong> (ou compartilhar → imprimir) para salvar como PDF.
+
+    <div id="pdfResumoMeses" style="background:var(--bg3);border-radius:8px;padding:.75rem;font-size:13px;color:var(--txt2);margin-bottom:1rem;text-align:center;min-height:36px"></div>
+
+    <div style="padding:.75rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:8px;font-size:12px;color:var(--txt2)">
+      💡 Abre em nova aba. Use <strong>Ctrl+P</strong> ou compartilhar → imprimir para salvar como PDF.
     </div>
     <div class="modal-footer">
       <button class="btn-modal-ok" onclick="gerarPDF()">📄 Gerar PDF</button>
@@ -735,20 +824,41 @@ onValue(dbRef, snap => {
 });
 
 // ============ MÊS SELECT ============
+let pickerAno = new Date().getFullYear();
+
 function buildMesSelect(){
-  const sel = document.getElementById('mesSelect');
-  if(!sel) return;
-  let html = '';
-  for(let y=2023;y<=2040;y++){
-    for(let m=1;m<=12;m++){
-      if(y===2023 && m<10) continue;
-      const v = y+'-'+(m<10?'0':'')+m;
-      html += `<option value="${v}">${MES[m-1]} ${y}</option>`;
-    }
-  }
-  sel.innerHTML = html;
-  sel.value = mesSelecionado;
+  renderMesBtn();
 }
+
+function renderMesBtn(){
+  const [y,m] = mesSelecionado.split('-');
+  const el = document.getElementById('mesBtnLabel');
+  if(el) el.textContent = MES[parseInt(m)-1]+' '+y;
+  pickerAno = parseInt(y);
+  renderPickerGrid();
+}
+
+function renderPickerGrid(){
+  const al = document.getElementById('anoLabel');
+  if(al) al.textContent = pickerAno;
+  const grid = document.getElementById('mesesGrid');
+  if(!grid) return;
+  const [cy,cm] = mesSelecionado.split('-').map(Number);
+  grid.innerHTML = MES.map((nome,i)=>{
+    const m=i+1;
+    const v=pickerAno+'-'+(m<10?'0':'')+m;
+    const ativo = pickerAno===cy && m===cm;
+    const fora = pickerAno<2023 || pickerAno>2040 || (pickerAno===2023&&m<10);
+    return `<button onclick="selecionarMes('${v}',event)" style="background:${ativo?'var(--gold)':'var(--bg3)'};color:${ativo?'#0a0a0c':fora?'var(--txt3)':'var(--txt)'};border:1px solid ${ativo?'var(--gold)':'var(--brd)'};border-radius:8px;padding:8px 4px;font-size:12px;font-weight:${ativo?'700':'400'};cursor:${fora?'not-allowed':'pointer'};opacity:${fora?'.35':'1'};font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent" ${fora?'disabled':''}>${nome}</button>`;
+  }).join('');
+}
+
+window.mudaAno = function(d,e){ if(e)e.stopPropagation(); pickerAno=Math.max(2023,Math.min(2040,pickerAno+d)); renderPickerGrid(); };
+window.selecionarMes = function(v,e){ if(e)e.stopPropagation(); mesSelecionado=v; fecharPicker(); renderMesBtn(); renderAll(); };
+window.togglePicker = function(e){ if(e)e.stopPropagation(); const p=document.getElementById('mesPicker'); if(p){const open=p.style.display!=='none'; fecharTodosOsPickers(); if(!open){p.style.display='block';}} };
+window.fecharPicker = function(){ const p=document.getElementById('mesPicker'); if(p)p.style.display='none'; };
+function fecharTodosOsPickers(){ document.querySelectorAll('#mesPicker,#pdfPickerInicio,#pdfPickerFim').forEach(p=>p.style.display='none'); }
+document.addEventListener('click', ()=>fecharTodosOsPickers());
 
 // ============ TABS ============
 window.showTab = name => {
@@ -765,6 +875,10 @@ window.showTab = name => {
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
   renderNotifBadge();
+  // Atualizar meta se aba anual estiver ativa
+  if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
+    renderMetaEconomia(); renderPatrimonio();
+  }
 }
 
 function renderCards(){
@@ -933,6 +1047,10 @@ function renderGraficos(){
   const ctxR=document.getElementById('chartReceitas');
   if(ctxR){const r=d.receitas;charts['receitas']=new Chart(ctxR,{type:'bar',data:{labels:['Sal. Bruno','Sal. Priscila','Extra B.','Extra P.','13º'],datasets:[{data:[r.salarioBruno,r.salarioPriscila,r.rendaExtraBruno,r.rendaExtraPriscila,r.decimoTerceiro].map(num),backgroundColor:GOLD_PAL,borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});}
 
+  // Patrimônio e Fixo/Var histórico
+  renderChartPatrimonio();
+  renderChartFixoVarHistorico();
+
   // Comparativo
   destroyChart('comp');
   const ctxC=document.getElementById('chartComparativo');
@@ -940,7 +1058,7 @@ function renderGraficos(){
 }
 
 // ============ AÇÕES ============
-window.mudarMes = v => { mesSelecionado=v; const s=document.getElementById('mesSelect');if(s)s.value=v; renderAll(); };
+window.mudarMes = v => { mesSelecionado=v; renderMesBtn(); renderAll(); };
 
 window.salvarReceitas = () => {
   const map={r_salarioBruno:'salarioBruno',r_salarioPriscila:'salarioPriscila',r_rendaExtraBruno:'rendaExtraBruno',r_rendaExtraPriscila:'rendaExtraPriscila',r_decimoTerceiro:'decimoTerceiro',r_valeAlim:'valeAlim'};
@@ -1500,7 +1618,7 @@ window.showTab = name => {
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
-  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); }
+  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); renderPatrimonio(); initMetaEconomia(); renderMetaEconomia(); }
   if(name==='config') initCfgAlertas();
 };
 
@@ -1510,28 +1628,99 @@ const _renderDespOrig = renderDespesas;
 
 
 // ============ EXPORTAR PDF ============
+// ---- PDF PICKER STATE ----
+let pdfAnoInicio = new Date().getFullYear();
+let pdfAnoFim = new Date().getFullYear();
+let pdfMesInicio = mesSelecionado;
+let pdfMesFim = mesSelecionado;
+
 window.abrirModalPDF = function(){
-  const lista = document.getElementById('pdfMesesLista');
-  if(!lista) return;
-  // Listar meses que têm dados
-  const mesesComDados = Object.keys(allData.meses||{}).sort().reverse();
-  if(!mesesComDados.length){ showToast('Nenhum dado para exportar',true); return; }
-  lista.innerHTML = mesesComDados.map(key=>{
-    const [y,m] = key.split('-');
-    return `<label style="display:flex;align-items:center;gap:.5rem;padding:.5rem;background:var(--bg3);border-radius:8px;cursor:pointer;font-size:13px">
-      <input type="checkbox" class="pdf-mes-check" data-key="${key}" checked style="accent-color:var(--gold);width:16px;height:16px">
-      ${MES[parseInt(m)-1]} ${y}
-    </label>`;
-  }).join('');
+  pdfMesInicio = mesSelecionado;
+  pdfMesFim = mesSelecionado;
+  pdfAnoInicio = parseInt(mesSelecionado.split('-')[0]);
+  pdfAnoFim = parseInt(mesSelecionado.split('-')[0]);
+  renderPickerPDF('inicio');
+  renderPickerPDF('fim');
+  atualizarResumoPDF();
   document.getElementById('modalPDF').style.display='flex';
 };
 
-window.selTodosPDF = sel => document.querySelectorAll('.pdf-mes-check').forEach(c=>c.checked=sel);
-window.fecharModalPDF = () => { document.getElementById('modalPDF').style.display='none'; };
+window.togglePickerPDF = function(tipo, e){
+  if(e) e.stopPropagation();
+  const id = tipo==='inicio'?'pdfPickerInicio':'pdfPickerFim';
+  const outro = tipo==='inicio'?'pdfPickerFim':'pdfPickerInicio';
+  const p=document.getElementById(id), o=document.getElementById(outro);
+  const open = p&&p.style.display!=='none';
+  if(o) o.style.display='none';
+  if(p) p.style.display = open?'none':'block';
+};
+
+window.mudaAnoPDF = function(tipo, d, e){
+  if(e) e.stopPropagation();
+  if(tipo==='inicio') pdfAnoInicio = Math.max(2023,Math.min(2040,pdfAnoInicio+d));
+  else pdfAnoFim = Math.max(2023,Math.min(2040,pdfAnoFim+d));
+  renderPickerPDF(tipo);
+};
+
+window.selecionarMesPDF = function(tipo, v, e){
+  if(e) e.stopPropagation();
+  if(tipo==='inicio'){ pdfMesInicio=v; document.getElementById('pdfPickerInicio').style.display='none'; }
+  else { pdfMesFim=v; document.getElementById('pdfPickerFim').style.display='none'; }
+  renderPickerPDF(tipo);
+  atualizarResumoPDF();
+};
+
+function renderPickerPDF(tipo){
+  const ano = tipo==='inicio'?pdfAnoInicio:pdfAnoFim;
+  const sel = tipo==='inicio'?pdfMesInicio:pdfMesFim;
+  const anoLabel = document.getElementById(tipo==='inicio'?'pdfAnoInicioLabel':'pdfAnoFimLabel');
+  const grid = document.getElementById(tipo==='inicio'?'pdfGridInicio':'pdfGridFim');
+  const btnLabel = document.getElementById(tipo==='inicio'?'pdfInicioLabel':'pdfFimLabel');
+  if(anoLabel) anoLabel.textContent = ano;
+  if(btnLabel && sel){ const [y,m]=sel.split('-'); btnLabel.textContent=MES[parseInt(m)-1]+' '+y; }
+  if(!grid) return;
+  const [sy,sm] = sel?sel.split('-').map(Number):[0,0];
+  grid.innerHTML = MES.map((nome,i)=>{
+    const m=i+1;
+    const v=ano+'-'+(m<10?'0':'')+m;
+    const ativo = ano===sy && m===sm;
+    const fora = ano<2023||ano>2040||(ano===2023&&m<10);
+    return `<button onclick="selecionarMesPDF('${tipo}','${v}',event)" style="background:${ativo?'var(--gold)':'var(--bg3)'};color:${ativo?'#0a0a0c':fora?'var(--txt3)':'var(--txt)'};border:1px solid ${ativo?'var(--gold)':'var(--brd)'};border-radius:7px;padding:7px 3px;font-size:11px;font-weight:${ativo?'700':'400'};cursor:${fora?'not-allowed':'pointer'};opacity:${fora?'.3':'1'};font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent" ${fora?'disabled':''}>${nome}</button>`;
+  }).join('');
+}
+
+function atualizarResumoPDF(){
+  const el = document.getElementById('pdfResumoMeses');
+  if(!el||!pdfMesInicio||!pdfMesFim) return;
+  const inicio = pdfMesInicio <= pdfMesFim ? pdfMesInicio : pdfMesFim;
+  const fim = pdfMesInicio <= pdfMesFim ? pdfMesFim : pdfMesInicio;
+  // contar meses no intervalo que têm dados
+  const [iy,im] = inicio.split('-').map(Number);
+  const [fy,fm] = fim.split('-').map(Number);
+  let count=0, cur=[iy,im];
+  while(cur[0]<fy||(cur[0]===fy&&cur[1]<=fm)){
+    const k=cur[0]+'-'+(cur[1]<10?'0':'')+cur[1];
+    if(allData.meses&&allData.meses[k]) count++;
+    cur[1]++; if(cur[1]>12){cur[1]=1;cur[0]++;}
+  }
+  const [iym,imm]=inicio.split('-'); const [fym,fmm]=fim.split('-');
+  el.innerHTML = `<strong style="color:var(--gold2)">${MES[parseInt(imm)-1]} ${iym}</strong> até <strong style="color:var(--gold2)">${MES[parseInt(fmm)-1]} ${fym}</strong> · <span style="color:var(--em)">${count} mês(es) com dados</span>`;
+}
+
+window.fecharModalPDF = () => { document.getElementById('modalPDF').style.display='none'; fecharTodosOsPickers(); };
 
 window.gerarPDF = function(){
-  const checks=[...document.querySelectorAll('.pdf-mes-check:checked')].map(c=>c.dataset.key);
-  if(!checks.length){ showToast('Selecione ao menos um mês',true); return; }
+  const inicio = pdfMesInicio<=pdfMesFim?pdfMesInicio:pdfMesFim;
+  const fim = pdfMesInicio<=pdfMesFim?pdfMesFim:pdfMesInicio;
+  const checks=[];
+  const [iy,im]=inicio.split('-').map(Number), [fy,fm]=fim.split('-').map(Number);
+  let cur=[iy,im];
+  while(cur[0]<fy||(cur[0]===fy&&cur[1]<=fm)){
+    const k=cur[0]+'-'+(cur[1]<10?'0':'')+cur[1];
+    if(allData.meses&&allData.meses[k]) checks.push(k);
+    cur[1]++; if(cur[1]>12){cur[1]=1;cur[0]++;}
+  }
+  if(!checks.length){ showToast('Nenhum dado no período selecionado',true); return; }
 
   const win = window.open('','_blank');
   if(!win){ showToast('Permita pop-ups para gerar o PDF',true); return; }
@@ -1629,6 +1818,209 @@ window.gerarPDF = function(){
   setTimeout(()=>win.print(), 500);
   fecharModalPDF();
 };
+
+
+// ============ META DE ECONOMIA ============
+function getMetaEconomia(){ return parseFloat(localStorage.getItem('meta_economia')||'0'); }
+
+window.salvarMetaEconomia = function(){
+  const inp = document.getElementById('metaEconomiaInput');
+  if(!inp) return;
+  const val = parseFloat(inp.value)||0;
+  localStorage.setItem('meta_economia', val);
+  renderMetaEconomia();
+  showToast('Meta salva!');
+};
+
+function initMetaEconomia(){
+  const inp = document.getElementById('metaEconomiaInput');
+  if(inp) inp.value = getMetaEconomia()||'';
+}
+
+function renderMetaEconomia(){
+  const el = document.getElementById('metaEconomiaDisplay');
+  if(!el) return;
+  const meta = getMetaEconomia();
+  const saldoAtual = saldoReal();
+  const rec = totalReceitas();
+
+  if(!meta){
+    el.innerHTML='<div style="font-size:13px;color:var(--txt3);text-align:center;padding:.5rem">Defina sua meta de economia mensal acima.</div>';
+    return;
+  }
+
+  const pct = rec>0 ? Math.min(Math.round(saldoAtual/meta*100),200) : 0;
+  const bateu = saldoAtual >= meta;
+  const pctBarra = Math.min(pct,100);
+  const cor = bateu ? 'var(--em)' : saldoAtual<0 ? 'var(--danger)' : 'var(--gold2)';
+  const msg = bateu
+    ? `✅ Meta batida! Economia de <strong>${fmt(saldoAtual)}</strong> — ${pct}% da meta`
+    : saldoAtual < 0
+      ? `❌ Saldo negativo. Faltam <strong>${fmt(meta - saldoAtual)}</strong> para atingir a meta`
+      : `⏳ Faltam <strong>${fmt(meta - saldoAtual)}</strong> para atingir a meta (${pct}%)`;
+
+  el.innerHTML = `
+    <div class="meta-progress-wrap">
+      <div class="meta-progress-fill${bateu?' bateu':saldoAtual<0?' perigo':''}" style="width:${pctBarra}%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem">
+      <div style="font-size:13px;color:var(--txt2)">${msg}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:${cor}">${fmt(saldoAtual)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.875rem">
+      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:.5rem">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px">Meta</div>
+        <div style="font-weight:700;color:var(--gold2);font-size:.95rem">${fmt(meta)}</div>
+      </div>
+      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:.5rem">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px">Atual</div>
+        <div style="font-weight:700;color:${cor};font-size:.95rem">${fmt(saldoAtual)}</div>
+      </div>
+      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:.5rem">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px">Progresso</div>
+        <div style="font-weight:700;color:${bateu?'var(--em)':'var(--txt2)'};font-size:.95rem">${pct}%</div>
+      </div>
+    </div>`;
+}
+
+// ============ PATRIMÔNIO ============
+function calcPatrimonioMes(key){
+  const md = allData.meses&&allData.meses[key];
+  if(!md) return null;
+  const r = md.receitas||{};
+  const rec = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(r[k]),0);
+  const gasto = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+  return rec - gasto;
+}
+
+function renderPatrimonio(){
+  const elStats = document.getElementById('patriStats');
+  const elHist = document.getElementById('patriHistorico');
+  if(!elStats||!elHist) return;
+
+  // Calcular patrimônio acumulado mês a mês
+  const meses = Object.keys(allData.meses||{}).sort();
+  let acumulado = 0;
+  const historico = [];
+  meses.forEach(key=>{
+    const s = calcPatrimonioMes(key);
+    if(s!==null){ acumulado+=s; historico.push({key,saldo:s,acum:acumulado}); }
+  });
+
+  if(!historico.length){
+    elStats.innerHTML='<div class="empty">Sem dados suficientes.</div>';
+    elHist.innerHTML='';
+    return;
+  }
+
+  const totalAcum = historico[historico.length-1].acum;
+  const melhorMes = [...historico].sort((a,b)=>b.saldo-a.saldo)[0];
+  const piorMes = [...historico].sort((a,b)=>a.saldo-b.saldo)[0];
+  const mediaSaldo = historico.reduce((s,h)=>s+h.saldo,0)/historico.length;
+  const mesesPositivos = historico.filter(h=>h.saldo>=0).length;
+
+  elStats.innerHTML = `
+    <div class="card"><div class="card-label">Patrimônio Acumulado</div><div class="card-val big" style="color:${totalAcum>=0?'var(--em)':'var(--danger)'}">${fmt(totalAcum)}</div></div>
+    <div class="card"><div class="card-label">Melhor Mês</div><div class="card-val" style="color:var(--em)">${fmt(melhorMes.saldo)}<div style="font-size:10px;color:var(--txt3);font-weight:400;margin-top:2px">${nomeMes(melhorMes.key)}</div></div></div>
+    <div class="card"><div class="card-label">Pior Mês</div><div class="card-val" style="color:var(--danger)">${fmt(piorMes.saldo)}<div style="font-size:10px;color:var(--txt3);font-weight:400;margin-top:2px">${nomeMes(piorMes.key)}</div></div></div>
+    <div class="card"><div class="card-label">Média Mensal</div><div class="card-val" style="color:${mediaSaldo>=0?'var(--em)':'var(--danger)'}">${fmt(mediaSaldo)}</div></div>
+    <div class="card"><div class="card-label">Meses Positivos</div><div class="card-val">${mesesPositivos}<span style="font-size:12px;color:var(--txt3);font-weight:400"> / ${historico.length}</span></div></div>
+  `;
+
+  // Últimos 12 meses no histórico visual
+  const ultimos = historico.slice(-12);
+  const maxAbs = Math.max(...ultimos.map(h=>Math.abs(h.saldo)),1);
+  elHist.innerHTML = `
+    <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">Últimos ${ultimos.length} meses</div>
+    ${ultimos.map(h=>{
+      const pct = Math.round(Math.abs(h.saldo)/maxAbs*100);
+      const pos = h.saldo>=0;
+      const [y,m]=h.key.split('-');
+      return `<div class="fv-bar-wrap">
+        <div class="fv-bar-mes">${MES[parseInt(m)-1]}</div>
+        <div class="fv-bar-outer">
+          <div class="fv-bar-inner" style="width:${pct}%;background:${pos?'linear-gradient(90deg,var(--em),#34d399)':'linear-gradient(90deg,var(--danger),#f87171)'}"></div>
+        </div>
+        <div class="fv-bar-pct" style="color:${pos?'var(--em)':'var(--danger)'}">${fmt(h.saldo).replace('R$ ','')}</div>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:.75rem;padding:.75rem;background:var(--bg3);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--txt2)">Acumulado total (${historico.length} meses)</span>
+      <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:${totalAcum>=0?'var(--em)':'var(--danger)'}">${fmt(totalAcum)}</span>
+    </div>`;
+}
+
+// ============ GRÁFICOS NOVOS ============
+function renderChartPatrimonio(){
+  const ctx = document.getElementById('chartPatrimonio');
+  if(!ctx) return;
+  destroyChart('patrimonio');
+  const meses = Object.keys(allData.meses||{}).sort();
+  let acum=0;
+  const labels=[], data=[], colors=[];
+  meses.forEach(key=>{
+    const s=calcPatrimonioMes(key);
+    if(s!==null){
+      acum+=s;
+      const [y,m]=key.split('-');
+      labels.push(MES[parseInt(m)-1]+'/'+y.slice(2));
+      data.push(parseFloat(acum.toFixed(2)));
+      colors.push(acum>=0?'rgba(16,185,129,.2)':'rgba(220,74,61,.2)');
+    }
+  });
+  if(!data.length) return;
+  charts['patrimonio'] = new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{
+      label:'Patrimônio acumulado',
+      data,
+      borderColor: data[data.length-1]>=0?'#10b981':'#dc4a3d',
+      backgroundColor: data[data.length-1]>=0?'rgba(16,185,129,.1)':'rgba(220,74,61,.1)',
+      tension:.4,pointRadius:2,fill:true
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
+      scales:{
+        y:{ticks:{color:'#9a8870',callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#1c2130'}},
+        x:{ticks:{color:'#9a8870',font:{size:9},maxTicksLimit:12},grid:{display:false}}
+      }
+    }
+  });
+}
+
+function renderChartFixoVarHistorico(){
+  const ctx = document.getElementById('chartFixoVar');
+  if(!ctx) return;
+  destroyChart('fixovarH');
+  const meses = Object.keys(allData.meses||{}).sort().slice(-6);
+  const labels=[], fixaData=[], varData=[];
+  meses.forEach(key=>{
+    const md=allData.meses&&allData.meses[key];
+    if(!md) return;
+    const [y,m]=key.split('-');
+    labels.push(MES[parseInt(m)-1]);
+    const desp=md.despesas||[];
+    fixaData.push(desp.filter(d=>d.tipo==='fixo').reduce((s,d)=>s+num(d.custoPrevisto),0));
+    varData.push(desp.filter(d=>d.tipo!=='fixo').reduce((s,d)=>s+num(d.custoPrevisto),0));
+  });
+  if(!labels.length) return;
+  charts['fixovarH']=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Fixas',data:fixaData,backgroundColor:'rgba(96,160,224,.8)',borderRadius:4},
+      {label:'Variáveis',data:varData,backgroundColor:'rgba(192,132,252,.8)',borderRadius:4}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#9a8870',font:{size:11}}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
+      scales:{
+        x:{stacked:false,ticks:{color:'#9a8870'},grid:{display:false}},
+        y:{ticks:{color:'#9a8870',callback:v=>v.toLocaleString('pt-BR')},grid:{color:'#1c2130'}}
+      }
+    }
+  });
+}
 
 // ============ BOOT ============
 buildMesSelect();
