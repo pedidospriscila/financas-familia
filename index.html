@@ -290,6 +290,11 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 .fv-bar-outer{flex:1;background:var(--bg3);border-radius:20px;height:8px;overflow:hidden}
 .fv-bar-inner{height:100%;border-radius:20px;background:linear-gradient(90deg,#60a0e0,#c084fc)}
 .fv-bar-pct{font-size:11px;color:var(--txt2);width:35px;text-align:right;flex-shrink:0}
+
+.pisca-amarelo{animation:piscaAm 1.5s ease-in-out infinite}
+.pisca-vermelho{animation:piscaVm 1.2s ease-in-out infinite}
+@keyframes piscaAm{0%,100%{border-left-color:#f59e0b;background:var(--bg3)}50%{border-left-color:#fcd34d;background:#2a1e06}}
+@keyframes piscaVm{0%,100%{border-left-color:var(--danger);background:var(--bg3)}50%{border-left-color:#f87171;background:var(--danger-dim)}}
 </style>
 </head>
 <body>
@@ -377,6 +382,23 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div class="card"><div class="card-label">Custo Real</div><div class="card-val" style="color:var(--danger)" id="c_custoReal">R$ 0,00</div></div>
     <div class="card"><div class="card-label">Saldo Previsto</div><div class="card-val big" id="c_saldoPrevisto">R$ 0,00</div></div>
     <div class="card"><div class="card-label">Saldo Real</div><div class="card-val big" id="c_saldoReal">R$ 0,00</div></div>
+  </div>
+
+  <!-- CARD META DE ECONOMIA -->
+  <div id="resumoMetaCard" style="display:none;background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1.25rem;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+      <div style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:var(--gold2)">🎯 Meta de Economia</div>
+      <div id="resumoMetaStatus" style="font-size:12px;font-weight:600"></div>
+    </div>
+    <div class="meta-progress-wrap" style="height:8px">
+      <div class="meta-progress-fill" id="resumoMetaBarra" style="width:0%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:12px">
+      <span style="color:var(--txt2)">Previsto: <strong id="resumoMetaPrev" style="color:var(--gold2)">—</strong></span>
+      <span style="color:var(--txt2)">Real: <strong id="resumoMetaReal" style="color:var(--em)">—</strong></span>
+      <span style="color:var(--txt2)">Meta: <strong id="resumoMetaAlvo" style="color:var(--gold2)">—</strong></span>
+    </div>
   </div>
 
   <div class="section">
@@ -806,20 +828,21 @@ const fbTimeout = setTimeout(()=>{
 
 onValue(dbRef, snap => {
   clearTimeout(fbTimeout);
+  // Se chegou qualquer resposta do Firebase (mesmo vazio) = conectado
+  const sd = document.getElementById('syncStatus');
+  if(sd){ sd.style.background='#10b981'; sd.classList.remove('sync-dot-pulse'); sd.title='Firebase conectado ✓'; }
   const data = snap.val();
   if(data){ allData=data; if(!allData.meses) allData.meses={}; }
   if(!fbReady){
     fbReady=true;
     buildMesSelect(); renderAll();
-    {const sd=document.getElementById('syncStatus');if(sd){sd.style.background='#10b981';sd.classList.remove('sync-dot-pulse');}}
-    document.getElementById('syncStatus').title='Firebase conectado ✓';
   } else {
     renderAll();
   }
 }, err => {
   clearTimeout(fbTimeout);
-  {const sd=document.getElementById('syncStatus');if(sd){sd.style.background='#ef4444';sd.classList.remove('sync-dot-pulse');}}
-  document.getElementById('syncStatus').title='Erro: '+err.code;
+  const sd=document.getElementById('syncStatus');
+  if(sd){ sd.style.background='#ef4444'; sd.classList.remove('sync-dot-pulse'); sd.title='Erro Firebase: '+err.code; }
   if(!fbReady){ buildMesSelect(); renderAll(); }
 });
 
@@ -874,11 +897,31 @@ window.showTab = name => {
 // ============ RENDER ============
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
-  renderNotifBadge();
-  // Atualizar meta se aba anual estiver ativa
+  renderNotifBadge(); renderMetaResumo();
   if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
     renderMetaEconomia(); renderPatrimonio();
   }
+}
+
+function renderMetaResumo(){
+  const card = document.getElementById('resumoMetaCard');
+  const meta = getMetaEconomia();
+  if(!card) return;
+  if(!meta){ card.style.display='none'; return; }
+  card.style.display='block';
+  const sp = saldoPrev(), sr = saldoReal();
+  const pctP = Math.min(Math.round(Math.max(sp,0)/meta*100),100);
+  const pctR = Math.min(Math.round(Math.max(sr,0)/meta*100),100);
+  const barra = document.getElementById('resumoMetaBarra');
+  if(barra){ barra.style.width=pctR+'%'; barra.className='meta-progress-fill'+(sr>=meta?' bateu':sr<0?' perigo':''); }
+  const status = document.getElementById('resumoMetaStatus');
+  if(status){ status.textContent = sr>=meta?'✅ Meta batida!':sr<0?'❌ Saldo negativo':'⏳ Em progresso'; status.style.color = sr>=meta?'var(--em)':sr<0?'var(--danger)':'var(--gold2)'; }
+  const prev = document.getElementById('resumoMetaPrev');
+  const real = document.getElementById('resumoMetaReal');
+  const alvo = document.getElementById('resumoMetaAlvo');
+  if(prev) prev.textContent = fmt(sp);
+  if(real) real.textContent = fmt(sr);
+  if(alvo) alvo.textContent = fmt(meta);
 }
 
 function renderCards(){
@@ -911,16 +954,25 @@ function renderResumo(){
   const pl=document.getElementById('pendentes-list'); if(!pl)return;
   const pend=(getDados().despesas||[]).filter(d=>!d.pago).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   if(!pend.length){pl.innerHTML='<div class="empty"><div class="empty-icon">✦</div>Tudo em dia!</div>';return;}
-  pl.innerHTML=pend.map(d=>`
-    <div class="pendente-item">
-      <div><div class="pendente-nome">${d.nome}</div>${d.vencimento?`<div class="pendente-dia">Vence dia ${d.vencimento}</div>`:''}</div>
+  const hoje2 = new Date().getDate();
+  pl.innerHTML=pend.map(d=>{
+    const venc = d.vencimento ? parseInt(d.vencimento) : null;
+    const diff = venc !== null ? venc - hoje2 : null;
+    const vencido = diff !== null && diff < 0;
+    const proximo = diff !== null && diff >= 0 && diff <= 3;
+    const borderColor = vencido ? 'var(--danger)' : proximo ? '#f59e0b' : 'var(--gold-border)';
+    const piscaClass = vencido ? 'pisca-vermelho' : proximo ? 'pisca-amarelo' : '';
+    const diaLabel = venc === null ? '' : vencido ? `Venceu dia ${venc}` : diff === 0 ? 'Vence HOJE' : `Vence em ${diff} dia(s)`;
+    return `<div class="pendente-item ${piscaClass}" style="border-left-color:${borderColor}">
+      <div><div class="pendente-nome">${d.nome}</div>${diaLabel?`<div class="pendente-dia" style="color:${vencido?'var(--danger)':proximo?'#f59e0b':'var(--txt3)'}">${diaLabel}</div>`:''}</div>
       <div style="text-align:right">
         <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Previsto</div>
         <div class="pendente-val">${fmt(d.custoPrevisto)}</div>
         ${d.custoReal?`<div style="font-size:10px;color:var(--txt3);margin-top:4px;margin-bottom:2px">Real</div><div style="color:var(--danger);font-weight:700;font-family:'Playfair Display',serif">${fmt(d.custoReal)}</div>`:''}
         <button onclick="togglePago('${d.id}')" class="btn-status pendente" style="margin-top:6px;font-size:10px">Marcar pago</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function campoReceitaAtivo(){
@@ -948,9 +1000,15 @@ function renderDespesas(){
     const pr=num(d.custoPrevisto),re=d.pago?num(d.custoReal||d.custoPrevisto):0;
     const dif=d.pago?pr-re:null;
     const dc=dif===null?'var(--txt3)':dif>=0?'var(--em)':'var(--danger)';
-    return `<tr class="tr-hover">
+    const hj = new Date().getDate();
+    const dv = d.vencimento ? parseInt(d.vencimento) : null;
+    const df = dv !== null ? dv - hj : null;
+    const rowBg = !d.pago && dv!==null ? (df<0 ? 'rgba(220,74,61,.08)' : df<=3 ? 'rgba(245,158,11,.06)' : '') : '';
+    const vencCor = !d.pago && dv!==null ? (df<0?'var(--danger)':df<=3?'#f59e0b':'var(--txt3)') : 'var(--txt3)';
+    const vencLabel = d.vencimento ? ((!d.pago&&df<0)?`⚠ ${d.vencimento}`:((!d.pago&&df===0)?`🔴 ${d.vencimento}`:d.vencimento)) : '—';
+    return `<tr class="tr-hover" style="background:${rowBg}">
       <td>${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}</td>
-      <td style="text-align:center;color:var(--txt3)">${d.vencimento||'—'}</td>
+      <td style="text-align:center;color:${vencCor};font-weight:${(!d.pago&&df!==null&&df<=3)?'700':'400'}">${vencLabel}</td>
       <td style="text-align:right">${fmt(pr)}</td>
       <td style="text-align:right">${d.custoReal?fmt(d.custoReal):'—'}</td>
       <td style="text-align:right;color:${dc}">${dif!==null?fmt(dif):'—'}</td>
@@ -1821,13 +1879,18 @@ window.gerarPDF = function(){
 
 
 // ============ META DE ECONOMIA ============
-function getMetaEconomia(){ return parseFloat(localStorage.getItem('meta_economia')||'0'); }
+function getMetaEconomia(){
+  return parseFloat((allData.config&&allData.config.metaEconomia)||localStorage.getItem('meta_economia')||'0');
+}
 
 window.salvarMetaEconomia = function(){
   const inp = document.getElementById('metaEconomiaInput');
   if(!inp) return;
   const val = parseFloat(inp.value)||0;
   localStorage.setItem('meta_economia', val);
+  if(!allData.config) allData.config={};
+  allData.config.metaEconomia = val;
+  saveData();
   renderMetaEconomia();
   showToast('Meta salva!');
 };
