@@ -352,6 +352,7 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <span id="syncStatus" title="Status Firebase" class="sync-dot-pulse" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;cursor:default"></span>
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
+    <button onclick="compartilharResumo()" title="Compartilhar Resumo" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">📸</button>
     <button onclick="toggleTema()" id="temaBtn" title="Alternar tema" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">🌙</button>
     <div style="position:relative">
       <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
@@ -382,23 +383,6 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div class="card"><div class="card-label">Custo Real</div><div class="card-val" style="color:var(--danger)" id="c_custoReal">R$ 0,00</div></div>
     <div class="card"><div class="card-label">Saldo Previsto</div><div class="card-val big" id="c_saldoPrevisto">R$ 0,00</div></div>
     <div class="card"><div class="card-label">Saldo Real</div><div class="card-val big" id="c_saldoReal">R$ 0,00</div></div>
-  </div>
-
-  <!-- CARD META DE ECONOMIA -->
-  <div id="resumoMetaCard" style="display:none;background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1.25rem;position:relative;overflow:hidden">
-    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
-      <div style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:var(--gold2)">🎯 Meta de Economia</div>
-      <div id="resumoMetaStatus" style="font-size:12px;font-weight:600"></div>
-    </div>
-    <div class="meta-progress-wrap" style="height:8px">
-      <div class="meta-progress-fill" id="resumoMetaBarra" style="width:0%"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:12px">
-      <span style="color:var(--txt2)">Previsto: <strong id="resumoMetaPrev" style="color:var(--gold2)">—</strong></span>
-      <span style="color:var(--txt2)">Real: <strong id="resumoMetaReal" style="color:var(--em)">—</strong></span>
-      <span style="color:var(--txt2)">Meta: <strong id="resumoMetaAlvo" style="color:var(--gold2)">—</strong></span>
-    </div>
   </div>
 
   <div class="section">
@@ -541,7 +525,6 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   </div>
   <div class="graficos-grid">
     <div class="grafico-card"><div class="grafico-titulo">Evolução do Patrimônio Acumulado</div><canvas id="chartPatrimonio"></canvas></div>
-    <div class="grafico-card"><div class="grafico-titulo">Fixas vs Variáveis — Histórico</div><canvas id="chartFixoVar"></canvas></div>
   </div>
 </div>
 
@@ -558,21 +541,6 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     </div>
     <div class="anual-grid" id="anualGrid"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem" id="anualTotais"></div>
-  </div>
-
-  <!-- META DE ECONOMIA -->
-  <div class="meta-eco-card">
-    <div class="meta-eco-header">
-      <div class="meta-eco-title">🎯 Meta de Economia Mensal</div>
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:12px;color:var(--txt2)">Meta: R$</span>
-        <input id="metaEconomiaInput" type="number" min="0" step="100"
-          style="background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:5px 10px;font-size:14px;font-weight:700;width:120px;outline:none;text-align:right;font-family:'Playfair Display',serif"
-          onchange="salvarMetaEconomia()" placeholder="0,00">
-        <button onclick="salvarMetaEconomia()" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif">✓</button>
-      </div>
-    </div>
-    <div id="metaEconomiaDisplay"></div>
   </div>
 
   <div class="section">
@@ -915,32 +883,12 @@ window.showTab = name => {
 // ============ RENDER ============
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
-  renderNotifBadge(); renderMetaResumo(); initMetaEconomia();
+  renderNotifBadge();
   if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
-    renderMetaEconomia(); renderPatrimonio();
+    renderPatrimonio();
   }
 }
 
-function renderMetaResumo(){
-  const card = document.getElementById('resumoMetaCard');
-  const meta = getMetaEconomia();
-  if(!card) return;
-  if(!meta){ card.style.display='none'; return; }
-  card.style.display='block';
-  const sp = saldoPrev(), sr = saldoReal();
-  const pctP = Math.min(Math.round(Math.max(sp,0)/meta*100),100);
-  const pctR = Math.min(Math.round(Math.max(sr,0)/meta*100),100);
-  const barra = document.getElementById('resumoMetaBarra');
-  if(barra){ barra.style.width=pctR+'%'; barra.className='meta-progress-fill'+(sr>=meta?' bateu':sr<0?' perigo':''); }
-  const status = document.getElementById('resumoMetaStatus');
-  if(status){ status.textContent = sr>=meta?'✅ Meta batida!':sr<0?'❌ Saldo negativo':'⏳ Em progresso'; status.style.color = sr>=meta?'var(--em)':sr<0?'var(--danger)':'var(--gold2)'; }
-  const prev = document.getElementById('resumoMetaPrev');
-  const real = document.getElementById('resumoMetaReal');
-  const alvo = document.getElementById('resumoMetaAlvo');
-  if(prev) prev.textContent = fmt(sp);
-  if(real) real.textContent = fmt(sr);
-  if(alvo) alvo.textContent = fmt(meta);
-}
 
 function renderCards(){
   const rec=totalReceitas(), prev=totalCustoPrev(), real=totalCustoReal();
@@ -1133,8 +1081,6 @@ function renderGraficos(){
 
   // Patrimônio e Fixo/Var histórico
   renderChartPatrimonio();
-  renderChartFixoVarHistorico();
-
   // Comparativo
   destroyChart('comp');
   const ctxC=document.getElementById('chartComparativo');
@@ -1702,7 +1648,7 @@ window.showTab = name => {
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
-  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); renderPatrimonio(); initMetaEconomia(); renderMetaEconomia(); }
+  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); renderPatrimonio(); }
   if(name==='config') initCfgAlertas();
 };
 
@@ -1905,406 +1851,6 @@ window.gerarPDF = function(){
 
 
 // ============ META DE ECONOMIA ============
-function getMetaEconomia(){
-  // Prioridade: Firebase > localStorage
-  const fbVal = allData.config&&allData.config.metaEconomia;
-  if(fbVal) return parseFloat(fbVal);
-  return parseFloat(localStorage.getItem('meta_economia')||'0');
-}
-
-window.salvarMetaEconomia = function(){
-  const inp = document.getElementById('metaEconomiaInput');
-  if(!inp) return;
-  const val = parseFloat(inp.value)||0;
-  localStorage.setItem('meta_economia', val);
-  if(!allData.config) allData.config={};
-  allData.config.metaEconomia = val;
-  saveData();
-  renderMetaEconomia();
-  showToast('Meta salva!');
-};
-
-function initMetaEconomia(){
-  const inp = document.getElementById('metaEconomiaInput');
-  if(inp) inp.value = getMetaEconomia()||'';
-}
-
-function renderMetaEconomia(){
-  const el = document.getElementById('metaEconomiaDisplay');
-  if(!el) return;
-  const meta = getMetaEconomia();
-  const saldoAtual = saldoReal();
-  const rec = totalReceitas();
-
-  if(!meta){
-    el.innerHTML='<div style="font-size:13px;color:var(--txt3);text-align:center;padding:.5rem">Defina sua meta de economia mensal acima.</div>';
-    return;
-  }
-
-  const pct = rec>0 ? Math.min(Math.round(saldoAtual/meta*100),200) : 0;
-  const bateu = saldoAtual >= meta;
-  const pctBarra = Math.min(pct,100);
-  const cor = bateu ? 'var(--em)' : saldoAtual<0 ? 'var(--danger)' : 'var(--gold2)';
-  const msg = bateu
-    ? `✅ Meta batida! Economia de <strong>${fmt(saldoAtual)}</strong> — ${pct}% da meta`
-    : saldoAtual < 0
-      ? `❌ Saldo negativo. Faltam <strong>${fmt(meta - saldoAtual)}</strong> para atingir a meta`
-      : `⏳ Faltam <strong>${fmt(meta - saldoAtual)}</strong> para atingir a meta (${pct}%)`;
-
-  el.innerHTML = `
-    <div class="meta-progress-wrap">
-      <div class="meta-progress-fill${bateu?' bateu':saldoAtual<0?' perigo':''}" style="width:${pctBarra}%"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem">
-      <div style="font-size:13px;color:var(--txt2)">${msg}</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:${cor}">${fmt(saldoAtual)}</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.875rem">
-      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:.5rem">
-        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px">Meta</div>
-        <div style="font-weight:700;color:var(--gold2);font-size:.95rem">${fmt(meta)}</div>
-      </div>
-      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:.5rem">
-        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px">Atual</div>
-        <div style="font-weight:700;color:${cor};font-size:.95rem">${fmt(saldoAtual)}</div>
-      </div>
-      <div style="text-align:center;background:var(--bg3);border-radius:8px;padding:.5rem">
-        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px">Progresso</div>
-        <div style="font-weight:700;color:${bateu?'var(--em)':'var(--txt2)'};font-size:.95rem">${pct}%</div>
-      </div>
-    </div>`;
-}
-
-// ============ PATRIMÔNIO ============
-function calcPatrimonioMes(key){
-  const md = allData.meses&&allData.meses[key];
-  if(!md) return null;
-  const r = md.receitas||{};
-  const rec = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(r[k]),0);
-  const gasto = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
-  return rec - gasto;
-}
-
-function renderPatrimonio(){
-  const elStats = document.getElementById('patriStats');
-  const elHist = document.getElementById('patriHistorico');
-  if(!elStats||!elHist) return;
-
-  // Calcular patrimônio acumulado mês a mês
-  const meses = Object.keys(allData.meses||{}).sort();
-  let acumulado = 0;
-  const historico = [];
-  meses.forEach(key=>{
-    const s = calcPatrimonioMes(key);
-    if(s!==null){ acumulado+=s; historico.push({key,saldo:s,acum:acumulado}); }
-  });
-
-  if(!historico.length){
-    elStats.innerHTML='<div class="empty">Sem dados suficientes.</div>';
-    elHist.innerHTML='';
-    return;
-  }
-
-  const totalAcum = historico[historico.length-1].acum;
-  const melhorMes = [...historico].sort((a,b)=>b.saldo-a.saldo)[0];
-  const piorMes = [...historico].sort((a,b)=>a.saldo-b.saldo)[0];
-  const mediaSaldo = historico.reduce((s,h)=>s+h.saldo,0)/historico.length;
-  const mesesPositivos = historico.filter(h=>h.saldo>=0).length;
-
-  elStats.innerHTML = `
-    <div class="card"><div class="card-label">Patrimônio Acumulado</div><div class="card-val big" style="color:${totalAcum>=0?'var(--em)':'var(--danger)'}">${fmt(totalAcum)}</div></div>
-    <div class="card"><div class="card-label">Melhor Mês</div><div class="card-val" style="color:var(--em)">${fmt(melhorMes.saldo)}<div style="font-size:10px;color:var(--txt3);font-weight:400;margin-top:2px">${nomeMes(melhorMes.key)}</div></div></div>
-    <div class="card"><div class="card-label">Pior Mês</div><div class="card-val" style="color:var(--danger)">${fmt(piorMes.saldo)}<div style="font-size:10px;color:var(--txt3);font-weight:400;margin-top:2px">${nomeMes(piorMes.key)}</div></div></div>
-    <div class="card"><div class="card-label">Média Mensal</div><div class="card-val" style="color:${mediaSaldo>=0?'var(--em)':'var(--danger)'}">${fmt(mediaSaldo)}</div></div>
-    <div class="card"><div class="card-label">Meses Positivos</div><div class="card-val">${mesesPositivos}<span style="font-size:12px;color:var(--txt3);font-weight:400"> / ${historico.length}</span></div></div>
-  `;
-
-  // Últimos 12 meses no histórico visual
-  const ultimos = historico.slice(-12);
-  const maxAbs = Math.max(...ultimos.map(h=>Math.abs(h.saldo)),1);
-  elHist.innerHTML = `
-    <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">Últimos ${ultimos.length} meses</div>
-    ${ultimos.map(h=>{
-      const pct = Math.round(Math.abs(h.saldo)/maxAbs*100);
-      const pos = h.saldo>=0;
-      const [y,m]=h.key.split('-');
-      return `<div class="fv-bar-wrap">
-        <div class="fv-bar-mes">${MES[parseInt(m)-1]}</div>
-        <div class="fv-bar-outer">
-          <div class="fv-bar-inner" style="width:${pct}%;background:${pos?'linear-gradient(90deg,var(--em),#34d399)':'linear-gradient(90deg,var(--danger),#f87171)'}"></div>
-        </div>
-        <div class="fv-bar-pct" style="color:${pos?'var(--em)':'var(--danger)'}">${fmt(h.saldo).replace('R$ ','')}</div>
-      </div>`;
-    }).join('')}
-    <div style="margin-top:.75rem;padding:.75rem;background:var(--bg3);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:12px;color:var(--txt2)">Acumulado total (${historico.length} meses)</span>
-      <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:${totalAcum>=0?'var(--em)':'var(--danger)'}">${fmt(totalAcum)}</span>
-    </div>`;
-}
-
-// ============ GRÁFICOS NOVOS ============
-function renderChartPatrimonio(){
-  const ctx = document.getElementById('chartPatrimonio');
-  if(!ctx) return;
-  destroyChart('patrimonio');
-  const meses = Object.keys(allData.meses||{}).sort();
-  let acum=0;
-  const labels=[], data=[], colors=[];
-  meses.forEach(key=>{
-    const s=calcPatrimonioMes(key);
-    if(s!==null){
-      acum+=s;
-      const [y,m]=key.split('-');
-      labels.push(MES[parseInt(m)-1]+'/'+y.slice(2));
-      data.push(parseFloat(acum.toFixed(2)));
-      colors.push(acum>=0?'rgba(16,185,129,.2)':'rgba(220,74,61,.2)');
-    }
-  });
-  if(!data.length) return;
-  charts['patrimonio'] = new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[{
-      label:'Patrimônio acumulado',
-      data,
-      borderColor: data[data.length-1]>=0?'#10b981':'#dc4a3d',
-      backgroundColor: data[data.length-1]>=0?'rgba(16,185,129,.1)':'rgba(220,74,61,.1)',
-      tension:.4,pointRadius:2,fill:true
-    }]},
-    options:{
-      responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
-      scales:{
-        y:{ticks:{color:'#9a8870',callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#1c2130'}},
-        x:{ticks:{color:'#9a8870',font:{size:9},maxTicksLimit:12},grid:{display:false}}
-      }
-    }
-  });
-}
-
-function renderChartFixoVarHistorico(){
-  const ctx = document.getElementById('chartFixoVar');
-  if(!ctx) return;
-  destroyChart('fixovarH');
-  const meses = Object.keys(allData.meses||{}).sort().slice(-6);
-  const labels=[], fixaData=[], varData=[];
-  meses.forEach(key=>{
-    const md=allData.meses&&allData.meses[key];
-    if(!md) return;
-    const [y,m]=key.split('-');
-    labels.push(MES[parseInt(m)-1]);
-    const desp=md.despesas||[];
-    fixaData.push(desp.filter(d=>d.tipo==='fixo').reduce((s,d)=>s+num(d.custoPrevisto),0));
-    varData.push(desp.filter(d=>d.tipo!=='fixo').reduce((s,d)=>s+num(d.custoPrevisto),0));
-  });
-  if(!labels.length) return;
-  charts['fixovarH']=new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'Fixas',data:fixaData,backgroundColor:'rgba(96,160,224,.8)',borderRadius:4},
-      {label:'Variáveis',data:varData,backgroundColor:'rgba(192,132,252,.8)',borderRadius:4}
-    ]},
-    options:{
-      responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{labels:{color:'#9a8870',font:{size:11}}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},
-      scales:{
-        x:{stacked:false,ticks:{color:'#9a8870'},grid:{display:false}},
-        y:{ticks:{color:'#9a8870',callback:v=>v.toLocaleString('pt-BR')},grid:{color:'#1c2130'}}
-      }
-    }
-  });
-}
-
-
-// ============ COMPARTILHAR RESUMO ============
-window.compartilharResumo = function(){
-  const canvas = document.getElementById('shareCanvas');
-  if(!canvas) return;
-
-  const W = 800, H = 960;
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-
-  const isDark = temaAtual !== 'light';
-  const bg0   = isDark ? '#0d0f14' : '#f5f3ee';
-  const bg1   = isDark ? '#131720' : '#ffffff';
-  const bg2   = isDark ? '#1c2130' : '#f0ede6';
-  const gold  = '#b8963e';
-  const gold2 = '#d4a853';
-  const em    = '#10b981';
-  const danger= '#dc4a3d';
-  const txt   = isDark ? '#f2ede4' : '#1a1612';
-  const txt2  = isDark ? '#9a9488' : '#5a5040';
-  const border= isDark ? '#2e2410' : '#e8d49a';
-
-  // Fundo
-  ctx.fillStyle = bg0;
-  ctx.fillRect(0, 0, W, H);
-
-  // Card principal
-  roundRect(ctx, 24, 24, W-48, H-48, 20, bg1, border);
-
-  // Linha dourada topo
-  const grad = ctx.createLinearGradient(24, 24, W-24, 24);
-  grad.addColorStop(0, 'transparent');
-  grad.addColorStop(0.5, gold);
-  grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad;
-  ctx.fillRect(24, 24, W-48, 3);
-
-  // Logo / título
-  ctx.font = 'bold 18px serif';
-  ctx.fillStyle = gold2;
-  ctx.textAlign = 'center';
-  ctx.fillText('✦  Finanças Família', W/2, 80);
-
-  // Mês
-  const [y,m] = mesSelecionado.split('-');
-  const mesNome = MES[parseInt(m)-1] + ' ' + y;
-  ctx.font = 'bold 32px serif';
-  ctx.fillStyle = txt;
-  ctx.fillText(mesNome, W/2, 126);
-
-  // Linha separadora
-  ctx.strokeStyle = border;
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(80, 148); ctx.lineTo(W-80, 148); ctx.stroke();
-
-  // Cards de valores
-  const rec = totalReceitas();
-  const prev = totalCustoPrevisto();
-  const real = totalCustoReal();
-  const sp = saldoPrev();
-  const sr = saldoReal();
-  const va = (getDados().receitas||{}).valeAlim||0;
-
-  const cards = [
-    { label: 'Receitas', val: rec, color: gold2 },
-    { label: 'Vale Alimentação', val: va, color: gold },
-    { label: 'Custo Previsto', val: prev, color: '#f59e0b' },
-    { label: 'Custo Real', val: real, color: danger },
-    { label: 'Saldo Previsto', val: sp, color: sp>=0?em:danger },
-    { label: 'Saldo Real', val: sr, color: sr>=0?em:danger },
-  ];
-
-  const cw = (W-48-24*3)/2; // largura card
-  const ch = 88;
-  const startY = 168;
-  cards.forEach((c, i)=>{
-    const col = i%2, row = Math.floor(i/2);
-    const x = 36 + col*(cw+24);
-    const y2 = startY + row*(ch+12);
-    roundRect(ctx, x, y2, cw, ch, 12, bg2, border);
-    ctx.font = '11px Inter,sans-serif';
-    ctx.fillStyle = txt2;
-    ctx.textAlign = 'left';
-    ctx.fillText(c.label.toUpperCase(), x+16, y2+22);
-    ctx.font = 'bold 22px serif';
-    ctx.fillStyle = c.color;
-    ctx.fillText(fmtN(c.val), x+16, y2+58);
-  });
-
-  // Comprometimento
-  const pctR = rec>0?Math.min(Math.round(real/rec*100),100):0;
-  const pctP = rec>0?Math.min(Math.round(prev/rec*100),100):0;
-  const barY = startY + 3*(ch+12) + 20;
-
-  ctx.font = 'bold 14px Inter,sans-serif';
-  ctx.fillStyle = txt;
-  ctx.textAlign = 'left';
-  ctx.fillText('Comprometimento da Renda', 36, barY);
-
-  // Barra previsto
-  ctx.font = '11px Inter,sans-serif';
-  ctx.fillStyle = txt2;
-  ctx.fillText('Previsto — '+pctP+'%', 36, barY+24);
-  roundRect(ctx, 36, barY+30, W-72, 10, 5, bg2, null);
-  if(pctP>0){
-    const barColor = pctP>90?danger:pctP>70?'#f59e0b':gold;
-    roundRect(ctx, 36, barY+30, Math.max((W-72)*pctP/100,0), 10, 5, barColor, null);
-  }
-
-  // Barra real
-  ctx.fillStyle = txt2;
-  ctx.fillText('Real — '+pctR+'%', 36, barY+58);
-  roundRect(ctx, 36, barY+64, W-72, 10, 5, bg2, null);
-  if(pctR>0){
-    const barColor2 = pctR>90?danger:pctR>70?'#f59e0b':em;
-    roundRect(ctx, 36, barY+64, Math.max((W-72)*pctR/100,0), 10, 5, barColor2, null);
-  }
-
-  // Meta de economia
-  const meta = getMetaEconomia();
-  if(meta>0){
-    const metaY = barY + 100;
-    roundRect(ctx, 36, metaY, W-72, 70, 12, bg2, border);
-    ctx.font = 'bold 13px Inter,sans-serif';
-    ctx.fillStyle = gold2;
-    ctx.textAlign = 'left';
-    ctx.fillText('🎯 Meta de Economia', 52, metaY+22);
-    const pctMeta = Math.min(Math.round(Math.max(sr,0)/meta*100),100);
-    ctx.font = '11px Inter,sans-serif';
-    ctx.fillStyle = txt2;
-    ctx.fillText('Meta: '+fmtN(meta)+'   Atual: '+fmtN(sr)+'   '+pctMeta+'%', 52, metaY+42);
-    roundRect(ctx, 52, metaY+50, W-104, 8, 4, isDark?'#252b3a':'#e8e4da', null);
-    if(pctMeta>0) roundRect(ctx, 52, metaY+50, Math.max((W-104)*pctMeta/100,0), 8, 4, sr>=meta?em:gold, null);
-  }
-
-  // Pendentes
-  const pendentes = (getDados().despesas||[]).filter(d=>!d.pago).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  const pendY = meta>0 ? barY+186 : barY+100;
-  if(pendentes.length>0){
-    ctx.font = 'bold 14px Inter,sans-serif';
-    ctx.fillStyle = txt;
-    ctx.textAlign = 'left';
-    ctx.fillText('Pendências ('+pendentes.length+')', 36, pendY);
-    const maxPend = Math.min(pendentes.length, 5);
-    pendentes.slice(0, maxPend).forEach((d,i)=>{
-      const py = pendY+14 + i*36;
-      roundRect(ctx, 36, py, W-72, 30, 8, bg2, border);
-      ctx.font = '13px Inter,sans-serif';
-      ctx.fillStyle = txt;
-      ctx.textAlign = 'left';
-      ctx.fillText(d.nome.length>32?d.nome.slice(0,32)+'…':d.nome, 52, py+20);
-      ctx.font = 'bold 13px serif';
-      ctx.fillStyle = '#f59e0b';
-      ctx.textAlign = 'right';
-      ctx.fillText(fmtN(d.custoPrevisto), W-52, py+20);
-    });
-    if(pendentes.length>maxPend){
-      ctx.font = '11px Inter,sans-serif';
-      ctx.fillStyle = txt2;
-      ctx.textAlign = 'center';
-      ctx.fillText('+ '+(pendentes.length-maxPend)+' outras pendências', W/2, pendY+14+maxPend*36+16);
-    }
-  }
-
-  // Rodapé
-  ctx.font = '11px Inter,sans-serif';
-  ctx.fillStyle = txt2;
-  ctx.textAlign = 'center';
-  ctx.fillText('Bruno & Priscila · Gerado em '+new Date().toLocaleDateString('pt-BR'), W/2, H-36);
-
-  // Linha dourada rodapé
-  ctx.fillStyle = grad;
-  ctx.fillRect(24, H-30, W-48, 2);
-
-  document.getElementById('modalShare').style.display='flex';
-};
-
-function fmtN(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
-function roundRect(ctx, x, y, w, h, r, fill, stroke){
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
-  ctx.closePath();
-  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
-  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
-}
-
 window.fecharModalShare = function(){ document.getElementById('modalShare').style.display='none'; };
 
 window.baixarImagem = function(){
