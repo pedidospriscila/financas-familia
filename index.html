@@ -352,7 +352,6 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <span id="syncStatus" title="Status Firebase" class="sync-dot-pulse" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;cursor:default"></span>
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
-    <button onclick="compartilharResumo()" title="Compartilhar Resumo" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">📸</button>
     <button onclick="toggleTema()" id="temaBtn" title="Alternar tema" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">🌙</button>
     <div style="position:relative">
       <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
@@ -523,9 +522,7 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte</div><canvas id="chartReceitas"></canvas></div>
     <div class="grafico-card"><div class="grafico-titulo">Previsto vs Real — Despesas</div><canvas id="chartComparativo"></canvas></div>
   </div>
-  <div class="graficos-grid">
-    <div class="grafico-card"><div class="grafico-titulo">Evolução do Patrimônio Acumulado</div><canvas id="chartPatrimonio"></canvas></div>
-  </div>
+
 </div>
 
 <!-- CONFIG -->
@@ -675,19 +672,6 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   </div>
 </div>
 
-
-<!-- MODAL COMPARTILHAR -->
-<div class="modal-overlay" id="modalShare" style="display:none" onclick="fecharModalShare()">
-  <div class="modal-box" style="max-width:420px;padding:1rem" onclick="event.stopPropagation()">
-    <div class="modal-title" style="margin-bottom:.75rem">📸 Resumo do Mês</div>
-    <canvas id="shareCanvas" style="width:100%;border-radius:12px;display:block"></canvas>
-    <div class="modal-footer" style="margin-top:.875rem">
-      <button class="btn-modal-ok" onclick="baixarImagem()">⬇ Salvar Imagem</button>
-      <button class="btn-modal-cancel" onclick="fecharModalShare()">Fechar</button>
-    </div>
-    <div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:.5rem">No celular: segure a imagem para salvar ou compartilhar</div>
-  </div>
-</div>
 
 <!-- MODAL EDITAR DESPESA -->
 <div class="modal-overlay" id="modalEditDesp" style="display:none">
@@ -885,7 +869,7 @@ function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
   renderNotifBadge();
   if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
-    renderPatrimonio();
+   
   }
 }
 
@@ -1094,8 +1078,6 @@ function renderGraficos(){
     }
   }
 
-  // 5. Patrimônio acumulado
-  renderChartPatrimonio();
 }
 
 // ============ AÇÕES ============
@@ -1659,7 +1641,7 @@ window.showTab = name => {
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
-  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); renderPatrimonio(); }
+  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); }
   if(name==='config') initCfgAlertas();
 };
 
@@ -1862,19 +1844,6 @@ window.gerarPDF = function(){
 
 
 // ============ META DE ECONOMIA ============
-window.fecharModalShare = function(){ document.getElementById('modalShare').style.display='none'; };
-
-window.baixarImagem = function(){
-  const canvas = document.getElementById('shareCanvas');
-  const [y,m] = mesSelecionado.split('-');
-  const nome = 'financas_'+MES[parseInt(m)-1].toLowerCase()+'_'+y+'.png';
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = nome;
-  a.click();
-  showToast('Imagem salva!');
-};
-
 // ============ BOOT ============
 buildMesSelect();
 setTimeout(verificarNotificacoes, 2000);
