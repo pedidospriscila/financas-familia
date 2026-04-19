@@ -1045,22 +1045,20 @@ const chartDefaults={ responsive:true, maintainAspectRatio:true };
 function renderGraficos(){
   const d=getDados();
 
-  // Evolução saldo — últimos 6 meses
+  // 1. Evolução saldo 6 meses
   destroyChart('evolucao');
   const ctxE=document.getElementById('chartEvolucao');
   if(ctxE){
     const labels=[],saldosPrev=[],saldosReal=[];
-    let ym=mesSelecionado;
     for(let i=5;i>=0;i--){
-      let [y,m]=ym.split('-').map(Number); m-=i; while(m<1){m+=12;y--;};
+      let [y,m]=mesSelecionado.split('-').map(Number); m-=i; while(m<1){m+=12;y--;}
       const key=y+'-'+(m<10?'0':'')+m;
       labels.push(MES[m-1]);
       const md=allData.meses&&allData.meses[key];
       if(md){
-        const rec=(md.receitas?['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(md.receitas[k]),0):0);
-        const prev=(md.despesas||[]).reduce((s,d2)=>s+num(d2.custoPrevisto),0);
-        const real=(md.despesas||[]).filter(d2=>d2.pago).reduce((s,d2)=>s+num(d2.custoReal||d2.custoPrevisto),0);
-        saldosPrev.push(rec-prev); saldosReal.push(rec-real);
+        const rec=['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num((md.receitas||{})[k]),0);
+        saldosPrev.push(rec-(md.despesas||[]).reduce((s,d2)=>s+num(d2.custoPrevisto),0));
+        saldosReal.push(rec-(md.despesas||[]).filter(d2=>d2.pago).reduce((s,d2)=>s+num(d2.custoReal||d2.custoPrevisto),0));
       } else { saldosPrev.push(null); saldosReal.push(null); }
     }
     charts['evolucao']=new Chart(ctxE,{type:'line',data:{labels,datasets:[
@@ -1069,22 +1067,35 @@ function renderGraficos(){
     ]},options:{...chartDefaults,plugins:{legend:{labels:{color:tickColor,font:{size:11}}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor},grid:{color:gridColor}}}}});
   }
 
-  // Visão geral
+  // 2. Visão geral
   destroyChart('barra');
   const ctxB=document.getElementById('chartBarra');
   if(ctxB) charts['barra']=new Chart(ctxB,{type:'bar',data:{labels:['Receitas','Prev.','Real','Saldo P.','Saldo R.'],datasets:[{data:[totalReceitas(),totalCustoPrev(),totalCustoReal(),Math.max(0,saldoPrev()),Math.max(0,saldoReal())],backgroundColor:['#c9a84c','#f59e0b','#dc4a3d','#4a8cdc','#10b981'],borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor},grid:{display:false}}}}});
 
-  // Receitas
+  // 3. Receitas por fonte
   destroyChart('receitas');
   const ctxR=document.getElementById('chartReceitas');
-  if(ctxR){const r=d.receitas;charts['receitas']=new Chart(ctxR,{type:'bar',data:{labels:['Sal. Bruno','Sal. Priscila','Extra B.','Extra P.','13º'],datasets:[{data:[r.salarioBruno,r.salarioPriscila,r.rendaExtraBruno,r.rendaExtraPriscila,r.decimoTerceiro].map(num),backgroundColor:GOLD_PAL,borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});}
+  if(ctxR){
+    const r=d.receitas;
+    charts['receitas']=new Chart(ctxR,{type:'bar',data:{labels:['Sal. Bruno','Sal. Priscila','Extra B.','Extra P.','13º'],datasets:[{data:[r.salarioBruno,r.salarioPriscila,r.rendaExtraBruno,r.rendaExtraPriscila,r.decimoTerceiro].map(num),backgroundColor:GOLD_PAL,borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});
+  }
 
-  // Patrimônio e Fixo/Var histórico
-  renderChartPatrimonio();
-  // Comparativo
+  // 4. Previsto vs Real
   destroyChart('comp');
   const ctxC=document.getElementById('chartComparativo');
-  if(ctxC&&d.despesas.length){const sl=d.despesas.slice(0,8);charts['comp']=new Chart(ctxC,{type:'bar',data:{labels:sl.map(x=>x.nome.length>10?x.nome.slice(0,10)+'…':x.nome),datasets:[{label:'Previsto',data:sl.map(x=>num(x.custoPrevisto)),backgroundColor:'#c9a84c',borderRadius:4},{label:'Real',data:sl.map(x=>x.pago?num(x.custoReal||x.custoPrevisto):0),backgroundColor:'#10b981',borderRadius:4}]},options:{...chartDefaults,plugins:{legend:{labels:{color:tickColor,font:{size:11}}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});}
+  if(ctxC){
+    const desp=d.despesas||[];
+    if(desp.length){
+      const sl=desp.slice(0,8);
+      charts['comp']=new Chart(ctxC,{type:'bar',data:{labels:sl.map(x=>x.nome.length>10?x.nome.slice(0,10)+'…':x.nome),datasets:[
+        {label:'Previsto',data:sl.map(x=>num(x.custoPrevisto)),backgroundColor:'#c9a84c',borderRadius:4},
+        {label:'Real',data:sl.map(x=>x.pago?num(x.custoReal||x.custoPrevisto):0),backgroundColor:'#10b981',borderRadius:4}
+      ]},options:{...chartDefaults,plugins:{legend:{labels:{color:tickColor,font:{size:11}}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});
+    }
+  }
+
+  // 5. Patrimônio acumulado
+  renderChartPatrimonio();
 }
 
 // ============ AÇÕES ============
