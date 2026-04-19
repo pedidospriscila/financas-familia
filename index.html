@@ -539,6 +539,10 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte</div><canvas id="chartReceitas"></canvas></div>
     <div class="grafico-card"><div class="grafico-titulo">Previsto vs Real — Despesas</div><canvas id="chartComparativo"></canvas></div>
   </div>
+  <div class="graficos-grid">
+    <div class="grafico-card"><div class="grafico-titulo">Evolução do Patrimônio Acumulado</div><canvas id="chartPatrimonio"></canvas></div>
+    <div class="grafico-card"><div class="grafico-titulo">Fixas vs Variáveis — Histórico</div><canvas id="chartFixoVar"></canvas></div>
+  </div>
 </div>
 
 <!-- CONFIG -->
@@ -700,6 +704,20 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
       <button class="btn-modal-ok" onclick="gerarPDF()">📄 Gerar PDF</button>
       <button class="btn-modal-cancel" onclick="fecharModalPDF()">Cancelar</button>
     </div>
+  </div>
+</div>
+
+
+<!-- MODAL COMPARTILHAR -->
+<div class="modal-overlay" id="modalShare" style="display:none" onclick="fecharModalShare()">
+  <div class="modal-box" style="max-width:420px;padding:1rem" onclick="event.stopPropagation()">
+    <div class="modal-title" style="margin-bottom:.75rem">📸 Resumo do Mês</div>
+    <canvas id="shareCanvas" style="width:100%;border-radius:12px;display:block"></canvas>
+    <div class="modal-footer" style="margin-top:.875rem">
+      <button class="btn-modal-ok" onclick="baixarImagem()">⬇ Salvar Imagem</button>
+      <button class="btn-modal-cancel" onclick="fecharModalShare()">Fechar</button>
+    </div>
+    <div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:.5rem">No celular: segure a imagem para salvar ou compartilhar</div>
   </div>
 </div>
 
@@ -897,7 +915,7 @@ window.showTab = name => {
 // ============ RENDER ============
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
-  renderNotifBadge(); renderMetaResumo();
+  renderNotifBadge(); renderMetaResumo(); initMetaEconomia();
   if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
     renderMetaEconomia(); renderPatrimonio();
   }
@@ -954,15 +972,19 @@ function renderResumo(){
   const pl=document.getElementById('pendentes-list'); if(!pl)return;
   const pend=(getDados().despesas||[]).filter(d=>!d.pago).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   if(!pend.length){pl.innerHTML='<div class="empty"><div class="empty-icon">✦</div>Tudo em dia!</div>';return;}
-  const hoje2 = new Date().getDate();
+  // Alertas visuais apenas se visualizando o mês atual real
+  const hoje2Obj = new Date();
+  const mesAtualReal2 = hoje2Obj.getFullYear()+'-'+(hoje2Obj.getMonth()+1<10?'0':'')+(hoje2Obj.getMonth()+1);
+  const esMesAtual2 = mesSelecionado === mesAtualReal2;
+  const hoje2 = hoje2Obj.getDate();
   pl.innerHTML=pend.map(d=>{
     const venc = d.vencimento ? parseInt(d.vencimento) : null;
-    const diff = venc !== null ? venc - hoje2 : null;
+    const diff = (esMesAtual2 && venc !== null) ? venc - hoje2 : null;
     const vencido = diff !== null && diff < 0;
     const proximo = diff !== null && diff >= 0 && diff <= 3;
     const borderColor = vencido ? 'var(--danger)' : proximo ? '#f59e0b' : 'var(--gold-border)';
     const piscaClass = vencido ? 'pisca-vermelho' : proximo ? 'pisca-amarelo' : '';
-    const diaLabel = venc === null ? '' : vencido ? `Venceu dia ${venc}` : diff === 0 ? 'Vence HOJE' : `Vence em ${diff} dia(s)`;
+    const diaLabel = venc === null ? '' : vencido ? `Venceu dia ${venc}` : diff === 0 ? 'Vence HOJE' : diff !== null ? `Vence em ${diff} dia(s)` : `Vence dia ${venc}`;
     return `<div class="pendente-item ${piscaClass}" style="border-left-color:${borderColor}">
       <div><div class="pendente-nome">${d.nome}</div>${diaLabel?`<div class="pendente-dia" style="color:${vencido?'var(--danger)':proximo?'#f59e0b':'var(--txt3)'}">${diaLabel}</div>`:''}</div>
       <div style="text-align:right">
@@ -1000,12 +1022,16 @@ function renderDespesas(){
     const pr=num(d.custoPrevisto),re=d.pago?num(d.custoReal||d.custoPrevisto):0;
     const dif=d.pago?pr-re:null;
     const dc=dif===null?'var(--txt3)':dif>=0?'var(--em)':'var(--danger)';
-    const hj = new Date().getDate();
+    // Alerta só se estivermos visualizando o mês atual do calendário real
+    const hoje = new Date();
+    const mesAtualReal = hoje.getFullYear()+'-'+(hoje.getMonth()+1<10?'0':'')+(hoje.getMonth()+1);
+    const eMesAtual = mesSelecionado === mesAtualReal;
+    const hj = hoje.getDate();
     const dv = d.vencimento ? parseInt(d.vencimento) : null;
-    const df = dv !== null ? dv - hj : null;
-    const rowBg = !d.pago && dv!==null ? (df<0 ? 'rgba(220,74,61,.08)' : df<=3 ? 'rgba(245,158,11,.06)' : '') : '';
-    const vencCor = !d.pago && dv!==null ? (df<0?'var(--danger)':df<=3?'#f59e0b':'var(--txt3)') : 'var(--txt3)';
-    const vencLabel = d.vencimento ? ((!d.pago&&df<0)?`⚠ ${d.vencimento}`:((!d.pago&&df===0)?`🔴 ${d.vencimento}`:d.vencimento)) : '—';
+    const df = (eMesAtual && dv !== null) ? dv - hj : null;
+    const rowBg = !d.pago && df!==null ? (df<0 ? 'rgba(220,74,61,.08)' : df<=3 ? 'rgba(245,158,11,.06)' : '') : '';
+    const vencCor = !d.pago && df!==null ? (df<0?'var(--danger)':df<=3?'#f59e0b':'var(--txt3)') : 'var(--txt3)';
+    const vencLabel = d.vencimento ? (!d.pago&&df!==null&&df<0?`⚠ ${d.vencimento}`:(!d.pago&&df===0?`🔴 ${d.vencimento}`:d.vencimento)) : '—';
     return `<tr class="tr-hover" style="background:${rowBg}">
       <td>${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}</td>
       <td style="text-align:center;color:${vencCor};font-weight:${(!d.pago&&df!==null&&df<=3)?'700':'400'}">${vencLabel}</td>
@@ -1880,7 +1906,10 @@ window.gerarPDF = function(){
 
 // ============ META DE ECONOMIA ============
 function getMetaEconomia(){
-  return parseFloat((allData.config&&allData.config.metaEconomia)||localStorage.getItem('meta_economia')||'0');
+  // Prioridade: Firebase > localStorage
+  const fbVal = allData.config&&allData.config.metaEconomia;
+  if(fbVal) return parseFloat(fbVal);
+  return parseFloat(localStorage.getItem('meta_economia')||'0');
 }
 
 window.salvarMetaEconomia = function(){
@@ -2084,6 +2113,210 @@ function renderChartFixoVarHistorico(){
     }
   });
 }
+
+
+// ============ COMPARTILHAR RESUMO ============
+window.compartilharResumo = function(){
+  const canvas = document.getElementById('shareCanvas');
+  if(!canvas) return;
+
+  const W = 800, H = 960;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const isDark = temaAtual !== 'light';
+  const bg0   = isDark ? '#0d0f14' : '#f5f3ee';
+  const bg1   = isDark ? '#131720' : '#ffffff';
+  const bg2   = isDark ? '#1c2130' : '#f0ede6';
+  const gold  = '#b8963e';
+  const gold2 = '#d4a853';
+  const em    = '#10b981';
+  const danger= '#dc4a3d';
+  const txt   = isDark ? '#f2ede4' : '#1a1612';
+  const txt2  = isDark ? '#9a9488' : '#5a5040';
+  const border= isDark ? '#2e2410' : '#e8d49a';
+
+  // Fundo
+  ctx.fillStyle = bg0;
+  ctx.fillRect(0, 0, W, H);
+
+  // Card principal
+  roundRect(ctx, 24, 24, W-48, H-48, 20, bg1, border);
+
+  // Linha dourada topo
+  const grad = ctx.createLinearGradient(24, 24, W-24, 24);
+  grad.addColorStop(0, 'transparent');
+  grad.addColorStop(0.5, gold);
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(24, 24, W-48, 3);
+
+  // Logo / título
+  ctx.font = 'bold 18px serif';
+  ctx.fillStyle = gold2;
+  ctx.textAlign = 'center';
+  ctx.fillText('✦  Finanças Família', W/2, 80);
+
+  // Mês
+  const [y,m] = mesSelecionado.split('-');
+  const mesNome = MES[parseInt(m)-1] + ' ' + y;
+  ctx.font = 'bold 32px serif';
+  ctx.fillStyle = txt;
+  ctx.fillText(mesNome, W/2, 126);
+
+  // Linha separadora
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(80, 148); ctx.lineTo(W-80, 148); ctx.stroke();
+
+  // Cards de valores
+  const rec = totalReceitas();
+  const prev = totalCustoPrevisto();
+  const real = totalCustoReal();
+  const sp = saldoPrev();
+  const sr = saldoReal();
+  const va = (getDados().receitas||{}).valeAlim||0;
+
+  const cards = [
+    { label: 'Receitas', val: rec, color: gold2 },
+    { label: 'Vale Alimentação', val: va, color: gold },
+    { label: 'Custo Previsto', val: prev, color: '#f59e0b' },
+    { label: 'Custo Real', val: real, color: danger },
+    { label: 'Saldo Previsto', val: sp, color: sp>=0?em:danger },
+    { label: 'Saldo Real', val: sr, color: sr>=0?em:danger },
+  ];
+
+  const cw = (W-48-24*3)/2; // largura card
+  const ch = 88;
+  const startY = 168;
+  cards.forEach((c, i)=>{
+    const col = i%2, row = Math.floor(i/2);
+    const x = 36 + col*(cw+24);
+    const y2 = startY + row*(ch+12);
+    roundRect(ctx, x, y2, cw, ch, 12, bg2, border);
+    ctx.font = '11px Inter,sans-serif';
+    ctx.fillStyle = txt2;
+    ctx.textAlign = 'left';
+    ctx.fillText(c.label.toUpperCase(), x+16, y2+22);
+    ctx.font = 'bold 22px serif';
+    ctx.fillStyle = c.color;
+    ctx.fillText(fmtN(c.val), x+16, y2+58);
+  });
+
+  // Comprometimento
+  const pctR = rec>0?Math.min(Math.round(real/rec*100),100):0;
+  const pctP = rec>0?Math.min(Math.round(prev/rec*100),100):0;
+  const barY = startY + 3*(ch+12) + 20;
+
+  ctx.font = 'bold 14px Inter,sans-serif';
+  ctx.fillStyle = txt;
+  ctx.textAlign = 'left';
+  ctx.fillText('Comprometimento da Renda', 36, barY);
+
+  // Barra previsto
+  ctx.font = '11px Inter,sans-serif';
+  ctx.fillStyle = txt2;
+  ctx.fillText('Previsto — '+pctP+'%', 36, barY+24);
+  roundRect(ctx, 36, barY+30, W-72, 10, 5, bg2, null);
+  if(pctP>0){
+    const barColor = pctP>90?danger:pctP>70?'#f59e0b':gold;
+    roundRect(ctx, 36, barY+30, Math.max((W-72)*pctP/100,0), 10, 5, barColor, null);
+  }
+
+  // Barra real
+  ctx.fillStyle = txt2;
+  ctx.fillText('Real — '+pctR+'%', 36, barY+58);
+  roundRect(ctx, 36, barY+64, W-72, 10, 5, bg2, null);
+  if(pctR>0){
+    const barColor2 = pctR>90?danger:pctR>70?'#f59e0b':em;
+    roundRect(ctx, 36, barY+64, Math.max((W-72)*pctR/100,0), 10, 5, barColor2, null);
+  }
+
+  // Meta de economia
+  const meta = getMetaEconomia();
+  if(meta>0){
+    const metaY = barY + 100;
+    roundRect(ctx, 36, metaY, W-72, 70, 12, bg2, border);
+    ctx.font = 'bold 13px Inter,sans-serif';
+    ctx.fillStyle = gold2;
+    ctx.textAlign = 'left';
+    ctx.fillText('🎯 Meta de Economia', 52, metaY+22);
+    const pctMeta = Math.min(Math.round(Math.max(sr,0)/meta*100),100);
+    ctx.font = '11px Inter,sans-serif';
+    ctx.fillStyle = txt2;
+    ctx.fillText('Meta: '+fmtN(meta)+'   Atual: '+fmtN(sr)+'   '+pctMeta+'%', 52, metaY+42);
+    roundRect(ctx, 52, metaY+50, W-104, 8, 4, isDark?'#252b3a':'#e8e4da', null);
+    if(pctMeta>0) roundRect(ctx, 52, metaY+50, Math.max((W-104)*pctMeta/100,0), 8, 4, sr>=meta?em:gold, null);
+  }
+
+  // Pendentes
+  const pendentes = (getDados().despesas||[]).filter(d=>!d.pago).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const pendY = meta>0 ? barY+186 : barY+100;
+  if(pendentes.length>0){
+    ctx.font = 'bold 14px Inter,sans-serif';
+    ctx.fillStyle = txt;
+    ctx.textAlign = 'left';
+    ctx.fillText('Pendências ('+pendentes.length+')', 36, pendY);
+    const maxPend = Math.min(pendentes.length, 5);
+    pendentes.slice(0, maxPend).forEach((d,i)=>{
+      const py = pendY+14 + i*36;
+      roundRect(ctx, 36, py, W-72, 30, 8, bg2, border);
+      ctx.font = '13px Inter,sans-serif';
+      ctx.fillStyle = txt;
+      ctx.textAlign = 'left';
+      ctx.fillText(d.nome.length>32?d.nome.slice(0,32)+'…':d.nome, 52, py+20);
+      ctx.font = 'bold 13px serif';
+      ctx.fillStyle = '#f59e0b';
+      ctx.textAlign = 'right';
+      ctx.fillText(fmtN(d.custoPrevisto), W-52, py+20);
+    });
+    if(pendentes.length>maxPend){
+      ctx.font = '11px Inter,sans-serif';
+      ctx.fillStyle = txt2;
+      ctx.textAlign = 'center';
+      ctx.fillText('+ '+(pendentes.length-maxPend)+' outras pendências', W/2, pendY+14+maxPend*36+16);
+    }
+  }
+
+  // Rodapé
+  ctx.font = '11px Inter,sans-serif';
+  ctx.fillStyle = txt2;
+  ctx.textAlign = 'center';
+  ctx.fillText('Bruno & Priscila · Gerado em '+new Date().toLocaleDateString('pt-BR'), W/2, H-36);
+
+  // Linha dourada rodapé
+  ctx.fillStyle = grad;
+  ctx.fillRect(24, H-30, W-48, 2);
+
+  document.getElementById('modalShare').style.display='flex';
+};
+
+function fmtN(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function roundRect(ctx, x, y, w, h, r, fill, stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
+}
+
+window.fecharModalShare = function(){ document.getElementById('modalShare').style.display='none'; };
+
+window.baixarImagem = function(){
+  const canvas = document.getElementById('shareCanvas');
+  const [y,m] = mesSelecionado.split('-');
+  const nome = 'financas_'+MES[parseInt(m)-1].toLowerCase()+'_'+y+'.png';
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = nome;
+  a.click();
+  showToast('Imagem salva!');
+};
 
 // ============ BOOT ============
 buildMesSelect();
