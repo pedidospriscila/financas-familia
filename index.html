@@ -278,11 +278,7 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 .meta-eco-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem}
 .meta-eco-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold2)}
 
-/* PATRIMÔNIO */
-.patri-section{background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem}
-.patri-stat{text-align:center;padding:.75rem}
-.patri-stat-val{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700}
-.patri-stat-label{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+
 
 /* FIXO VAR HISTÓRICO */
 .fv-bar-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
@@ -301,6 +297,10 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 .rosca-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .rosca-leg-nome{color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rosca-leg-val{color:var(--gold2);font-weight:600;white-space:nowrap;font-size:10px}
+
+.rosca-centro{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px}
+.rosca-centro-val{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;white-space:nowrap;line-height:1.2}
+.rosca-centro-sub{font-size:9px;color:#6b6050;margin-top:2px}
 </style>
 </head>
 <body>
@@ -550,7 +550,7 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   </div>
   <div class="graficos-grid">
     <div class="grafico-card"><div class="grafico-titulo">Previsto vs Real — Despesas</div><canvas id="chartComparativo"></canvas></div>
-    <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte (Barras)</div><canvas id="chartReceitas"></canvas></div>
+
   </div>
 
 </div>
@@ -574,21 +574,6 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div class="section-title">Comparativo — Mês Atual vs Anterior</div>
     <div id="comparativoContent"></div>
   </div>
-
-  <div class="section">
-    <div class="section-title">Alertas do Mês</div>
-    <div id="alertasContent"></div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Despesas Fixas vs Variáveis</div>
-    <div id="fixoVarContent"></div>
-  </div>
-
-  <div class="patri-section">
-    <div class="section-title">📈 Evolução do Patrimônio</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.25rem" id="patriStats"></div>
-    <div id="patriHistorico"></div>
   </div>
 </div>
 
@@ -1087,14 +1072,6 @@ function renderGraficos(){
   const ctxB=document.getElementById('chartBarra');
   if(ctxB) charts['barra']=new Chart(ctxB,{type:'bar',data:{labels:['Receitas','Prev.','Real','Saldo P.','Saldo R.'],datasets:[{data:[totalReceitas(),totalCustoPrev(),totalCustoReal(),Math.max(0,saldoPrev()),Math.max(0,saldoReal())],backgroundColor:['#c9a84c','#f59e0b','#dc4a3d','#4a8cdc','#10b981'],borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor},grid:{display:false}}}}});
 
-  // 3. Receitas por fonte
-  destroyChart('receitas');
-  const ctxR=document.getElementById('chartReceitas');
-  if(ctxR){
-    const r=d.receitas;
-    charts['receitas']=new Chart(ctxR,{type:'bar',data:{labels:['Sal. Bruno','Sal. Priscila','Extra B.','Extra P.','13º'],datasets:[{data:[r.salarioBruno,r.salarioPriscila,r.rendaExtraBruno,r.rendaExtraPriscila,r.decimoTerceiro].map(num),backgroundColor:GOLD_PAL,borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});
-  }
-
   // 4. Roscas
   destroyChart('roscaDesp'); destroyChart('roscaRec');
   const ctxRD = document.getElementById('chartRoscaDespesas');
@@ -1102,21 +1079,42 @@ function renderGraficos(){
   const GOLD_ROSCA = ['#b8963e','#d4a853','#e8c97a','#a07830','#7a5820','#c9a84c','#4a3010','#8a6c2a','#6b5020','#9a7838'];
   const TEAL_ROSCA = ['#10b981','#34d399','#059669','#065f46','#047857','#0d9488'];
 
-  if(ctxRD && d.despesas.length){
-    const despTop = [...d.despesas].sort((a,b)=>num(b.custoPrevisto)-num(a.custoPrevisto));
-    const top7 = despTop.slice(0,7);
-    const outros = despTop.slice(7).reduce((s,x)=>s+num(x.custoPrevisto),0);
-    const dadosRosca = outros>0 ? [...top7, {nome:'Outros',custoPrevisto:outros}] : top7;
-    const totalDesp = dadosRosca.reduce((s,x)=>s+num(x.custoPrevisto),0);
-    const elTot = document.getElementById('roscaDespTotal');
-    if(elTot) elTot.textContent = 'R$'+totalDesp.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
-    charts['roscaDesp'] = new Chart(ctxRD,{
+  // Rosca Previsto
+  destroyChart('roscaDespPrev'); destroyChart('roscaDespReal');
+  function montarRoscaDesp(canvasId, totId, legId, campo, cor, chartKey){
+    const ctx = document.getElementById(canvasId);
+    if(!ctx || !d.despesas.length) return;
+    const sorted = [...d.despesas].filter(x=>num(x[campo])>0).sort((a,b)=>num(b[campo])-num(a[campo]));
+    const top7 = sorted.slice(0,7);
+    const outros = sorted.slice(7).reduce((s,x)=>s+num(x[campo]),0);
+    const dados = outros>0 ? [...top7, {nome:'Outros',[campo]:outros}] : top7;
+    const total = dados.reduce((s,x)=>s+num(x[campo]),0);
+    const elT = document.getElementById(totId);
+    if(elT) elT.textContent = 'R$'+total.toLocaleString('pt-BR',{maximumFractionDigits:0});
+    charts[chartKey] = new Chart(ctx,{
       type:'doughnut',
-      data:{labels:dadosRosca.map(x=>x.nome),datasets:[{data:dadosRosca.map(x=>num(x.custoPrevisto)),backgroundColor:GOLD_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},
+      data:{labels:dados.map(x=>x.nome),datasets:[{data:dados.map(x=>num(x[campo])),backgroundColor:GOLD_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},
       options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}
     });
-    const legD = document.getElementById('legendaDespesas');
-    if(legD){ legD.innerHTML = dadosRosca.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%GOLD_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.custoPrevisto)}</span></div>`).join(''); }
+    const leg = document.getElementById(legId);
+    if(leg) leg.innerHTML = dados.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%GOLD_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x[campo])}</span></div>`).join('');
+  }
+  montarRoscaDesp('chartRoscaDespPrev','roscaDespPrevTotal','legendaDespPrev','custoPrevisto','#d4a853','roscaDespPrev');
+  const despPagas = d.despesas.filter(x=>x.pago);
+  if(despPagas.length){
+    const sorted2=[...despPagas].sort((a,b)=>num(b.custoReal||b.custoPrevisto)-num(a.custoReal||a.custoPrevisto));
+    const top7r=sorted2.slice(0,7);
+    const outrosr=sorted2.slice(7).reduce((s,x)=>s+num(x.custoReal||x.custoPrevisto),0);
+    const dadosr=outrosr>0?[...top7r,{nome:'Outros',custoReal:outrosr}]:top7r;
+    const totalr=dadosr.reduce((s,x)=>s+num(x.custoReal||x.custoPrevisto),0);
+    const elTr=document.getElementById('roscaDespRealTotal');
+    if(elTr) elTr.textContent='R$'+totalr.toLocaleString('pt-BR',{maximumFractionDigits:0});
+    const ctxRR2=document.getElementById('chartRoscaDespReal');
+    if(ctxRR2){
+      charts['roscaDespReal']=new Chart(ctxRR2,{type:'doughnut',data:{labels:dadosr.map(x=>x.nome),datasets:[{data:dadosr.map(x=>num(x.custoReal||x.custoPrevisto)),backgroundColor:GOLD_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}});
+      const legR2=document.getElementById('legendaDespReal');
+      if(legR2) legR2.innerHTML=dadosr.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%GOLD_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.custoReal||x.custoPrevisto)}</span></div>`).join('');
+    }
   }
 
   if(ctxRR){
@@ -1127,6 +1125,7 @@ function renderGraficos(){
       {nome:'Extra Bruno', val:num(r.rendaExtraBruno)},
       {nome:'Extra Priscila', val:num(r.rendaExtraPriscila)},
       {nome:'13º Salário', val:num(r.decimoTerceiro)},
+      {nome:'Vale Alimentação', val:num(r.valeAlim)},
     ].filter(x=>x.val>0);
     const totalRec = recItens.reduce((s,x)=>s+x.val,0);
     const elTotR = document.getElementById('roscaRecTotal');
@@ -1458,7 +1457,7 @@ window.salvarConfigAlertas = function(){
   if(saldo) localStorage.setItem('alerta_saldo', saldo.value);
   if(dias) localStorage.setItem('notif_dias', dias.value);
   showToast('Configurações salvas!');
-  renderAlertas();
+ 
   renderNotifBadge();
 };
 function initCfgAlertas(){
@@ -1472,58 +1471,6 @@ function initCfgAlertas(){
 }
 
 // ============ ALERTAS AUTOMÁTICOS ============
-function renderAlertas(){
-  const el = document.getElementById('alertasContent');
-  if(!el) return;
-  const cfg = getCfgAlertas();
-  const dados = getDados();
-  const alertas = [];
-
-  // Saldo baixo
-  const sr = saldoReal();
-  if(sr < cfg.saldo){
-    alertas.push({tipo:'danger', icon:'🔴', msg:`Saldo real <strong>R$ ${sr.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong> está abaixo do limite de R$ ${cfg.saldo.toLocaleString('pt-BR')}`});
-  }
-
-  // Custo real ultrapassou previsto
-  const totPrev = totalCustoPrevisto();
-  const totReal = totalCustoReal();
-  if(totPrev > 0 && totReal > 0){
-    const diff = ((totReal - totPrev) / totPrev * 100);
-    if(diff > cfg.pct){
-      alertas.push({tipo:'danger', icon:'⚠️', msg:`Custo real ultrapassou o previsto em <strong>${diff.toFixed(1)}%</strong> (limite: ${cfg.pct}%)`});
-    }
-  }
-
-  // Despesas individuais que ultrapassaram
-  (dados.despesas||[]).filter(d=>d.pago && num(d.custoReal)>0).forEach(d=>{
-    const diff = (num(d.custoReal)-num(d.custoPrevisto))/num(d.custoPrevisto)*100;
-    if(diff > cfg.pct){
-      alertas.push({tipo:'warn', icon:'⚡', msg:`<strong>${d.nome}</strong> custou ${diff.toFixed(0)}% acima do previsto (${fmt(d.custoPrevisto)} → ${fmt(d.custoReal)})`});
-    }
-  });
-
-  // Vencimentos próximos
-  const hoje = new Date().getDate();
-  const diasAlert = cfg.dias;
-  (dados.despesas||[]).filter(d=>!d.pago && d.vencimento).forEach(d=>{
-    const venc = parseInt(d.vencimento);
-    const diff = venc - hoje;
-    if(diff >= 0 && diff <= diasAlert){
-      alertas.push({tipo:diff===0?'danger':'warn', icon:'🔔', msg:`<strong>${d.nome}</strong> vence ${diff===0?'hoje':'em '+diff+' dia(s)'} — ${fmt(d.custoPrevisto)}`});
-    }
-  });
-
-  if(alertas.length===0){
-    el.innerHTML='<div class="empty"><div class="empty-icon">✦</div>Nenhum alerta no momento. Tudo sob controle!</div>';
-    return;
-  }
-  el.innerHTML = alertas.map(a=>`
-    <div class="alerta-banner ${a.tipo==='warn'?'warn':''}">
-      <span class="alerta-icon">${a.icon}</span>
-      <div class="alerta-txt">${a.msg}</div>
-    </div>`).join('');
-}
 
 // ============ BADGE NOTIFICAÇÕES ============
 function renderNotifBadge(){
@@ -1602,80 +1549,60 @@ function renderAnual(){
 function renderComparativo(){
   const el = document.getElementById('comparativoContent');
   if(!el) return;
-
   const antKey = mesAnterior(mesSelecionado);
   const mdAnt = allData.meses && allData.meses[antKey];
-  const mdAtual = getDados();
-
   if(!mdAnt || !(mdAnt.despesas||[]).length){
     el.innerHTML = '<div class="empty">Sem dados do mês anterior para comparar.</div>';
     return;
   }
-
   const recAtual = totalReceitas();
   const recAnt = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num((mdAnt.receitas||{})[k]),0);
   const gastoAtual = totalCustoReal();
   const gastoAnt = (mdAnt.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
   const saldoAtual = saldoReal();
   const saldoAnt = recAnt - gastoAnt;
+  const mesA = nomeMes(antKey), mesB = nomeMes(mesSelecionado);
 
-  function diffStr(a, b){
-    const d = a - b;
-    const c = d >= 0 ? 'var(--em)' : 'var(--danger)';
-    const s = d >= 0 ? '+' : '';
-    return `<span style="color:${c}">${s}${fmt(d)}</span>`;
+  function arrow(val){ return val>0?'↑':val<0?'↓':'→'; }
+  function arrowColor(val,inverted=false){ const pos=inverted?val<0:val>0; return pos?'var(--em)':'var(--danger)'; }
+
+  function compCard(label, valAnt, valAtual, inverted=false){
+    const diff = valAtual - valAnt;
+    const pct = valAnt!==0 ? Math.abs(diff/valAnt*100).toFixed(1) : 0;
+    const cor = arrowColor(diff, inverted);
+    const sinal = diff>0?'+':'';
+    return `<div style="background:var(--bg3);border-radius:12px;padding:1rem;border:1px solid var(--brd)">
+      <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">${label}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem">
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:.5rem">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">${mesA}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--txt2)">${fmt(valAnt)}</div>
+        </div>
+        <div style="text-align:center;background:var(--bg2);border-radius:8px;padding:.5rem">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">${mesB}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--txt)">${fmt(valAtual)}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem;background:${diff===0?'var(--bg2)':inverted?diff<0?'rgba(16,185,129,.1)':'rgba(220,74,61,.1)':diff>0?'rgba(16,185,129,.1)':'rgba(220,74,61,.1)'};border-radius:8px">
+        <span style="font-size:18px">${arrow(inverted?-diff:diff)}</span>
+        <span style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:${cor}">${sinal}${fmt(diff)}</span>
+        <span style="font-size:11px;color:var(--txt3)">(${pct}%)</span>
+      </div>
+    </div>`;
   }
 
-  const mesAntNome = nomeMes(antKey);
   el.innerHTML = `
-    <div style="font-size:12px;color:var(--txt3);margin-bottom:.75rem">Comparando <strong style="color:var(--gold2)">${nomeMes(mesSelecionado)}</strong> com <strong style="color:var(--txt2)">${mesAntNome}</strong></div>
-    <div class="comp-row">
-      <div class="comp-nome">Receitas</div>
-      <div class="comp-val" style="color:var(--txt2)">${fmt(recAnt)}</div>
-      <div class="comp-val">${fmt(recAtual)}</div>
-      <div class="comp-diff">${diffStr(recAtual, recAnt)}</div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:1rem;text-align:center">
+      Comparando <strong style="color:var(--txt2)">${mesA}</strong> → <strong style="color:var(--gold2)">${mesB}</strong>
     </div>
-    <div class="comp-row">
-      <div class="comp-nome">Gastos reais</div>
-      <div class="comp-val" style="color:var(--txt2)">${fmt(gastoAnt)}</div>
-      <div class="comp-val">${fmt(gastoAtual)}</div>
-      <div class="comp-diff">${diffStr(-gastoAtual, -gastoAnt)}</div>
-    </div>
-    <div class="comp-row" style="background:var(--gold-dim)">
-      <div class="comp-nome" style="font-weight:700">Saldo</div>
-      <div class="comp-val" style="color:var(--txt2)">${fmt(saldoAnt)}</div>
-      <div class="comp-val" style="color:${saldoAtual>=0?'var(--em)':'var(--danger)'};font-weight:700">${fmt(saldoAtual)}</div>
-      <div class="comp-diff">${diffStr(saldoAtual, saldoAnt)}</div>
-    </div>
-    <div style="font-size:11px;color:var(--txt3);margin-top:.5rem;text-align:right">← ${mesAntNome} &nbsp;|&nbsp; ${nomeMes(mesSelecionado)} →</div>
-  `;
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem">
+      ${compCard('💵 Receitas', recAnt, recAtual, false)}
+      ${compCard('💸 Gastos Reais', gastoAnt, gastoAtual, true)}
+      ${compCard('💰 Saldo Real', saldoAnt, saldoAtual, false)}
+    </div>`;
 }
 
 // ============ FIXAS vs VARIÁVEIS ============
-function renderFixoVar(){
-  const el = document.getElementById('fixoVarContent');
-  if(!el) return;
-  const desp = getDados().despesas||[];
-  const fixas = desp.filter(d=>d.tipo==='fixo');
-  const vars = desp.filter(d=>d.tipo!=='fixo');
-  const totFixo = fixas.reduce((s,d)=>s+num(d.custoPrevisto),0);
-  const totVar = vars.reduce((s,d)=>s+num(d.custoPrevisto),0);
-  const total = totFixo + totVar;
-  const pctFixo = total>0 ? Math.round(totFixo/total*100) : 0;
-
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-      <div class="card"><div class="card-label">Fixas (${fixas.length})</div><div class="card-val" style="color:#60a0e0">${fmt(totFixo)}<span style="font-size:11px;color:var(--txt3);margin-left:4px">${pctFixo}%</span></div></div>
-      <div class="card"><div class="card-label">Variáveis (${vars.length})</div><div class="card-val" style="color:#c084fc">${fmt(totVar)}<span style="font-size:11px;color:var(--txt3);margin-left:4px">${100-pctFixo}%</span></div></div>
-    </div>
-    <div style="background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;margin-bottom:1rem">
-      <div style="height:100%;width:${pctFixo}%;background:linear-gradient(90deg,#60a0e0,#c084fc);border-radius:20px;transition:width .6s ease"></div>
-    </div>
-    ${fixas.length===0&&vars.length===0?'<div class="empty">Nenhuma despesa cadastrada. Ao adicionar despesas, marque o tipo (Fixo/Variável).</div>':''}
-    ${fixas.length>0?`<div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.4px">Fixas</div>${fixas.slice(0,5).map(d=>`<div class="comp-row"><div class="comp-nome">${d.nome}</div><span class="badge-fixo">FIXO</span><div class="comp-val">${fmt(d.custoPrevisto)}</div></div>`).join('')}`:''}
-    ${vars.length>0?`<div style="font-size:11px;color:var(--txt3);margin:.75rem 0 .4rem;text-transform:uppercase;letter-spacing:.4px">Variáveis</div>${vars.slice(0,5).map(d=>`<div class="comp-row"><div class="comp-nome">${d.nome}</div><span class="badge-var">VAR</span><div class="comp-val">${fmt(d.custoPrevisto)}</div></div>`).join('')}`:''}
-  `;
-}
 
 // ============ NOTIFICAÇÕES DO DIA ============
 function verificarNotificacoes(){
@@ -1715,7 +1642,7 @@ window.showTab = name => {
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
-  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderAlertas(); renderFixoVar(); }
+  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo();  }
   if(name==='config') initCfgAlertas();
 };
 
