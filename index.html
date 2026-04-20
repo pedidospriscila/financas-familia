@@ -295,6 +295,12 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 .pisca-vermelho{animation:piscaVm 1.2s ease-in-out infinite}
 @keyframes piscaAm{0%,100%{border-left-color:#f59e0b;background:var(--bg3)}50%{border-left-color:#fcd34d;background:#2a1e06}}
 @keyframes piscaVm{0%,100%{border-left-color:var(--danger);background:var(--bg3)}50%{border-left-color:#f87171;background:var(--danger-dim)}}
+
+.rosca-legenda{display:flex;flex-direction:column;gap:4px;margin-top:.75rem;max-height:140px;overflow-y:auto}
+.rosca-leg-item{display:flex;align-items:center;font-size:11px;gap:6px}
+.rosca-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rosca-leg-nome{color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rosca-leg-val{color:var(--gold2);font-weight:600;white-space:nowrap;font-size:10px}
 </style>
 </head>
 <body>
@@ -519,8 +525,32 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
     <div class="grafico-card"><div class="grafico-titulo">Visão Geral do Mês</div><canvas id="chartBarra"></canvas></div>
   </div>
   <div class="graficos-grid">
-    <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte</div><canvas id="chartReceitas"></canvas></div>
+    <div class="grafico-card">
+      <div class="grafico-titulo">Composição das Despesas</div>
+      <div style="position:relative">
+        <canvas id="chartRoscaDespesas"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:100px">
+          <div id="roscaDespTotal" style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#d4a853;white-space:nowrap"></div>
+          <div style="font-size:9px;color:#6b6050;margin-top:2px">Total Previsto</div>
+        </div>
+      <div class="rosca-legenda" id="legendaDespesas"></div>
+    </div>
+    </div>
+    <div class="grafico-card">
+      <div class="grafico-titulo">Receitas por Fonte</div>
+      <div style="position:relative">
+        <canvas id="chartRoscaReceitas"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:100px">
+          <div id="roscaRecTotal" style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#10b981;white-space:nowrap"></div>
+          <div style="font-size:9px;color:#6b6050;margin-top:2px">Total Receitas</div>
+        </div>
+      </div>
+      <div class="rosca-legenda" id="legendaReceitas"></div>
+    </div>
+  </div>
+  <div class="graficos-grid">
     <div class="grafico-card"><div class="grafico-titulo">Previsto vs Real — Despesas</div><canvas id="chartComparativo"></canvas></div>
+    <div class="grafico-card"><div class="grafico-titulo">Receitas por Fonte (Barras)</div><canvas id="chartReceitas"></canvas></div>
   </div>
 
 </div>
@@ -1020,6 +1050,7 @@ function renderAquisicoes(){
 
 // ============ GRÁFICOS ============
 let charts={};
+function isDarkTheme(){ return temaAtual !== 'light'; }
 const destroyChart = id => { if(charts[id]){charts[id].destroy();delete charts[id];} };
 const GOLD_PAL=['#c9a84c','#e8c97a','#f5e4b0','#a07830','#7a5820','#4a3010','#d4a84c','#b89040','#8a6820'];
 const gridColor='#1a1a1f';
@@ -1064,7 +1095,54 @@ function renderGraficos(){
     charts['receitas']=new Chart(ctxR,{type:'bar',data:{labels:['Sal. Bruno','Sal. Priscila','Extra B.','Extra P.','13º'],datasets:[{data:[r.salarioBruno,r.salarioPriscila,r.rendaExtraBruno,r.rendaExtraPriscila,r.decimoTerceiro].map(num),backgroundColor:GOLD_PAL,borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor,font:{size:10}},grid:{display:false}}}}});
   }
 
-  // 4. Previsto vs Real
+  // 4. Roscas
+  destroyChart('roscaDesp'); destroyChart('roscaRec');
+  const ctxRD = document.getElementById('chartRoscaDespesas');
+  const ctxRR = document.getElementById('chartRoscaReceitas');
+  const GOLD_ROSCA = ['#b8963e','#d4a853','#e8c97a','#a07830','#7a5820','#c9a84c','#4a3010','#8a6c2a','#6b5020','#9a7838'];
+  const TEAL_ROSCA = ['#10b981','#34d399','#059669','#065f46','#047857','#0d9488'];
+
+  if(ctxRD && d.despesas.length){
+    const despTop = [...d.despesas].sort((a,b)=>num(b.custoPrevisto)-num(a.custoPrevisto));
+    const top7 = despTop.slice(0,7);
+    const outros = despTop.slice(7).reduce((s,x)=>s+num(x.custoPrevisto),0);
+    const dadosRosca = outros>0 ? [...top7, {nome:'Outros',custoPrevisto:outros}] : top7;
+    const totalDesp = dadosRosca.reduce((s,x)=>s+num(x.custoPrevisto),0);
+    const elTot = document.getElementById('roscaDespTotal');
+    if(elTot) elTot.textContent = 'R$'+totalDesp.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+    charts['roscaDesp'] = new Chart(ctxRD,{
+      type:'doughnut',
+      data:{labels:dadosRosca.map(x=>x.nome),datasets:[{data:dadosRosca.map(x=>num(x.custoPrevisto)),backgroundColor:GOLD_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},
+      options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}
+    });
+    const legD = document.getElementById('legendaDespesas');
+    if(legD){ legD.innerHTML = dadosRosca.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%GOLD_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.custoPrevisto)}</span></div>`).join(''); }
+  }
+
+  if(ctxRR){
+    const r = d.receitas||{};
+    const recItens = [
+      {nome:'Sal. Bruno', val:num(r.salarioBruno)},
+      {nome:'Sal. Priscila', val:num(r.salarioPriscila)},
+      {nome:'Extra Bruno', val:num(r.rendaExtraBruno)},
+      {nome:'Extra Priscila', val:num(r.rendaExtraPriscila)},
+      {nome:'13º Salário', val:num(r.decimoTerceiro)},
+    ].filter(x=>x.val>0);
+    const totalRec = recItens.reduce((s,x)=>s+x.val,0);
+    const elTotR = document.getElementById('roscaRecTotal');
+    if(elTotR) elTotR.textContent = 'R$'+totalRec.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+    if(recItens.length){
+      charts['roscaRec'] = new Chart(ctxRR,{
+        type:'doughnut',
+        data:{labels:recItens.map(x=>x.nome),datasets:[{data:recItens.map(x=>x.val),backgroundColor:TEAL_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},
+        options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}
+      });
+      const legR = document.getElementById('legendaReceitas');
+      if(legR){ legR.innerHTML = recItens.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${TEAL_ROSCA[i%TEAL_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.val)}</span></div>`).join(''); }
+    }
+  }
+
+  // 5. Previsto vs Real
   destroyChart('comp');
   const ctxC=document.getElementById('chartComparativo');
   if(ctxC){
@@ -1322,10 +1400,6 @@ function showToast(msg,err=false){
 
 // ============ LOGIN ============
 (function(){
-  // Hash SHA-256 da senha "familia2025" — troque aqui para mudar a senha
-  // Para gerar um novo hash: https://emn178.github.io/online-tools/sha256.html
-  // Senha: familia2025
-  // Para trocar: substitua SENHA_OK pela nova senha diretamente
   const SENHA_OK = '341026';
   const SESSION_KEY = 'financas_auth_ok';
 
