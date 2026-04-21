@@ -301,6 +301,38 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 .rosca-centro{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90px}
 .rosca-centro-val{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;white-space:nowrap;line-height:1.2}
 .rosca-centro-sub{font-size:9px;color:#6b6050;margin-top:2px}
+
+/* BUSCA */
+.busca-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
+.busca-input{flex:1;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;color:var(--txt);padding:9px 12px;font-size:13px;outline:none;font-family:'Inter',sans-serif;transition:border-color .2s}
+.busca-input:focus{border-color:var(--gold)}
+.busca-input::placeholder{color:var(--txt3)}
+
+/* BADGE RECORRENTE */
+.badge-rec{display:inline-block;background:#0a2a1a;color:#34d399;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.2px;margin-left:4px}
+body.light .badge-rec{background:#d1fae5;color:#065f46}
+
+/* ÍCONE HISTÓRICO */
+.btn-hist{background:transparent;border:1px solid var(--brd);border-radius:6px;color:var(--txt3);cursor:pointer;padding:3px 7px;font-size:12px;-webkit-tap-highlight-color:transparent;transition:all .2s}
+.btn-hist:hover{border-color:var(--gold);color:var(--gold2)}
+
+/* MODAL HISTÓRICO */
+.hist-bar-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem}
+.hist-bar-mes{font-size:11px;color:var(--txt3);width:50px;flex-shrink:0;text-align:right}
+.hist-bar-outer{flex:1;background:var(--bg3);border-radius:20px;height:10px;overflow:hidden}
+.hist-bar-prev{height:50%;background:var(--gold);border-radius:20px;transition:width .5s ease}
+.hist-bar-real{height:50%;background:var(--em);border-radius:20px;transition:width .5s ease}
+.hist-val{font-size:10px;color:var(--txt2);width:75px;text-align:right;flex-shrink:0}
+
+/* PWA STANDALONE */
+@media all and (display-mode: standalone) {
+  .header{padding-top:env(safe-area-inset-top,0px);padding-top:max(env(safe-area-inset-top),12px)}
+  body{padding-bottom:env(safe-area-inset-bottom,0px)}
+}
+/* iOS safe area */
+@supports(padding-top: env(safe-area-inset-top)){
+  .header{padding-top:max(12px,env(safe-area-inset-top))}
+}
 </style>
 </head>
 <body>
@@ -463,12 +495,19 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
           <option value="fixo">Fixo</option>
         </select>
       </div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:.75rem;padding:.5rem 0;margin-top:.25rem">
+        <input type="checkbox" id="d_recorrente" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
+        <label for="d_recorrente" style="font-size:13px;color:var(--txt);cursor:pointer;margin:0">🔄 Despesa recorrente (aparece automaticamente nos próximos meses)</label>
+      </div>
       <div class="field" style="justify-content:flex-end"><button class="btn-add" id="btn_add_despesa">+ Adicionar</button></div>
     </div>
   </div>
 
   <div class="section">
     <div class="section-title">Lista de Despesas</div>
+    <div class="busca-wrap">
+      <input class="busca-input" id="buscaDespesa" type="text" placeholder="🔍 Buscar despesa..." oninput="renderDespesas()">
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -526,15 +565,26 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
   </div>
   <div class="graficos-grid">
     <div class="grafico-card">
-      <div class="grafico-titulo">Composição das Despesas</div>
+      <div class="grafico-titulo">Despesas — Custo Previsto</div>
       <div style="position:relative">
-        <canvas id="chartRoscaDespesas"></canvas>
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:100px">
-          <div id="roscaDespTotal" style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#d4a853;white-space:nowrap"></div>
-          <div style="font-size:9px;color:#6b6050;margin-top:2px">Total Previsto</div>
+        <canvas id="chartRoscaDespPrev"></canvas>
+        <div class="rosca-centro">
+          <div id="roscaDespPrevTotal" class="rosca-centro-val" style="color:#d4a853"></div>
+          <div class="rosca-centro-sub">Previsto</div>
         </div>
-      <div class="rosca-legenda" id="legendaDespesas"></div>
+      </div>
+      <div class="rosca-legenda" id="legendaDespPrev"></div>
     </div>
+    <div class="grafico-card">
+      <div class="grafico-titulo">Despesas — Custo Real Pago</div>
+      <div style="position:relative">
+        <canvas id="chartRoscaDespReal"></canvas>
+        <div class="rosca-centro">
+          <div id="roscaDespRealTotal" class="rosca-centro-val" style="color:#dc4a3d"></div>
+          <div class="rosca-centro-sub">Real Pago</div>
+        </div>
+      </div>
+      <div class="rosca-legenda" id="legendaDespReal"></div>
     </div>
     <div class="grafico-card">
       <div class="grafico-titulo">Receitas por Fonte</div>
@@ -688,6 +738,24 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
 </div>
 
 
+
+<!-- MODAL HISTÓRICO DESPESA -->
+<div class="modal-overlay" id="modalHistorico" style="display:none" onclick="fecharModalHist()">
+  <div class="modal-box" style="max-width:500px" onclick="event.stopPropagation()">
+    <div class="modal-title" id="histTitulo">Histórico</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:1rem">Últimos 12 meses — Previsto vs Real</div>
+    <div style="display:flex;gap:1rem;margin-bottom:1rem;font-size:11px">
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:5px;background:var(--gold);border-radius:3px"></span>Previsto</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:5px;background:var(--em);border-radius:3px"></span>Real</span>
+    </div>
+    <div id="histConteudo"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem" id="histStats"></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="fecharModalHist()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR DESPESA -->
 <div class="modal-overlay" id="modalEditDesp" style="display:none">
   <div class="modal-box">
@@ -697,6 +765,10 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
       <div class="field"><label>Dia Vencimento</label><input id="ed_venc" type="number" min="1" max="31" inputmode="numeric"></div>
       <div class="field"><label>Custo Previsto</label><input id="ed_previsto" type="number" step="0.01" inputmode="decimal"></div>
       <div class="field"><label>Custo Real</label><input id="ed_real" type="number" step="0.01" inputmode="decimal"></div>
+      <div style="display:flex;flex-direction:row;align-items:center;gap:.75rem;padding:.25rem 0;margin-top:.25rem">
+        <input type="checkbox" id="ed_recorrente" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
+        <label for="ed_recorrente" style="font-size:13px;color:var(--txt);cursor:pointer;margin:0">🔄 Recorrente</label>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal-ok" onclick="salvarEdicaoDesp()">✓ Salvar</button>
@@ -737,6 +809,19 @@ body.light .badge-var{background:#f3e8ff;color:#7e22ce}
       <button class="btn-modal-ok" onclick="confirmarCopiar()">✓ Copiar</button>
       <button class="btn-modal-cancel" onclick="fecharModal()">Cancelar</button>
     </div>
+  </div>
+</div>
+
+
+<!-- BANNER INSTALAR -->
+<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#131720;border-top:1px solid #2e2410;padding:12px 16px;z-index:400;box-shadow:0 -4px 20px rgba(0,0,0,.5)">
+  <div style="display:flex;align-items:center;gap:12px;max-width:600px;margin:0 auto">
+    <div style="width:44px;height:44px;background:linear-gradient(135deg,#1e1a0d,#2e2410);border:1px solid #b8963e;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">✦</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#d4a853;font-family:'Playfair Display',serif">Instalar como App</div>
+      <div style="font-size:11px;color:#9a9488;margin-top:2px" id="installTip">Toque em <strong style="color:#d4a853">Compartilhar</strong> → <strong style="color:#d4a853">Adicionar à Tela de Início</strong></div>
+    </div>
+    <button onclick="fecharBanner()" style="background:transparent;border:1px solid #3a3020;color:#9a9488;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;flex-shrink:0">✕ Fechar</button>
   </div>
 </div>
 
@@ -820,6 +905,7 @@ onValue(dbRef, snap => {
   if(data){ allData=data; if(!allData.meses) allData.meses={}; }
   if(!fbReady){
     fbReady=true;
+    aplicarRecorrentes();
     buildMesSelect(); renderAll();
   } else {
     renderAll();
@@ -964,7 +1050,13 @@ function renderDespesas(){
     ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00'));
     setText('ft_dif','—'); return;
   }
-  const sorted=[...desp].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+  const busca=(document.getElementById('buscaDespesa')||{}).value||'';
+  const filtrado = busca ? desp.filter(d=>d.nome.toLowerCase().includes(busca.toLowerCase())) : desp;
+  if(!filtrado.length && busca){
+    tb.innerHTML='<tr><td colspan="6" class="empty">Nenhuma despesa encontrada para "'+busca+'"</td></tr>';
+    return;
+  }
+  const sorted=[...filtrado].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   tb.innerHTML=sorted.map(d=>{
     const pr=num(d.custoPrevisto),re=d.pago?num(d.custoReal||d.custoPrevisto):0;
     const dif=d.pago?pr-re:null;
@@ -980,13 +1072,14 @@ function renderDespesas(){
     const vencCor = !d.pago && df!==null ? (df<0?'var(--danger)':df<=3?'#f59e0b':'var(--txt3)') : 'var(--txt3)';
     const vencLabel = d.vencimento ? (!d.pago&&df!==null&&df<0?`⚠ ${d.vencimento}`:(!d.pago&&df===0?`🔴 ${d.vencimento}`:d.vencimento)) : '—';
     return `<tr class="tr-hover" style="background:${rowBg}">
-      <td>${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}</td>
+      <td>${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}${d.recorrente?'<span class="badge-rec">🔄</span>':''}</td>
       <td style="text-align:center;color:${vencCor};font-weight:${(!d.pago&&df!==null&&df<=3)?'700':'400'}">${vencLabel}</td>
       <td style="text-align:right">${fmt(pr)}</td>
       <td style="text-align:right">${d.custoReal?fmt(d.custoReal):'—'}</td>
       <td style="text-align:right;color:${dc}">${dif!==null?fmt(dif):'—'}</td>
       <td style="text-align:center;white-space:nowrap">
         <button onclick="togglePago('${d.id}')" class="btn-status ${d.pago?'pago':'pendente'}">${d.pago?'✓ Pago':'Pendente'}</button>
+        <button onclick="verHistorico('${d.nome}')" class="btn-hist" title="Histórico">📈</button>
         <button onclick="editarDespesa('${d.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar">✏</button>
         <button onclick="removerDespesa('${d.id}')" class="btn-del">✕</button>
       </td>
@@ -1073,71 +1166,61 @@ function renderGraficos(){
   if(ctxB) charts['barra']=new Chart(ctxB,{type:'bar',data:{labels:['Receitas','Prev.','Real','Saldo P.','Saldo R.'],datasets:[{data:[totalReceitas(),totalCustoPrev(),totalCustoReal(),Math.max(0,saldoPrev()),Math.max(0,saldoReal())],backgroundColor:['#c9a84c','#f59e0b','#dc4a3d','#4a8cdc','#10b981'],borderRadius:6,borderSkipped:false}]},options:{...chartDefaults,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{color:tickColor,callback:v=>v.toLocaleString('pt-BR')},grid:{color:gridColor}},x:{ticks:{color:tickColor},grid:{display:false}}}}});
 
   // 4. Roscas
-  destroyChart('roscaDesp'); destroyChart('roscaRec');
-  const ctxRD = document.getElementById('chartRoscaDespesas');
-  const ctxRR = document.getElementById('chartRoscaReceitas');
-  const GOLD_ROSCA = ['#b8963e','#d4a853','#e8c97a','#a07830','#7a5820','#c9a84c','#4a3010','#8a6c2a','#6b5020','#9a7838'];
+  const GOLD_ROSCA = ['#b8963e','#d4a853','#e8c97a','#a07830','#7a5820','#c9a84c','#4a3010','#8a6c2a'];
   const TEAL_ROSCA = ['#10b981','#34d399','#059669','#065f46','#047857','#0d9488'];
+  const bdColor = isDarkTheme()?'#0d0f14':'#f5f3ee';
+  const roscaOpts = {responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}};
 
   // Rosca Previsto
-  destroyChart('roscaDespPrev'); destroyChart('roscaDespReal');
-  function montarRoscaDesp(canvasId, totId, legId, campo, cor, chartKey){
-    const ctx = document.getElementById(canvasId);
-    if(!ctx || !d.despesas.length) return;
-    const sorted = [...d.despesas].filter(x=>num(x[campo])>0).sort((a,b)=>num(b[campo])-num(a[campo]));
-    const top7 = sorted.slice(0,7);
-    const outros = sorted.slice(7).reduce((s,x)=>s+num(x[campo]),0);
-    const dados = outros>0 ? [...top7, {nome:'Outros',[campo]:outros}] : top7;
-    const total = dados.reduce((s,x)=>s+num(x[campo]),0);
-    const elT = document.getElementById(totId);
-    if(elT) elT.textContent = 'R$'+total.toLocaleString('pt-BR',{maximumFractionDigits:0});
-    charts[chartKey] = new Chart(ctx,{
-      type:'doughnut',
-      data:{labels:dados.map(x=>x.nome),datasets:[{data:dados.map(x=>num(x[campo])),backgroundColor:GOLD_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},
-      options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}
-    });
-    const leg = document.getElementById(legId);
-    if(leg) leg.innerHTML = dados.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%GOLD_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x[campo])}</span></div>`).join('');
+  destroyChart('roscaDespPrev');
+  const ctxDP = document.getElementById('chartRoscaDespPrev');
+  if(ctxDP && d.despesas.length){
+    const sp=[...d.despesas].filter(x=>num(x.custoPrevisto)>0).sort((a,b)=>num(b.custoPrevisto)-num(a.custoPrevisto));
+    const dp7=sp.slice(0,7); const dpO=sp.slice(7).reduce((s,x)=>s+num(x.custoPrevisto),0);
+    const dpD=dpO>0?[...dp7,{nome:'Outros',custoPrevisto:dpO}]:dp7;
+    const dpT=dpD.reduce((s,x)=>s+num(x.custoPrevisto),0);
+    const elDP=document.getElementById('roscaDespPrevTotal');
+    if(elDP) elDP.textContent='R$'+dpT.toLocaleString('pt-BR',{maximumFractionDigits:0});
+    charts['roscaDespPrev']=new Chart(ctxDP,{type:'doughnut',data:{labels:dpD.map(x=>x.nome),datasets:[{data:dpD.map(x=>num(x.custoPrevisto)),backgroundColor:GOLD_ROSCA,borderColor:bdColor,borderWidth:3,hoverOffset:8}]},options:roscaOpts});
+    const legDP=document.getElementById('legendaDespPrev');
+    if(legDP) legDP.innerHTML=dpD.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%8]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.custoPrevisto)}</span></div>`).join('');
   }
-  montarRoscaDesp('chartRoscaDespPrev','roscaDespPrevTotal','legendaDespPrev','custoPrevisto','#d4a853','roscaDespPrev');
-  const despPagas = d.despesas.filter(x=>x.pago);
-  if(despPagas.length){
-    const sorted2=[...despPagas].sort((a,b)=>num(b.custoReal||b.custoPrevisto)-num(a.custoReal||a.custoPrevisto));
-    const top7r=sorted2.slice(0,7);
-    const outrosr=sorted2.slice(7).reduce((s,x)=>s+num(x.custoReal||x.custoPrevisto),0);
-    const dadosr=outrosr>0?[...top7r,{nome:'Outros',custoReal:outrosr}]:top7r;
-    const totalr=dadosr.reduce((s,x)=>s+num(x.custoReal||x.custoPrevisto),0);
-    const elTr=document.getElementById('roscaDespRealTotal');
-    if(elTr) elTr.textContent='R$'+totalr.toLocaleString('pt-BR',{maximumFractionDigits:0});
-    const ctxRR2=document.getElementById('chartRoscaDespReal');
-    if(ctxRR2){
-      charts['roscaDespReal']=new Chart(ctxRR2,{type:'doughnut',data:{labels:dadosr.map(x=>x.nome),datasets:[{data:dadosr.map(x=>num(x.custoReal||x.custoPrevisto)),backgroundColor:GOLD_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}});
-      const legR2=document.getElementById('legendaDespReal');
-      if(legR2) legR2.innerHTML=dadosr.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%GOLD_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.custoReal||x.custoPrevisto)}</span></div>`).join('');
+
+  // Rosca Real Pago
+  destroyChart('roscaDespReal');
+  const ctxDR = document.getElementById('chartRoscaDespReal');
+  if(ctxDR){
+    const dp=d.despesas.filter(x=>x.pago&&num(x.custoReal||x.custoPrevisto)>0);
+    if(dp.length){
+      const sr=[...dp].sort((a,b)=>num(b.custoReal||b.custoPrevisto)-num(a.custoReal||a.custoPrevisto));
+      const dr7=sr.slice(0,7); const drO=sr.slice(7).reduce((s,x)=>s+num(x.custoReal||x.custoPrevisto),0);
+      const drD=drO>0?[...dr7,{nome:'Outros',val:drO}]:dr7;
+      const drT=drD.reduce((s,x)=>s+num(x.custoReal||x.custoPrevisto||x.val),0);
+      const elDR=document.getElementById('roscaDespRealTotal');
+      if(elDR) elDR.textContent='R$'+drT.toLocaleString('pt-BR',{maximumFractionDigits:0});
+      charts['roscaDespReal']=new Chart(ctxDR,{type:'doughnut',data:{labels:drD.map(x=>x.nome),datasets:[{data:drD.map(x=>num(x.custoReal||x.custoPrevisto||x.val)),backgroundColor:GOLD_ROSCA,borderColor:bdColor,borderWidth:3,hoverOffset:8}]},options:roscaOpts});
+      const legDR=document.getElementById('legendaDespReal');
+      if(legDR) legDR.innerHTML=drD.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${GOLD_ROSCA[i%8]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.custoReal||x.custoPrevisto||x.val)}</span></div>`).join('');
     }
   }
 
+  // Rosca Receitas
+  destroyChart('roscaRec');
+  const ctxRR = document.getElementById('chartRoscaReceitas');
   if(ctxRR){
-    const r = d.receitas||{};
-    const recItens = [
-      {nome:'Sal. Bruno', val:num(r.salarioBruno)},
-      {nome:'Sal. Priscila', val:num(r.salarioPriscila)},
-      {nome:'Extra Bruno', val:num(r.rendaExtraBruno)},
-      {nome:'Extra Priscila', val:num(r.rendaExtraPriscila)},
-      {nome:'13º Salário', val:num(r.decimoTerceiro)},
-      {nome:'Vale Alimentação', val:num(r.valeAlim)},
+    const r=d.receitas||{};
+    const ri=[
+      {nome:'Sal. Bruno',val:num(r.salarioBruno)},{nome:'Sal. Priscila',val:num(r.salarioPriscila)},
+      {nome:'Extra Bruno',val:num(r.rendaExtraBruno)},{nome:'Extra Priscila',val:num(r.rendaExtraPriscila)},
+      {nome:'13º Salário',val:num(r.decimoTerceiro)},{nome:'Vale Alimentação',val:num(r.valeAlim)},
     ].filter(x=>x.val>0);
-    const totalRec = recItens.reduce((s,x)=>s+x.val,0);
-    const elTotR = document.getElementById('roscaRecTotal');
-    if(elTotR) elTotR.textContent = 'R$'+totalRec.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
-    if(recItens.length){
-      charts['roscaRec'] = new Chart(ctxRR,{
-        type:'doughnut',
-        data:{labels:recItens.map(x=>x.nome),datasets:[{data:recItens.map(x=>x.val),backgroundColor:TEAL_ROSCA,borderColor:isDarkTheme()?'#0d0f14':'#f5f3ee',borderWidth:3,hoverOffset:8}]},
-        options:{responsive:true,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}}}
-      });
-      const legR = document.getElementById('legendaReceitas');
-      if(legR){ legR.innerHTML = recItens.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${TEAL_ROSCA[i%TEAL_ROSCA.length]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.val)}</span></div>`).join(''); }
+    if(ri.length){
+      const rT=ri.reduce((s,x)=>s+x.val,0);
+      const elRT=document.getElementById('roscaRecTotal');
+      if(elRT) elRT.textContent='R$'+rT.toLocaleString('pt-BR',{maximumFractionDigits:0});
+      charts['roscaRec']=new Chart(ctxRR,{type:'doughnut',data:{labels:ri.map(x=>x.nome),datasets:[{data:ri.map(x=>x.val),backgroundColor:TEAL_ROSCA,borderColor:bdColor,borderWidth:3,hoverOffset:8}]},options:roscaOpts});
+      const legRR=document.getElementById('legendaReceitas');
+      if(legRR) legRR.innerHTML=ri.map((x,i)=>`<div class="rosca-leg-item"><span class="rosca-leg-dot" style="background:${TEAL_ROSCA[i%6]}"></span><span class="rosca-leg-nome">${x.nome}</span><span class="rosca-leg-val">${fmt(x.val)}</span></div>`).join('');
     }
   }
 
@@ -1183,11 +1266,13 @@ document.getElementById('btn_add_despesa').addEventListener('click', () => {
     if(!dados.despesas) dados.despesas=[];
     const nomeParcela=parcelas>1?`${nome} (${p+1}/${parcelas})`:nome;
     const tipoEl=document.getElementById('d_tipo');
-  dados.despesas.push({id:uid(),nome:nomeParcela,vencimento:venc,custoPrevisto:num(prev),custoReal:p===0?custoReal:0,pago:false,tipo:tipoEl?tipoEl.value:'variavel'});
+  const recEl=document.getElementById('d_recorrente');
+  const isRec = p===0 && recEl && recEl.checked; // só marcar recorrente na parcela 1
+  dados.despesas.push({id:uid(),nome:nomeParcela,vencimento:venc,custoPrevisto:num(prev),custoReal:p===0?custoReal:0,pago:false,tipo:tipoEl?tipoEl.value:'variavel',recorrente:isRec});
     m++; if(m>12){m=1;y++;}
   }
-  ['d_nome','d_venc','d_previsto','d_real','d_parcelas'].forEach(id=>{document.getElementById(id).value='';});
-  saveData(); renderDespesas(); renderCards(); renderResumo();
+  ['d_nome','d_venc','d_previsto','d_real','d_parcelas'].forEach(id=>{document.getElementById(id).value='';}); const rcEl=document.getElementById('d_recorrente'); if(rcEl) rcEl.checked=false;
+  saveData(); aplicarRecorrentes(); renderDespesas(); renderCards(); renderResumo();
   showToast(parcelas>1?`Despesa lançada em ${parcelas} meses!`:'Despesa adicionada!');
 });
 
@@ -1266,6 +1351,7 @@ window.editarDespesa = id => {
   document.getElementById('ed_venc').value=d.vencimento||'';
   document.getElementById('ed_previsto').value=d.custoPrevisto||'';
   document.getElementById('ed_real').value=d.custoReal||'';
+  const edRec=document.getElementById('ed_recorrente'); if(edRec) edRec.checked=!!d.recorrente;
   document.getElementById('modalEditDesp').style.display='flex';
   document.getElementById('modalEditDesp')._id=id;
 };
@@ -1279,6 +1365,7 @@ window.salvarEdicaoDesp = () => {
   d.vencimento=document.getElementById('ed_venc').value;
   d.custoPrevisto=num(document.getElementById('ed_previsto').value)||d.custoPrevisto;
   d.custoReal=num(document.getElementById('ed_real').value);
+  const edRec2=document.getElementById('ed_recorrente'); if(edRec2) d.recorrente=edRec2.checked;
   saveData(); renderDespesas(); renderCards(); renderResumo(); fecharModalDesp(); showToast('Despesa atualizada!');
 };
 
@@ -1845,6 +1932,192 @@ window.gerarPDF = function(){
 
 
 // ============ META DE ECONOMIA ============
+
+// ============ RECORRÊNCIA AUTOMÁTICA ============
+function aplicarRecorrentes(){
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesAtual = hoje.getMonth() + 1;
+  // Propagar até 2 meses à frente do atual (para planejamento)
+  let limiteAno = anoAtual, limiteMes = mesAtual + 2;
+  if(limiteMes > 12){ limiteMes -= 12; limiteAno++; }
+  const limiteKey = limiteAno + '-' + (limiteMes < 10 ? '0' : '') + limiteMes;
+
+  // Coletar todas as despesas recorrentes de todos os meses existentes
+  const meses = Object.keys(allData.meses || {}).sort();
+  let houveMudanca = false;
+
+  // Para cada mês com despesa recorrente, propagar para TODOS os meses futuros até o limite
+  meses.forEach(key => {
+    const md = allData.meses[key];
+    if(!md || !md.despesas) return;
+    const recorrentes = md.despesas.filter(d => d.recorrente);
+    if(!recorrentes.length) return;
+
+    // Gerar todos os meses futuros a partir deste até o limite
+    let [y, m] = key.split('-').map(Number);
+    // Avançar 1 mês (não propagar no mesmo mês de origem)
+    m++; if(m > 12){ m = 1; y++; }
+
+    while(true){
+      const futKey = y + '-' + (m < 10 ? '0' : '') + m;
+      if(futKey > limiteKey) break;
+
+      if(!allData.meses[futKey]) allData.meses[futKey] = {receitas:{salarioBruno:0,salarioPriscila:0,rendaExtraBruno:0,rendaExtraPriscila:0,decimoTerceiro:0,valeAlim:0},despesas:[],aquisicoes:[]};
+      const futDesp = allData.meses[futKey].despesas || [];
+
+      recorrentes.forEach(d => {
+        const jaExiste = futDesp.some(x => x.nome === d.nome && x.recorrente);
+        if(!jaExiste){
+          futDesp.push({
+            id: uid(),
+            nome: d.nome,
+            vencimento: d.vencimento,
+            custoPrevisto: d.custoPrevisto,
+            custoReal: 0,
+            pago: false,
+            tipo: d.tipo || 'variavel',
+            recorrente: true
+          });
+          houveMudanca = true;
+        }
+      });
+      allData.meses[futKey].despesas = futDesp;
+
+      m++; if(m > 12){ m = 1; y++; }
+    }
+  });
+
+  if(houveMudanca) saveData();
+}
+
+
+// ============ HISTÓRICO DE DESPESA ============
+window.verHistorico = function(nomeDespesa){
+  const modal = document.getElementById('modalHistorico');
+  const titulo = document.getElementById('histTitulo');
+  const conteudo = document.getElementById('histConteudo');
+  const stats = document.getElementById('histStats');
+  if(!modal) return;
+
+  titulo.textContent = '📈 ' + nomeDespesa;
+
+  // Coletar últimos 12 meses
+  const hoje = new Date();
+  const historico = [];
+  for(let i=11; i>=0; i--){
+    let y=hoje.getFullYear(), m=hoje.getMonth()+1-i;
+    while(m<1){m+=12;y--;}
+    const key=y+'-'+(m<10?'0':'')+m;
+    const md=allData.meses&&allData.meses[key];
+    const d=md&&(md.despesas||[]).find(x=>x.nome===nomeDespesa);
+    historico.push({key, mes:MES[m-1], ano:y, prev:d?num(d.custoPrevisto):null, real:d&&d.pago?num(d.custoReal||d.custoPrevisto):null});
+  }
+
+  const comDados = historico.filter(h=>h.prev!==null);
+  if(!comDados.length){
+    conteudo.innerHTML='<div class="empty">Sem histórico para esta despesa nos últimos 12 meses.</div>';
+    stats.innerHTML=''; modal.style.display='flex'; return;
+  }
+
+  const maxVal = Math.max(...comDados.map(h=>Math.max(h.prev||0,h.real||0)), 1);
+  conteudo.innerHTML = historico.map(h=>{
+    if(h.prev===null) return `<div class="hist-bar-wrap"><div class="hist-bar-mes">${h.mes}</div><div style="flex:1;font-size:11px;color:var(--txt3);padding-left:.5rem">—</div></div>`;
+    const pctP = Math.round(h.prev/maxVal*100);
+    const pctR = h.real!==null ? Math.round(h.real/maxVal*100) : 0;
+    const difCor = h.real===null?'var(--txt3)':h.real>h.prev?'var(--danger)':'var(--em)';
+    const dif = h.real!==null ? (h.real-h.prev) : null;
+    return `<div class="hist-bar-wrap">
+      <div class="hist-bar-mes">${h.mes}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+          <div class="hist-bar-outer"><div class="hist-bar-prev" style="width:${pctP}%"></div></div>
+          <span style="font-size:10px;color:var(--txt2);width:80px;text-align:right">${fmt(h.prev)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="hist-bar-outer">${h.real!==null?`<div class="hist-bar-real" style="width:${pctR}%"></div>`:'<div style="height:100%;border-radius:20px;background:var(--brd)"></div>'}</div>
+          <span style="font-size:10px;width:80px;text-align:right;color:${difCor}">${h.real!==null?fmt(h.real):'Pendente'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Stats
+  const medPrev = comDados.reduce((s,h)=>s+(h.prev||0),0)/comDados.length;
+  const pagos = comDados.filter(h=>h.real!==null);
+  const medReal = pagos.length ? pagos.reduce((s,h)=>s+h.real,0)/pagos.length : 0;
+  const maiorReal = pagos.length ? Math.max(...pagos.map(h=>h.real)) : 0;
+  stats.innerHTML = `
+    <div class="card"><div class="card-label">Média Prevista</div><div class="card-val" style="font-size:.9rem">${fmt(medPrev)}</div></div>
+    <div class="card"><div class="card-label">Média Real</div><div class="card-val" style="font-size:.9rem;color:var(--em)">${fmt(medReal)}</div></div>
+    <div class="card"><div class="card-label">Maior Gasto</div><div class="card-val" style="font-size:.9rem;color:var(--danger)">${fmt(maiorReal)}</div></div>
+  `;
+  modal.style.display='flex';
+};
+
+window.fecharModalHist = () => { document.getElementById('modalHistorico').style.display='none'; };
+
+
+// ============ PWA / INSTALAÇÃO ============
+(function(){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+
+  // Se já está rodando como app, não mostrar banner
+  if(isStandalone) return;
+
+  // Verificar se já fechou o banner antes
+  if(sessionStorage.getItem('banner_fechado')) return;
+
+  let deferredPrompt = null;
+
+  // Android: capturar o prompt de instalação nativo
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const banner = document.getElementById('installBanner');
+    const tip = document.getElementById('installTip');
+    if(banner && tip){
+      tip.innerHTML = 'Toque em <strong style="color:#d4a853">Instalar App</strong> para adicionar à tela inicial';
+      const btn = banner.querySelector('button');
+      // Adicionar botão de instalar para Android
+      const installBtn = document.createElement('button');
+      installBtn.textContent = '⬇ Instalar';
+      installBtn.style.cssText = 'background:linear-gradient(135deg,#b8963e,#8a6c2a);color:#0a0a0c;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0';
+      installBtn.onclick = async () => {
+        if(deferredPrompt){
+          deferredPrompt.prompt();
+          const result = await deferredPrompt.userChoice;
+          fecharBanner();
+        }
+      };
+      banner.querySelector('div > div:last-child').before(installBtn);
+      banner.style.display = 'block';
+    }
+  });
+
+  // iOS: mostrar banner com instruções após 2s
+  if(isIOS && !isStandalone){
+    setTimeout(()=>{
+      const banner = document.getElementById('installBanner');
+      if(banner) banner.style.display = 'block';
+    }, 2000);
+  }
+
+  window.fecharBanner = function(){
+    const banner = document.getElementById('installBanner');
+    if(banner) banner.style.display = 'none';
+    sessionStorage.setItem('banner_fechado', '1');
+  };
+
+  // Registrar Service Worker para cache offline
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+})();
+
 // ============ BOOT ============
 buildMesSelect();
 setTimeout(verificarNotificacoes, 2000);
