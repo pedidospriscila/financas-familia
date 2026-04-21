@@ -1,51 +1,43 @@
-const CACHE_NAME = 'financas-familia-v2';
-const URLS_TO_CACHE = [
-  './',
-  './index.html',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
-  'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap'
-];
+const CACHE = 'financas-v4';
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(URLS_TO_CACHE).catch(e => console.log('Cache parcial:', e)))
-      .then(() => self.skipWaiting())
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c =>
+      c.addAll([
+        '/financas-familia/index.html',
+        '/financas-familia/manifest.json',
+        '/financas-familia/icon-192.png',
+        '/financas-familia/icon-512.png'
+      ]).catch(() => {})
+    ).then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
-  // Nunca interceptar Firebase ou googleapis auth
-  if(url.hostname.includes('firebaseio.com') || 
-     url.hostname.includes('googleapis.com') ||
-     url.hostname.includes('gstatic.com')){
-    return;
-  }
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  // Nunca interceptar Firebase, Google APIs
+  if(url.hostname.includes('firebase') || 
+     url.hostname.includes('gstatic') || 
+     url.hostname.includes('googleapis') ||
+     url.hostname.includes('cdnjs')) return;
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if(cached) return cached;
-      return fetch(event.request).then(response => {
-        if(response && response.status === 200 && response.type === 'basic'){
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const network = fetch(e.request).then(res => {
+        if(res && res.status === 200) {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         }
-        return response;
-      }).catch(() => cached || new Response('Offline'));
+        return res;
+      }).catch(() => cached);
+      return cached || network;
     })
   );
 });
