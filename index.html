@@ -405,7 +405,7 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
     <button onclick="toggleTema()" id="temaBtn" title="Alternar tema" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">🌙</button>
-    <button onclick="tentarInstalar()" id="btnPWAHeader" title="Instalar App" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">📲</button>
+    <button onclick="abrirModalInstalar()" id="btnPWAHeader" title="Instalar App" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">📲</button>
     <div style="position:relative">
       <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
       <span id="notifBadge" class="notif-badge" style="display:none">!</span>
@@ -767,6 +767,63 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem" id="histStats"></div>
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="fecharModalHist()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL INSTALAR APP -->
+<div class="modal-overlay" id="modalInstalar" style="display:none" onclick="fecharModalInstalar()">
+  <div class="modal-box" style="max-width:400px" onclick="event.stopPropagation()">
+    <div class="modal-title">📲 Instalar como App</div>
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:1.25rem">Siga os passos abaixo no seu celular Android:</div>
+
+    <div style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:flex-start;gap:.75rem;background:var(--bg3);border-radius:10px;padding:.875rem">
+        <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a0a0c;flex-shrink:0">1</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:2px">Abra no Google Chrome</div>
+          <div style="font-size:12px;color:var(--txt2)">Certifique-se de estar usando o Chrome (não outro navegador)</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:.75rem;background:var(--bg3);border-radius:10px;padding:.875rem">
+        <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a0a0c;flex-shrink:0">2</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:2px">Toque nos 3 pontinhos <span style="color:var(--gold2)">⋮</span></div>
+          <div style="font-size:12px;color:var(--txt2)">No canto superior direito do Chrome</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:.75rem;background:var(--bg3);border-radius:10px;padding:.875rem">
+        <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a0a0c;flex-shrink:0">3</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:2px">Toque em <span style="color:var(--gold2)">"Adicionar à tela inicial"</span></div>
+          <div style="font-size:12px;color:var(--txt2)">Pode aparecer também como "Instalar app"</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:.75rem;background:var(--bg3);border-radius:10px;padding:.875rem">
+        <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a0a0c;flex-shrink:0">4</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:2px">Confirme tocando em <span style="color:var(--gold2)">"Adicionar"</span></div>
+          <div style="font-size:12px;color:var(--txt2)">O ícone aparece na tela inicial e abre em tela cheia!</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;padding:.75rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:8px;font-size:12px;color:var(--txt2)">
+      💡 <strong style="color:var(--gold2)">Dica:</strong> Se não aparecer "Adicionar à tela inicial", tente acessar o link algumas vezes pelo Chrome e depois tente novamente.
+    </div>
+
+    <div id="btnAndroidInstall" style="display:none;margin-top:1rem">
+      <button onclick="instalarAndroid()" style="width:100%;background:linear-gradient(135deg,#b8963e,#8a6c2a);color:#0a0a0c;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">
+        ⬇ Instalar Agora
+      </button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="fecharModalInstalar()">Fechar</button>
     </div>
   </div>
 </div>
@@ -2076,59 +2133,46 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
 
 // ============ PWA / INSTALAÇÃO ============
 (function(){
+  let deferredPrompt = null;
+
   // Registrar Service Worker
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('./sw.js', {scope:'./'})
-      .then(reg => console.log('SW registrado:', reg.scope))
-      .catch(err => console.log('SW erro:', err));
+    navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(()=>{});
   }
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone === true
-    || document.referrer.includes('android-app://');
+    || window.navigator.standalone === true;
 
+  // Ocultar botão PWA se já instalado
   if(isStandalone){
     document.body.classList.add('pwa-mode');
-    return; // Já está instalado, não mostrar banner
   }
 
-  let deferredPrompt = null;
-
-  // Capturar evento de instalação (Android Chrome)
+  // Capturar prompt nativo do Android Chrome
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    mostrarBannerAndroid();
+    // Mostrar botão "Instalar Agora" no modal
+    const btn = document.getElementById('btnAndroidInstall');
+    if(btn) btn.style.display = 'block';
   });
 
-  function mostrarBannerAndroid(){
-    const banner = document.getElementById('installBanner');
-    const tip = document.getElementById('installTip');
-    const btnInstall = document.getElementById('btnInstalarApp');
-    if(!banner) return;
-    if(tip) tip.innerHTML = 'Toque em <strong style="color:#d4a853">Instalar</strong> para adicionar à tela inicial';
-    if(btnInstall){
-      btnInstall.style.display = 'inline-block';
-      btnInstall.onclick = async () => {
-        if(deferredPrompt){
-          deferredPrompt.prompt();
-          const {outcome} = await deferredPrompt.userChoice;
-          if(outcome === 'accepted') fecharBanner();
-          deferredPrompt = null;
-        }
-      };
-    }
-    banner.style.display = 'block';
-  }
+  window.abrirModalInstalar = function(){
+    document.getElementById('modalInstalar').style.display = 'flex';
+  };
 
-  // iOS: mostrar banner manual após 3s
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(isIOS && !isStandalone && !sessionStorage.getItem('banner_fechado')){
-    setTimeout(() => {
-      const banner = document.getElementById('installBanner');
-      if(banner) banner.style.display = 'block';
-    }, 3000);
-  }
+  window.fecharModalInstalar = function(){
+    document.getElementById('modalInstalar').style.display = 'none';
+  };
+
+  window.instalarAndroid = async function(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      const {outcome} = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if(outcome === 'accepted') fecharModalInstalar();
+    }
+  };
 
   window.fecharBanner = function(){
     const b = document.getElementById('installBanner');
@@ -2136,17 +2180,8 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
     sessionStorage.setItem('banner_fechado','1');
   };
 
-  // Botão manual de instalação no header
-  window.tentarInstalar = async function(){
-    if(deferredPrompt){
-      deferredPrompt.prompt();
-      const {outcome} = await deferredPrompt.userChoice;
-      deferredPrompt = null;
-    } else {
-      // iOS ou Chrome sem prompt: mostrar instruções
-      const banner = document.getElementById('installBanner');
-      if(banner) banner.style.display = banner.style.display==='none'?'block':'none';
-    }
+  window.tentarInstalar = function(){
+    document.getElementById('modalInstalar').style.display = 'flex';
   };
 })();
 
