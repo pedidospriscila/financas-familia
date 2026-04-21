@@ -2,7 +2,13 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finanças">
+<meta name="theme-color" content="#0d0f14">
+<link rel="manifest" href="manifest.json">
 <title>Finanças Família</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -333,6 +339,14 @@ body.light .badge-rec{background:#d1fae5;color:#065f46}
 @supports(padding-top: env(safe-area-inset-top)){
   .header{padding-top:max(12px,env(safe-area-inset-top))}
 }
+
+/* PWA SAFE AREA */
+body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
+@media all and (display-mode:standalone){
+  .header{padding-top:max(12px,env(safe-area-inset-top,12px))}
+  body{background:#0d0f14}
+  #btnPWAHeader{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -391,6 +405,7 @@ body.light .badge-rec{background:#d1fae5;color:#065f46}
     <button class="btn-hd hd-hide-sm" onclick="exportarBackup()">⬇</button>
     <button class="btn-hd hd-hide-sm" onclick="document.getElementById('inputBackup').click()">⬆</button>
     <button onclick="toggleTema()" id="temaBtn" title="Alternar tema" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">🌙</button>
+    <button onclick="tentarInstalar()" id="btnPWAHeader" title="Instalar App" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px;-webkit-tap-highlight-color:transparent">📲</button>
     <div style="position:relative">
       <button class="btn-cfg" onclick="showTab('config')">⚙️</button>
       <span id="notifBadge" class="notif-badge" style="display:none">!</span>
@@ -814,14 +829,15 @@ body.light .badge-rec{background:#d1fae5;color:#065f46}
 
 
 <!-- BANNER INSTALAR -->
-<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#131720;border-top:1px solid #2e2410;padding:12px 16px;z-index:400;box-shadow:0 -4px 20px rgba(0,0,0,.5)">
+<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#131720;border-top:2px solid #b8963e;padding:14px 16px;z-index:999;box-shadow:0 -4px 24px rgba(0,0,0,.7)">
   <div style="display:flex;align-items:center;gap:12px;max-width:600px;margin:0 auto">
-    <div style="width:44px;height:44px;background:linear-gradient(135deg,#1e1a0d,#2e2410);border:1px solid #b8963e;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">✦</div>
-    <div style="flex:1">
+    <div style="width:42px;height:42px;background:linear-gradient(135deg,#1e1a0d,#2e2410);border:1px solid #b8963e;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✦</div>
+    <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:700;color:#d4a853;font-family:'Playfair Display',serif">Instalar como App</div>
-      <div style="font-size:11px;color:#9a9488;margin-top:2px" id="installTip">Toque em <strong style="color:#d4a853">Compartilhar</strong> → <strong style="color:#d4a853">Adicionar à Tela de Início</strong></div>
+      <div style="font-size:11px;color:#9a9488;margin-top:2px;line-height:1.4" id="installTip">No Chrome: toque nos <strong style="color:#d4a853">3 pontinhos ⋮</strong> → <strong style="color:#d4a853">Adicionar à tela inicial</strong></div>
     </div>
-    <button onclick="fecharBanner()" style="background:transparent;border:1px solid #3a3020;color:#9a9488;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;flex-shrink:0">✕ Fechar</button>
+    <button id="btnInstalarApp" style="display:none;background:linear-gradient(135deg,#b8963e,#8a6c2a);color:#0a0a0c;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0">⬇ Instalar</button>
+    <button onclick="fecharBanner()" style="background:transparent;border:1px solid #3a3020;color:#9a9488;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;flex-shrink:0;line-height:1">✕</button>
   </div>
 </div>
 
@@ -2060,62 +2076,78 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
 
 // ============ PWA / INSTALAÇÃO ============
 (function(){
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isAndroid = /android/i.test(navigator.userAgent);
+  // Registrar Service Worker
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.log('SW erro:', err));
+  }
+
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone === true;
+    || window.navigator.standalone === true
+    || document.referrer.includes('android-app://');
 
-  // Se já está rodando como app, não mostrar banner
-  if(isStandalone) return;
-
-  // Verificar se já fechou o banner antes
-  if(sessionStorage.getItem('banner_fechado')) return;
+  if(isStandalone){
+    document.body.classList.add('pwa-mode');
+    return; // Já está instalado, não mostrar banner
+  }
 
   let deferredPrompt = null;
 
-  // Android: capturar o prompt de instalação nativo
+  // Capturar evento de instalação (Android Chrome)
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    const banner = document.getElementById('installBanner');
-    const tip = document.getElementById('installTip');
-    if(banner && tip){
-      tip.innerHTML = 'Toque em <strong style="color:#d4a853">Instalar App</strong> para adicionar à tela inicial';
-      const btn = banner.querySelector('button');
-      // Adicionar botão de instalar para Android
-      const installBtn = document.createElement('button');
-      installBtn.textContent = '⬇ Instalar';
-      installBtn.style.cssText = 'background:linear-gradient(135deg,#b8963e,#8a6c2a);color:#0a0a0c;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0';
-      installBtn.onclick = async () => {
-        if(deferredPrompt){
-          deferredPrompt.prompt();
-          const result = await deferredPrompt.userChoice;
-          fecharBanner();
-        }
-      };
-      banner.querySelector('div > div:last-child').before(installBtn);
-      banner.style.display = 'block';
-    }
+    mostrarBannerAndroid();
   });
 
-  // iOS: mostrar banner com instruções após 2s
-  if(isIOS && !isStandalone){
-    setTimeout(()=>{
+  function mostrarBannerAndroid(){
+    const banner = document.getElementById('installBanner');
+    const tip = document.getElementById('installTip');
+    const btnInstall = document.getElementById('btnInstalarApp');
+    if(!banner) return;
+    if(tip) tip.innerHTML = 'Toque em <strong style="color:#d4a853">Instalar</strong> para adicionar à tela inicial';
+    if(btnInstall){
+      btnInstall.style.display = 'inline-block';
+      btnInstall.onclick = async () => {
+        if(deferredPrompt){
+          deferredPrompt.prompt();
+          const {outcome} = await deferredPrompt.userChoice;
+          if(outcome === 'accepted') fecharBanner();
+          deferredPrompt = null;
+        }
+      };
+    }
+    banner.style.display = 'block';
+  }
+
+  // iOS: mostrar banner manual após 3s
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS && !isStandalone && !sessionStorage.getItem('banner_fechado')){
+    setTimeout(() => {
       const banner = document.getElementById('installBanner');
       if(banner) banner.style.display = 'block';
-    }, 2000);
+    }, 3000);
   }
 
   window.fecharBanner = function(){
-    const banner = document.getElementById('installBanner');
-    if(banner) banner.style.display = 'none';
-    sessionStorage.setItem('banner_fechado', '1');
+    const b = document.getElementById('installBanner');
+    if(b) b.style.display = 'none';
+    sessionStorage.setItem('banner_fechado','1');
   };
 
-  // Registrar Service Worker para cache offline
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  }
+  // Botão manual de instalação no header
+  window.tentarInstalar = async function(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      const {outcome} = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    } else {
+      // iOS ou Chrome sem prompt: mostrar instruções
+      const banner = document.getElementById('installBanner');
+      if(banner) banner.style.display = banner.style.display==='none'?'block':'none';
+    }
+  };
 })();
 
 // ============ BOOT ============
