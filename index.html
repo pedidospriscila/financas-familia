@@ -50,11 +50,10 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
 input[type=file]{display:none}
 
 /* NAV */
-.nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg2);border-bottom:1px solid var(--gold-border);width:100%}
-@media(min-width:520px){.nav-tabs{grid-template-columns:repeat(7,1fr)}}
-.tab{padding:.65rem .1rem;text-align:center;font-size:9.5px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;user-select:none;min-height:52px}
+.nav-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--gold-border);width:100%;overflow:hidden}
+.tab{flex:1;padding:.55rem .1rem;text-align:center;font-size:9px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
 .tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
-.tab-label{font-size:9px;font-weight:600;line-height:1}
+.tab-label{font-size:8.5px;font-weight:600;line-height:1;white-space:nowrap}
 .tab .tab-icon{display:none}
 
 main{padding:1.25rem;max-width:1200px;margin:0 auto}
@@ -204,11 +203,27 @@ body.light{
   --em:#0a7a50;--em-dim:#d4f0e4;
   --danger:#c0392b;--danger-dim:#fde8e6;
   --brd:#e0d8c8;
+  background:#f5f3ee!important;
+  color:#1a1612!important;
 }
-body.light .header{background:#fff;border-bottom-color:#e8d49a}
-body.light .nav-tabs{background:#fff;border-bottom-color:#e8d49a}
-body.light .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-body.light #loginScreen{background:#f5f3ee}
+body.light *{-webkit-tap-highlight-color:transparent}
+body.light #appWrapper{background:#f5f3ee!important}
+body.light main{background:#f5f3ee!important}
+body.light .page{background:#f5f3ee!important}
+body.light .header{background:#ffffff!important;border-bottom-color:#e8d49a!important}
+body.light .nav-tabs{background:#ffffff!important;border-bottom-color:#e8d49a!important}
+body.light .tab{color:#9a8870!important}
+body.light .tab.active{color:#6d5220!important;border-bottom-color:#8a6c2a!important}
+body.light #loginScreen{background:#f5f3ee!important}
+body.light .card{background:#ffffff!important;border-color:#e8d49a!important}
+body.light .section{background:#ffffff!important;border-color:#e8d49a!important}
+body.light .grafico-card{background:#ffffff!important;border-color:#e8d49a!important}
+body.light .cfg-section{background:#ffffff!important;border-color:#e8d49a!important}
+body.light input,body.light select,body.light textarea{background:#f0ede6!important;color:#1a1612!important;border-color:#e0d8c8!important}
+body.light table{background:#ffffff!important}
+body.light td,body.light th{color:#1a1612!important;border-color:#e8d49a!important}
+body.light .modal-box{background:#ffffff!important;border-color:#e8d49a!important}
+body.light .pendente-item{background:#f0ede6!important;border-color:#e8d49a!important}
 
 /* ALERTA BANNER */
 .alerta-banner{background:linear-gradient(135deg,#2a1205,#1a0a02);border:1px solid #c0392b;border-radius:10px;padding:.875rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem;animation:slideIn .3s ease}
@@ -386,8 +401,8 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
 .ia-header-info{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:var(--bg2);border-radius:10px;margin-bottom:.75rem;border:1px solid var(--gold-border)}
 .ia-header-dot{width:8px;height:8px;border-radius:50%;background:var(--em);animation:syncpulse 2s ease-in-out infinite}
 
-.tab > *:first-child{font-size:18px;line-height:1.2}
-@media(max-width:380px){.tab > *:first-child{font-size:16px}}
+.tab > *:first-child{font-size:16px;line-height:1.2}
+@media(max-width:360px){.tab > *:first-child{font-size:14px}}
 </style>
 </head>
 <body>
@@ -463,7 +478,6 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
   <div class="tab" onclick="showTab('metas')">🎯<span class="tab-label">Metas</span></div>
   <div class="tab" onclick="showTab('graficos')">📊<span class="tab-label">Gráficos</span></div>
   <div class="tab" onclick="showTab('anual')">📅<span class="tab-label">Anual</span></div>
-  <div class="tab" onclick="showTab('ia')">🤖<span class="tab-label">IA</span></div>
 </div>
 
 <main>
@@ -694,167 +708,6 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
     <div class="section-title">Comparativo — Mês Atual vs Anterior</div>
     <div id="comparativoContent"></div>
   </div>
-  </div>
-</div>
-
-
-<!-- IA ASSISTENTE -->
-<div class="page" id="page-ia">
-  <div class="ia-header-info">
-    <div class="ia-header-dot"></div>
-    <div style="flex:1">
-      <div style="font-size:12px;font-weight:700;color:var(--gold2)">Assistente Financeiro IA</div>
-      <div style="font-size:10px;color:var(--txt3)">Powered by Claude · Acesso ao seu histórico completo</div>
-    </div>
-    <button onclick="limparChat()" style="background:transparent;border:none;color:var(--txt3);font-size:11px;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--brd)">🗑 Limpar</button>
-  </div>
-
-  <div class="ia-chips" id="iaChips">
-    <div class="ia-chip" onclick="enviarChip(this)">Como foi nosso mês atual?</div>
-    <div class="ia-chip" onclick="enviarChip(this)">Em que estamos gastando mais?</div>
-    <div class="ia-chip" onclick="enviarChip(this)">Qual foi nosso melhor mês?</div>
-    <div class="ia-chip" onclick="enviarChip(this)">Como está nosso patrimônio?</div>
-    <div class="ia-chip" onclick="enviarChip(this)">Dicas para economizar</div>
-    <div class="ia-chip" onclick="enviarChip(this)">Previsão para o próximo mês</div>
-  </div>
-
-  <div class="ia-container">
-    <div class="ia-msgs" id="iaMsgs"></div>
-    <div class="ia-input-wrap">
-      <textarea class="ia-input" id="iaInput" placeholder="Pergunte sobre suas finanças..." rows="1"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensagemIA()}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
-      <button class="ia-send" id="iaSendBtn" onclick="enviarMensagemIA()" title="Enviar">➤</button>
-    </div>
-  </div>
-</div>
-
-<div class="page" id="page-config">
-  <div class="cfg-section">
-    <div class="section-title">Backup & Sincronização</div>
-    <div class="cfg-info">
-      <strong>☁️ Firebase:</strong> financas-familia-f18d5<br><br>
-      Exporte os dados regularmente como backup de segurança.
-    </div>
-    
-  <hr class="divider">
-  <div class="section-title" style="margin-top:1rem">Histórico do Excel</div>
-  <div class="cfg-info">Importe o histórico completo da planilha antiga (Out/2023 a Mar/2026). <strong>Atenção:</strong> isso irá mesclar com os dados atuais, sem apagar o que já existe.</div>
-  <button class="btn-save" style="margin-top:0" onclick="importarHistorico()">📊 Importar Histórico Excel</button>
-  <div id="seed_status" style="margin-top:.75rem;font-size:13px;color:var(--txt2)"></div>
-
-  <hr class="divider">
-  <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-      <button class="btn-save" style="margin-top:0" onclick="exportarBackup()">⬇ Exportar JSON</button>
-      <button class="btn-save" style="margin-top:0;background:var(--bg3);border:1px solid var(--gold-border);color:var(--gold2)" onclick="document.getElementById('inputBackup').click()">⬆ Importar JSON</button>
-      <button class="btn-save" style="margin-top:0;background:#0a2040;border:1px solid #60a0e0;color:#60a0e0" onclick="abrirModalPDF()">📄 Exportar PDF</button>
-      <button class="btn-save" style="margin-top:0;background:var(--danger-dim);border:1px solid var(--danger);color:var(--danger)" onclick="limparDados()">🗑 Limpar Dados</button>
-    </div>
-  </div>
-
-  <div class="cfg-section">
-    <div class="section-title">Alertas Automáticos</div>
-    <div class="cfg-info">Configure os limites para receber alertas visuais automáticos.</div>
-    <div class="alert-field">
-      <label>⚠️ Alertar quando custo real ultrapassar previsto em</label>
-      <input type="number" id="cfg_alerta_pct" value="20" min="1" max="100">
-      <span style="font-size:13px;color:var(--txt2)">%</span>
-    </div>
-    <div class="alert-field">
-      <label>🔴 Alertar quando saldo real ficar abaixo de</label>
-      <input type="number" id="cfg_alerta_saldo" value="500" min="0">
-      <span style="font-size:13px;color:var(--txt2)">R$</span>
-    </div>
-    <div class="alert-field">
-      <label>🔔 Notificações de vencimento (dias antes)</label>
-      <input type="number" id="cfg_notif_dias" value="3" min="1" max="15">
-      <span style="font-size:13px;color:var(--txt2)">dias</span>
-    </div>
-    <button class="btn-save" style="margin-top:.875rem" onclick="salvarConfigAlertas()">✓ Salvar configurações</button>
-  </div>
-
-  <div class="cfg-section">
-    <div class="section-title">Senha de Acesso</div>
-    <div class="cfg-info">Para alterar a senha, edite o arquivo index.html no GitHub e substitua o valor de <code style="background:var(--bg3);padding:2px 6px;border-radius:4px">SENHA_OK</code> pela nova senha.</div>
-  </div>
-</div>
-
-</main>
-
-
-
-
-<!-- MODAL PDF -->
-<div class="modal-overlay" id="modalPDF" style="display:none">
-  <div class="modal-box" style="max-width:420px">
-    <div class="modal-title">📄 Exportar Relatório PDF</div>
-    <div style="font-size:12px;color:var(--txt2);margin-bottom:1.25rem">Escolha o período que deseja exportar.</div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-      <!-- Picker INÍCIO -->
-      <div>
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">De</div>
-        <div style="position:relative">
-          <button onclick="togglePickerPDF('inicio',event)" style="width:100%;background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:8px 12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent">
-            <span id="pdfInicioLabel">—</span><span style="font-size:9px;opacity:.6">▼</span>
-          </button>
-          <div id="pdfPickerInicio" style="display:none;position:absolute;top:42px;left:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:.875rem;z-index:600;width:220px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
-              <button onclick="mudaAnoPDF('inicio',-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">‹</button>
-              <span id="pdfAnoInicioLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:.95rem;font-weight:700"></span>
-              <button onclick="mudaAnoPDF('inicio',1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">›</button>
-            </div>
-            <div id="pdfGridInicio" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
-          </div>
-        </div>
-      </div>
-      <!-- Picker FIM -->
-      <div>
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">Até</div>
-        <div style="position:relative">
-          <button onclick="togglePickerPDF('fim',event)" style="width:100%;background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:8px 12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent">
-            <span id="pdfFimLabel">—</span><span style="font-size:9px;opacity:.6">▼</span>
-          </button>
-          <div id="pdfPickerFim" style="display:none;position:absolute;top:42px;right:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:.875rem;z-index:600;width:220px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
-              <button onclick="mudaAnoPDF('fim',-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">‹</button>
-              <span id="pdfAnoFimLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:.95rem;font-weight:700"></span>
-              <button onclick="mudaAnoPDF('fim',1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">›</button>
-            </div>
-            <div id="pdfGridFim" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="pdfResumoMeses" style="background:var(--bg3);border-radius:8px;padding:.75rem;font-size:13px;color:var(--txt2);margin-bottom:1rem;text-align:center;min-height:36px"></div>
-
-    <div style="padding:.75rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:8px;font-size:12px;color:var(--txt2)">
-      💡 Abre em nova aba. Use <strong>Ctrl+P</strong> ou compartilhar → imprimir para salvar como PDF.
-    </div>
-    <div class="modal-footer">
-      <button class="btn-modal-ok" onclick="gerarPDF()">📄 Gerar PDF</button>
-      <button class="btn-modal-cancel" onclick="fecharModalPDF()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-
-
-<!-- MODAL HISTÓRICO DESPESA -->
-<div class="modal-overlay" id="modalHistorico" style="display:none" onclick="fecharModalHist()">
-  <div class="modal-box" style="max-width:500px" onclick="event.stopPropagation()">
-    <div class="modal-title" id="histTitulo">Histórico</div>
-    <div style="font-size:11px;color:var(--txt3);margin-bottom:1rem">Últimos 12 meses — Previsto vs Real</div>
-    <div style="display:flex;gap:1rem;margin-bottom:1rem;font-size:11px">
-      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:5px;background:var(--gold);border-radius:3px"></span>Previsto</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:5px;background:var(--em);border-radius:3px"></span>Real</span>
-    </div>
-    <div id="histConteudo"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem" id="histStats"></div>
-    <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="fecharModalHist()">Fechar</button>
-    </div>
   </div>
 </div>
 
@@ -1119,7 +972,7 @@ window.showTab = name => {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['resumo','receitas','despesas','metas','graficos','anual','ia','config'];
+  const tabs=['resumo','receitas','despesas','metas','graficos','anual','config'];
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<5) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
@@ -1946,7 +1799,7 @@ window.showTab = name => {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const tabs=['resumo','receitas','despesas','metas','graficos','anual','ia','config'];
+  const tabs=['resumo','receitas','despesas','metas','graficos','anual','config'];
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
@@ -2157,60 +2010,79 @@ window.gerarPDF = function(){
 // ============ RECORRÊNCIA AUTOMÁTICA ============
 function aplicarRecorrentes(){
   const hoje = new Date();
-  const anoAtual = hoje.getFullYear();
-  const mesAtual = hoje.getMonth() + 1;
-  // Propagar até 2 meses à frente do atual (para planejamento)
-  let limiteAno = anoAtual, limiteMes = mesAtual + 2;
-  if(limiteMes > 12){ limiteMes -= 12; limiteAno++; }
-  const limiteKey = limiteAno + '-' + (limiteMes < 10 ? '0' : '') + limiteMes;
+  const diaHoje = hoje.getDate();
+  const anoHoje = hoje.getFullYear();
+  const mesHoje = hoje.getMonth() + 1;
+  const mesAtualKey = anoHoje + '-' + (mesHoje < 10 ? '0' : '') + mesHoje;
 
-  // Coletar todas as despesas recorrentes de todos os meses existentes
-  const meses = Object.keys(allData.meses || {}).sort();
+  // Calcular mês seguinte
+  let anoProx = anoHoje, mesProx = mesHoje + 1;
+  if(mesProx > 12){ mesProx = 1; anoProx++; }
+  const mesProxKey = anoProx + '-' + (mesProx < 10 ? '0' : '') + mesProx;
+
+  // Só executa a partir do dia 20
+  if(diaHoje < 20) return;
+
+  // Verificar se já foi executado neste mês (evitar duplicar)
+  const flagKey = 'recorrente_copiado_' + mesAtualKey;
+  if(localStorage.getItem(flagKey) === '1') return;
+
+  // Buscar todas as despesas recorrentes do mês atual
+  const mdAtual = allData.meses && allData.meses[mesAtualKey];
+  if(!mdAtual || !mdAtual.despesas) return;
+
+  const recorrentes = mdAtual.despesas.filter(d => d.recorrente);
+  if(!recorrentes.length) return;
+
+  // Criar mês seguinte se não existir
+  if(!allData.meses[mesProxKey]){
+    allData.meses[mesProxKey] = {
+      receitas:{salarioBruno:0,salarioPriscila:0,rendaExtraBruno:0,rendaExtraPriscila:0,decimoTerceiro:0,valeAlim:0},
+      despesas:[],
+      aquisicoes:[]
+    };
+  }
+
+  const despProx = allData.meses[mesProxKey].despesas || [];
   let houveMudanca = false;
 
-  // Para cada mês com despesa recorrente, propagar para TODOS os meses futuros até o limite
-  meses.forEach(key => {
-    const md = allData.meses[key];
-    if(!md || !md.despesas) return;
-    const recorrentes = md.despesas.filter(d => d.recorrente);
-    if(!recorrentes.length) return;
-
-    // Gerar todos os meses futuros a partir deste até o limite
-    let [y, m] = key.split('-').map(Number);
-    // Avançar 1 mês (não propagar no mesmo mês de origem)
-    m++; if(m > 12){ m = 1; y++; }
-
-    while(true){
-      const futKey = y + '-' + (m < 10 ? '0' : '') + m;
-      if(futKey > limiteKey) break;
-
-      if(!allData.meses[futKey]) allData.meses[futKey] = {receitas:{salarioBruno:0,salarioPriscila:0,rendaExtraBruno:0,rendaExtraPriscila:0,decimoTerceiro:0,valeAlim:0},despesas:[],aquisicoes:[]};
-      const futDesp = allData.meses[futKey].despesas || [];
-
-      recorrentes.forEach(d => {
-        const jaExiste = futDesp.some(x => x.nome === d.nome && x.recorrente);
-        if(!jaExiste){
-          futDesp.push({
-            id: uid(),
-            nome: d.nome,
-            vencimento: d.vencimento,
-            custoPrevisto: d.custoPrevisto,
-            custoReal: 0,
-            pago: false,
-            tipo: d.tipo || 'variavel',
-            recorrente: true
-          });
-          houveMudanca = true;
-        }
+  recorrentes.forEach(d => {
+    // Verificar se já existe no mês seguinte
+    const jaExiste = despProx.some(x => x.nome === d.nome && x.recorrente);
+    if(!jaExiste){
+      // Usar o valor REAL pago como novo previsto (se foi pago), senão usar o previsto atual
+      const novoPrevisto = (d.pago && num(d.custoReal) > 0) ? num(d.custoReal) : num(d.custoPrevisto);
+      despProx.push({
+        id: uid(),
+        nome: d.nome,
+        vencimento: d.vencimento,
+        custoPrevisto: novoPrevisto,
+        custoReal: 0,
+        pago: false,
+        tipo: d.tipo || 'variavel',
+        recorrente: true
       });
-      allData.meses[futKey].despesas = futDesp;
-
-      m++; if(m > 12){ m = 1; y++; }
+      houveMudanca = true;
     }
   });
 
-  if(houveMudanca) saveData();
+  allData.meses[mesProxKey].despesas = despProx;
+
+  if(houveMudanca){
+    saveData();
+    localStorage.setItem(flagKey, '1');
+    showToast('🔄 ' + recorrentes.length + ' despesa(s) recorrente(s) copiada(s) para ' + MES[mesProx-1] + '!');
+  } else {
+    localStorage.setItem(flagKey, '1');
+  }
 }
+
+// Verificar recorrência manualmente (para testar ou forçar)
+window.forcarRecorrencia = function(){
+  localStorage.removeItem('recorrente_copiado_' + mesSelecionado.split('-')[0] + '-' + mesSelecionado.split('-')[1]);
+  aplicarRecorrentes();
+  showToast('Recorrência verificada!');
+};
 
 
 // ============ HISTÓRICO DE DESPESA ============
@@ -2336,228 +2208,6 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
 
 
 // ============ ASSISTENTE FINANCEIRO IA ============
-let iaMsgs = [];
-let iaTyping = false;
-
-function gerarContextoFinanceiro(){
-  // Resumo completo dos dados para a IA
-  const hoje = new Date();
-  const mesAtual = mesSelecionado;
-  const [y,m] = mesAtual.split('-').map(Number);
-  const nomeMesAtual = MES[m-1] + '/' + y;
-
-  const dados = getDados();
-  const rec = totalReceitas();
-  const prev = totalCustoPrevisto();
-  const real = totalCustoReal();
-  const sp = saldoPrev();
-  const sr = saldoReal();
-  const desp = dados.despesas || [];
-  const pendentes = desp.filter(d=>!d.pago);
-  const pagas = desp.filter(d=>d.pago);
-
-  // Histórico dos últimos 12 meses
-  const historico = [];
-  for(let i=11;i>=0;i--){
-    let hy=hoje.getFullYear(), hm=hoje.getMonth()+1-i;
-    while(hm<1){hm+=12;hy--;}
-    const key=hy+'-'+(hm<10?'0':'')+hm;
-    const md=allData.meses&&allData.meses[key];
-    if(md){
-      const r2=md.receitas||{};
-      const hRec=['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(r2[k]),0);
-      const hPrev=(md.despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto),0);
-      const hReal=(md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
-      historico.push({mes:MES[hm-1]+'/'+hy, receita:hRec, previsto:hPrev, real:hReal, saldo:hRec-hReal});
-    }
-  }
-
-  // Top 5 despesas do mês
-  const top5 = [...desp].sort((a,b)=>num(b.custoPrevisto)-num(a.custoPrevisto)).slice(0,5);
-
-  // Metas
-  const metas = allData.aquisicoes || [];
-
-  // Média histórica
-  const mediaGasto = historico.length ? historico.reduce((s,h)=>s+h.real,0)/historico.length : 0;
-  const mediaReceita = historico.length ? historico.reduce((s,h)=>s+h.receita,0)/historico.length : 0;
-  const melhorMes = historico.length ? [...historico].sort((a,b)=>b.saldo-a.saldo)[0] : null;
-  const piorMes = historico.length ? [...historico].sort((a,b)=>a.saldo-b.saldo)[0] : null;
-
-  const fmt2 = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-  return `Você é um assistente financeiro pessoal e amigável para a família Bruno & Priscila. Você tem acesso COMPLETO aos dados financeiros deles. Responda em português brasileiro, de forma clara, direta e pessoal. Use os nomes Bruno e Priscila quando relevante. Seja analítico mas acessível. Use emojis com moderação.
-
-=== DADOS DO MÊS ATUAL (${nomeMesAtual}) ===
-Receitas totais: ${fmt2(rec)}
-- Salário Bruno: ${fmt2(num((dados.receitas||{}).salarioBruno))}
-- Salário Priscila: ${fmt2(num((dados.receitas||{}).salarioPriscila))}
-- Renda Extra Bruno: ${fmt2(num((dados.receitas||{}).rendaExtraBruno))}
-- Renda Extra Priscila: ${fmt2(num((dados.receitas||{}).rendaExtraPriscila))}
-- 13º Salário: ${fmt2(num((dados.receitas||{}).decimoTerceiro))}
-- Vale Alimentação: ${fmt2(num((dados.receitas||{}).valeAlim))}
-
-Custo previsto: ${fmt2(prev)}
-Custo real pago: ${fmt2(real)}
-Saldo previsto: ${fmt2(sp)}
-Saldo real: ${fmt2(sr)}
-Comprometimento da renda (real): ${rec>0?(real/rec*100).toFixed(1):'0'}%
-
-Despesas pendentes (${pendentes.length}):
-${pendentes.slice(0,8).map(d=>`- ${d.nome}: ${fmt2(d.custoPrevisto)} (vence dia ${d.vencimento||'?'})`).join('\n')}
-
-Top 5 maiores despesas previstas:
-${top5.map((d,i)=>`${i+1}. ${d.nome}: ${fmt2(d.custoPrevisto)}`).join('\n')}
-
-=== HISTÓRICO (últimos ${historico.length} meses) ===
-${historico.map(h=>`${h.mes}: Receita ${fmt2(h.receita)} | Gasto ${fmt2(h.real)} | Saldo ${fmt2(h.saldo)}`).join('\n')}
-
-Média mensal de gastos: ${fmt2(mediaGasto)}
-Média mensal de receitas: ${fmt2(mediaReceita)}
-Melhor mês: ${melhorMes ? melhorMes.mes + ' (saldo: '+fmt2(melhorMes.saldo)+')' : 'N/A'}
-Pior mês: ${piorMes ? piorMes.mes + ' (saldo: '+fmt2(piorMes.saldo)+')' : 'N/A'}
-
-=== METAS/DESEJOS (${metas.length} itens) ===
-${metas.slice(0,5).map(a=>`- ${a.nome}: ${fmt2(a.valor)} [${a.comprado?'Comprado':'Pendente'}]`).join('\n') || 'Nenhuma meta cadastrada'}
-
-=== CONTEXTO ===
-Data atual: ${hoje.toLocaleDateString('pt-BR')}
-Mês visualizado: ${nomeMesAtual}
-Total de meses com dados: ${Object.keys(allData.meses||{}).length}
-`;
-}
-
-function addMsgIA(role, text, isLoading=false){
-  const msgs = document.getElementById('iaMsgs');
-  if(!msgs) return null;
-
-  const div = document.createElement('div');
-  div.className = 'ia-msg ' + (role==='user'?'user':'bot');
-
-  const now = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-
-  if(isLoading){
-    div.innerHTML = `<div class="ia-bubble loading">
-      <div class="ia-dots"><span></span><span></span><span></span></div>
-      <span style="font-size:12px;color:var(--txt3)">Analisando seus dados...</span>
-    </div>`;
-  } else {
-    // Formatar markdown básico
-    const formatted = text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/^### (.+)$/gm, '<div style="font-weight:700;color:var(--gold2);margin:.5rem 0 .25rem">$1</div>')
-      .replace(/^## (.+)$/gm, '<div style="font-weight:700;color:var(--gold2);font-size:1.05em;margin:.5rem 0 .25rem">$1</div>')
-      .replace(/^- (.+)$/gm, '<div style="display:flex;gap:.5rem;margin:.15rem 0"><span style="color:var(--gold)">•</span><span>$1</span></div>')
-      .replace(/\n/g, '<br>');
-    div.innerHTML = `<div class="ia-bubble">${formatted}</div><div class="ia-ts">${now}</div>`;
-  }
-
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-
-async function enviarMensagemIA(){
-  if(iaTyping) return;
-  const input = document.getElementById('iaInput');
-  const sendBtn = document.getElementById('iaSendBtn');
-  const texto = input.value.trim();
-  if(!texto) return;
-
-  iaTyping = true;
-  input.value = '';
-  input.style.height = 'auto';
-  sendBtn.disabled = true;
-
-  // Ocultar chips após primeira mensagem
-  const chips = document.getElementById('iaChips');
-  if(chips) chips.style.display = 'none';
-
-  // Adicionar mensagem do usuário
-  iaMsgs.push({role:'user', content: texto});
-  addMsgIA('user', texto);
-
-  // Mostrar loading
-  const loadingDiv = addMsgIA('bot', '', true);
-
-  try {
-    const contexto = gerarContextoFinanceiro();
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: contexto,
-        messages: iaMsgs
-      })
-    });
-
-    const data = await response.json();
-    if(!response.ok){
-      const errMsg = data.error ? data.error.message : 'Erro '+response.status;
-      throw new Error(errMsg);
-    }
-    const resposta = data.content && data.content[0] ? data.content[0].text : 'Desculpe, não consegui processar sua pergunta.';
-
-    // Remover loading e adicionar resposta
-    if(loadingDiv) loadingDiv.remove();
-    iaMsgs.push({role:'assistant', content: resposta});
-    addMsgIA('bot', resposta);
-
-  } catch(e) {
-    if(loadingDiv) loadingDiv.remove();
-    const msg = e.message || 'Erro desconhecido';
-    if(msg.includes('401') || msg.includes('auth') || msg.includes('API key')){
-      addMsgIA('bot', '🔑 Esta funcionalidade requer que o app seja aberto dentro do **Claude.ai**. Acesse claude.ai para usar o assistente financeiro.');
-    } else {
-      addMsgIA('bot', '❌ Erro: ' + msg + '. Tente novamente.');
-    }
-  }
-
-  iaTyping = false;
-  sendBtn.disabled = false;
-  input.focus();
-}
-
-window.enviarChip = function(el){
-  const texto = el.textContent;
-  const input = document.getElementById('iaInput');
-  if(input){ input.value = texto; enviarMensagemIA(); }
-};
-
-window.limparChat = function(){
-  iaMsgs = [];
-  const msgs = document.getElementById('iaMsgs');
-  if(msgs) msgs.innerHTML = '';
-  const chips = document.getElementById('iaChips');
-  if(chips) chips.style.display = 'flex';
-};
-
-function iniciarChatIA(){
-  const msgs = document.getElementById('iaMsgs');
-  if(!msgs || msgs.children.length > 0) return;
-
-  // Mensagem de boas-vindas
-  const dados = getDados();
-  const sr = saldoReal();
-  const [y,m] = mesSelecionado.split('-').map(Number);
-  const corSaldo = sr >= 0 ? '#10b981' : '#dc4a3d';
-
-  addMsgIA('bot', `Olá, Bruno e Priscila! 👋
-
-Sou seu assistente financeiro pessoal. Tenho acesso completo ao histórico de vocês desde **Out/2023**.
-
-Mês atual: **${MES[m-1]}/${y}**
-Saldo real: <strong style="color:${corSaldo}">${fmt(sr)}</strong>
-
-Como posso ajudar? Podem me perguntar sobre gastos, tendências, comparativos, dicas de economia ou qualquer coisa sobre as finanças de vocês! 💰`);
-}
 
 // ============ BOOT ============
 buildMesSelect();
