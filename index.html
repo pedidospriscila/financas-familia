@@ -50,9 +50,9 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
 input[type=file]{display:none}
 
 /* NAV */
-.nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg2);border-bottom:1px solid var(--gold-border)}
-@media(min-width:601px){.nav-tabs{grid-template-columns:repeat(7,1fr)}}
-.tab{padding:.6rem .25rem;text-align:center;font-size:10px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;user-select:none}
+.nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg2);border-bottom:1px solid var(--gold-border);width:100%}
+@media(min-width:520px){.nav-tabs{grid-template-columns:repeat(7,1fr)}}
+.tab{padding:.65rem .1rem;text-align:center;font-size:9.5px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;user-select:none;min-height:52px}
 .tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
 .tab-label{font-size:9px;font-weight:600;line-height:1}
 .tab .tab-icon{display:none}
@@ -1137,12 +1137,14 @@ window.setTop5Tipo = function(tipo){
 };
 
 function renderTop5(){
+  try {
   const section = document.getElementById('top5Section');
   const lista = document.getElementById('top5Lista');
   const tipoLabel = document.getElementById('top5TipoLabel');
   if(!section || !lista) return;
 
-  const desp = getDados().despesas || [];
+  const dados = getDados();
+  const desp = (dados && dados.despesas) ? dados.despesas : [];
   if(!desp.length){ section.style.display='none'; return; }
 
   let ordenadas;
@@ -1171,21 +1173,22 @@ function renderTop5(){
     const pct = total > 0 ? (val/total*100).toFixed(1) : 0;
     const barPct = maxVal > 0 ? Math.round(val/maxVal*100) : 0;
     const isFirst = i === 0;
-    return `<div class="top5-item">
-      <div class="top5-rank${isFirst?' first':''}">${i < 3 ? medals[i] : i+1}</div>
-      <div class="top5-nome" title="${d.nome}">${d.nome}</div>
-      <div class="top5-bar-wrap"><div class="top5-bar" style="width:${barPct}%"></div></div>
-      <div class="top5-pct">${pct}%</div>
-      <div class="top5-val">${fmt(val)}</div>
-    </div>`;
+    return '<div class="top5-item">'
+      + '<div class="top5-rank' + (isFirst?' first':'') + '">' + (i < 3 ? medals[i] : i+1) + '</div>'
+      + '<div class="top5-nome" title="' + d.nome + '">' + d.nome + '</div>'
+      + '<div class="top5-bar-wrap"><div class="top5-bar" style="width:' + barPct + '%"></div></div>'
+      + '<div class="top5-pct">' + pct + '%</div>'
+      + '<div class="top5-val">' + fmt(val) + '</div>'
+      + '</div>';
   }).join('');
+  } catch(e){ console.error('Top5 erro:', e); }
 }
 
 
 
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
-  renderNotifBadge(); setTimeout(renderTop5, 50);
+  renderNotifBadge(); renderTop5();
   if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
    
   }
@@ -1196,6 +1199,7 @@ function renderCards(){
   const rec=totalReceitas(), prev=totalCustoPrev(), real=totalCustoReal();
   const sp=saldoPrev(), sr=saldoReal();
   const va=num(getDados().receitas.valeAlim);
+  renderTop5();
   setText('c_totalReceitas',fmt(rec));
   setText('c_valeAlim',fmt(va));
   setText('c_custoPrevisto',fmt(prev));
@@ -2495,6 +2499,10 @@ async function enviarMensagemIA(){
     });
 
     const data = await response.json();
+    if(!response.ok){
+      const errMsg = data.error ? data.error.message : 'Erro '+response.status;
+      throw new Error(errMsg);
+    }
     const resposta = data.content && data.content[0] ? data.content[0].text : 'Desculpe, não consegui processar sua pergunta.';
 
     // Remover loading e adicionar resposta
@@ -2504,7 +2512,12 @@ async function enviarMensagemIA(){
 
   } catch(e) {
     if(loadingDiv) loadingDiv.remove();
-    addMsgIA('bot', '❌ Erro ao conectar com a IA. Verifique sua conexão e tente novamente.');
+    const msg = e.message || 'Erro desconhecido';
+    if(msg.includes('401') || msg.includes('auth') || msg.includes('API key')){
+      addMsgIA('bot', '🔑 Esta funcionalidade requer que o app seja aberto dentro do **Claude.ai**. Acesse claude.ai para usar o assistente financeiro.');
+    } else {
+      addMsgIA('bot', '❌ Erro: ' + msg + '. Tente novamente.');
+    }
   }
 
   iaTyping = false;
