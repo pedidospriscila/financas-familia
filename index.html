@@ -50,11 +50,12 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
 input[type=file]{display:none}
 
 /* NAV */
-.nav-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--gold-border);overflow-x:auto;scrollbar-width:none}
-.nav-tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:70px;padding:.7rem .5rem;text-align:center;font-size:11px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.nav-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg2);border-bottom:1px solid var(--gold-border)}
+@media(min-width:601px){.nav-tabs{grid-template-columns:repeat(7,1fr)}}
+.tab{padding:.6rem .25rem;text-align:center;font-size:10px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;user-select:none}
 .tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
-.tab-icon{font-size:15px;display:block;margin-bottom:3px}
+.tab-label{font-size:9px;font-weight:600;line-height:1}
+.tab .tab-icon{display:none}
 
 main{padding:1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
@@ -384,6 +385,9 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
 .ia-chip:hover{background:var(--gold-dim);border-color:var(--gold)}
 .ia-header-info{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:var(--bg2);border-radius:10px;margin-bottom:.75rem;border:1px solid var(--gold-border)}
 .ia-header-dot{width:8px;height:8px;border-radius:50%;background:var(--em);animation:syncpulse 2s ease-in-out infinite}
+
+.tab > *:first-child{font-size:18px;line-height:1.2}
+@media(max-width:380px){.tab > *:first-child{font-size:16px}}
 </style>
 </head>
 <body>
@@ -453,13 +457,13 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
 
 <!-- TABS (sem config) -->
 <div class="nav-tabs">
-  <div class="tab active" onclick="showTab('resumo')"><span class="tab-icon">◈</span>Resumo</div>
-  <div class="tab" onclick="showTab('receitas')"><span class="tab-icon">◉</span>Receitas</div>
-  <div class="tab" onclick="showTab('despesas')"><span class="tab-icon">◐</span>Despesas</div>
-  <div class="tab" onclick="showTab('metas')"><span class="tab-icon">◎</span>Metas</div>
-  <div class="tab" onclick="showTab('graficos')"><span class="tab-icon">◑</span>Gráficos</div>
-  <div class="tab" onclick="showTab('anual')"><span class="tab-icon">◇</span>Anual</div>
-  <div class="tab" onclick="showTab('ia')"><span class="tab-icon">✦</span>IA</div>
+  <div class="tab active" onclick="showTab('resumo')">🏠<span class="tab-label">Resumo</span></div>
+  <div class="tab" onclick="showTab('receitas')">💵<span class="tab-label">Receitas</span></div>
+  <div class="tab" onclick="showTab('despesas')">💸<span class="tab-label">Despesas</span></div>
+  <div class="tab" onclick="showTab('metas')">🎯<span class="tab-label">Metas</span></div>
+  <div class="tab" onclick="showTab('graficos')">📊<span class="tab-label">Gráficos</span></div>
+  <div class="tab" onclick="showTab('anual')">📅<span class="tab-label">Anual</span></div>
+  <div class="tab" onclick="showTab('ia')">🤖<span class="tab-label">IA</span></div>
 </div>
 
 <main>
@@ -1122,9 +1126,66 @@ window.showTab = name => {
 };
 
 // ============ RENDER ============
+// ============ TOP 5 MAIORES DESPESAS ============
+var top5Tipo = 'previsto';
+
+window.setTop5Tipo = function(tipo){
+  top5Tipo = tipo;
+  document.getElementById('btnTop5Prev').classList.toggle('active', tipo==='previsto');
+  document.getElementById('btnTop5Real').classList.toggle('active', tipo==='real');
+  renderTop5();
+};
+
+function renderTop5(){
+  const section = document.getElementById('top5Section');
+  const lista = document.getElementById('top5Lista');
+  const tipoLabel = document.getElementById('top5TipoLabel');
+  if(!section || !lista) return;
+
+  const desp = getDados().despesas || [];
+  if(!desp.length){ section.style.display='none'; return; }
+
+  let ordenadas;
+  if(top5Tipo === 'real'){
+    ordenadas = desp
+      .filter(d => d.pago && num(d.custoReal||d.custoPrevisto) > 0)
+      .sort((a,b) => num(b.custoReal||b.custoPrevisto) - num(a.custoReal||a.custoPrevisto));
+  } else {
+    ordenadas = desp
+      .filter(d => num(d.custoPrevisto) > 0)
+      .sort((a,b) => num(b.custoPrevisto) - num(a.custoPrevisto));
+  }
+
+  if(!ordenadas.length){ section.style.display='none'; return; }
+  section.style.display = 'block';
+
+  const top5 = ordenadas.slice(0, 5);
+  const total = desp.reduce((s,d) => s + num(top5Tipo==='real' ? (d.pago?(d.custoReal||d.custoPrevisto):0) : d.custoPrevisto), 0);
+  const maxVal = num(top5Tipo==='real' ? (top5[0].custoReal||top5[0].custoPrevisto) : top5[0].custoPrevisto);
+
+  if(tipoLabel) tipoLabel.textContent = top5Tipo==='real' ? 'Custo Real Pago' : 'Custo Previsto';
+
+  const medals = ['🥇','🥈','🥉','4º','5º'];
+  lista.innerHTML = top5.map((d, i) => {
+    const val = num(top5Tipo==='real' ? (d.custoReal||d.custoPrevisto) : d.custoPrevisto);
+    const pct = total > 0 ? (val/total*100).toFixed(1) : 0;
+    const barPct = maxVal > 0 ? Math.round(val/maxVal*100) : 0;
+    const isFirst = i === 0;
+    return `<div class="top5-item">
+      <div class="top5-rank${isFirst?' first':''}">${i < 3 ? medals[i] : i+1}</div>
+      <div class="top5-nome" title="${d.nome}">${d.nome}</div>
+      <div class="top5-bar-wrap"><div class="top5-bar" style="width:${barPct}%"></div></div>
+      <div class="top5-pct">${pct}%</div>
+      <div class="top5-val">${fmt(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+
+
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
-  renderNotifBadge(); renderTop5();
+  renderNotifBadge(); setTimeout(renderTop5, 50);
   if(document.getElementById('page-anual')&&document.getElementById('page-anual').classList.contains('active')){
    
   }
@@ -2269,61 +2330,6 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
 })();
 
 
-// ============ TOP 5 MAIORES DESPESAS ============
-let top5Tipo = 'previsto';
-
-window.setTop5Tipo = function(tipo){
-  top5Tipo = tipo;
-  document.getElementById('btnTop5Prev').classList.toggle('active', tipo==='previsto');
-  document.getElementById('btnTop5Real').classList.toggle('active', tipo==='real');
-  renderTop5();
-};
-
-function renderTop5(){
-  const section = document.getElementById('top5Section');
-  const lista = document.getElementById('top5Lista');
-  const tipoLabel = document.getElementById('top5TipoLabel');
-  if(!section || !lista) return;
-
-  const desp = getDados().despesas || [];
-  if(!desp.length){ section.style.display='none'; return; }
-
-  let ordenadas;
-  if(top5Tipo === 'real'){
-    ordenadas = desp
-      .filter(d => d.pago && num(d.custoReal||d.custoPrevisto) > 0)
-      .sort((a,b) => num(b.custoReal||b.custoPrevisto) - num(a.custoReal||a.custoPrevisto));
-  } else {
-    ordenadas = desp
-      .filter(d => num(d.custoPrevisto) > 0)
-      .sort((a,b) => num(b.custoPrevisto) - num(a.custoPrevisto));
-  }
-
-  if(!ordenadas.length){ section.style.display='none'; return; }
-  section.style.display = 'block';
-
-  const top5 = ordenadas.slice(0, 5);
-  const total = desp.reduce((s,d) => s + num(top5Tipo==='real' ? (d.pago?(d.custoReal||d.custoPrevisto):0) : d.custoPrevisto), 0);
-  const maxVal = num(top5Tipo==='real' ? (top5[0].custoReal||top5[0].custoPrevisto) : top5[0].custoPrevisto);
-
-  if(tipoLabel) tipoLabel.textContent = top5Tipo==='real' ? 'Custo Real Pago' : 'Custo Previsto';
-
-  const medals = ['🥇','🥈','🥉','4º','5º'];
-  lista.innerHTML = top5.map((d, i) => {
-    const val = num(top5Tipo==='real' ? (d.custoReal||d.custoPrevisto) : d.custoPrevisto);
-    const pct = total > 0 ? (val/total*100).toFixed(1) : 0;
-    const barPct = maxVal > 0 ? Math.round(val/maxVal*100) : 0;
-    const isFirst = i === 0;
-    return `<div class="top5-item">
-      <div class="top5-rank${isFirst?' first':''}">${i < 3 ? medals[i] : i+1}</div>
-      <div class="top5-nome" title="${d.nome}">${d.nome}</div>
-      <div class="top5-bar-wrap"><div class="top5-bar" style="width:${barPct}%"></div></div>
-      <div class="top5-pct">${pct}%</div>
-      <div class="top5-val">${fmt(val)}</div>
-    </div>`;
-  }).join('');
-}
-
 
 // ============ ASSISTENTE FINANCEIRO IA ============
 let iaMsgs = [];
@@ -2476,9 +2482,12 @@ async function enviarMensagemIA(){
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: contexto,
         messages: iaMsgs
