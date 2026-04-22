@@ -51,7 +51,7 @@ input[type=file]{display:none}
 
 /* NAV */
 .nav-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--gold-border);width:100%;overflow:hidden}
-.tab{flex:1;padding:.55rem .1rem;text-align:center;font-size:9px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
+.tab{flex:1;padding:.4rem .05rem;text-align:center;font-size:8px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
 .tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
 .tab-label{font-size:8.5px;font-weight:600;line-height:1;white-space:nowrap}
 .tab .tab-icon{display:none}
@@ -429,6 +429,9 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
         onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
         Entrar
       </button>
+      <button id="btnBiometria" onclick="loginBiometria()" style="display:none;width:100%;background:var(--bg3);border:1px solid var(--gold-border);color:var(--gold2);border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:.5rem;transition:opacity .2s">
+        🔐 Usar Biometria / Digital
+      </button>
       <div id="loginErro" style="color:#dc4a3d;font-size:12px;text-align:center;margin-top:.75rem;opacity:0;transition:opacity .3s">Senha incorreta. Tente novamente.</div>
     </div>
     <div style="text-align:center;margin-top:1.5rem;font-size:11px;color:#3a3530">Acesso privado · Bruno & Priscila</div>
@@ -712,6 +715,60 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
 </div>
 
 
+<div class="page" id="page-config">
+  <div class="cfg-section">
+    <div class="section-title">Backup & Sincronização</div>
+    <div class="cfg-info">
+      <strong>☁️ Firebase:</strong> financas-familia-f18d5<br><br>
+      Use o backup para exportar todos os dados regularmente como backup de segurança.
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem">
+      <button class="btn-save" style="margin-top:0" onclick="exportarBackup()">⬇ Exportar JSON</button>
+      <button class="btn-save" style="margin-top:0;background:var(--bg3);border:1px solid var(--gold-border);color:var(--gold2)" onclick="document.getElementById('inputBackup').click()">⬆ Importar JSON</button>
+      <button class="btn-save" style="margin-top:0;background:#0a2040;border:1px solid #60a0e0;color:#60a0e0" onclick="abrirModalPDF()">📄 Exportar PDF</button>
+      <button class="btn-save" style="margin-top:0;background:var(--danger-dim);border:1px solid var(--danger);color:var(--danger)" onclick="limparDados()">🗑 Limpar Dados</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem">
+      <button class="btn-save" style="margin-top:0;background:var(--bg3);border:1px solid #34d399;color:#34d399" onclick="forcarRecorrencia()">🔄 Forçar Recorrência Agora</button>
+    </div>
+  </div>
+
+  <div class="cfg-section">
+    <div class="section-title">Importar Histórico</div>
+    <div class="cfg-info">Importa os dados históricos do Excel (Out/2023 a Mar/2026).</div>
+    <button class="btn-save" onclick="importarHistoricoExcel()">📊 Importar Histórico Excel</button>
+  </div>
+
+  <div class="cfg-section">
+    <div class="section-title">Alertas Automáticos</div>
+    <div class="cfg-info">Configure os limites para receber alertas visuais automáticos.</div>
+    <div class="alert-field">
+      <label>⚠️ Alertar quando custo real ultrapassar previsto em</label>
+      <input type="number" id="cfg_alerta_pct" value="20" min="1" max="100">
+      <span style="font-size:13px;color:var(--txt2)">%</span>
+    </div>
+    <div class="alert-field">
+      <label>🔴 Alertar quando saldo real ficar abaixo de</label>
+      <input type="number" id="cfg_alerta_saldo" value="500" min="0">
+      <span style="font-size:13px;color:var(--txt2)">R$</span>
+    </div>
+    <div class="alert-field">
+      <label>🔔 Notificações de vencimento (dias antes)</label>
+      <input type="number" id="cfg_notif_dias" value="3" min="1" max="15">
+      <span style="font-size:13px;color:var(--txt2)">dias</span>
+    </div>
+    <button class="btn-save" style="margin-top:.875rem" onclick="salvarConfigAlertas()">✓ Salvar configurações</button>
+  </div>
+
+  <div class="cfg-section">
+    <div class="section-title">Senha & Biometria</div>
+    <div class="cfg-info">Para alterar a senha, edite o index.html e substitua <code style="background:var(--bg3);padding:2px 6px;border-radius:4px">SENHA_OK</code> pela nova senha.</div>
+    <button class="btn-save" style="margin-top:.75rem;background:var(--bg3);border:1px solid var(--gold-border);color:var(--gold2)" onclick="registrarBiometria()">🔐 Ativar Login por Biometria/Digital</button>
+    <div class="cfg-info" style="margin-top:.5rem;font-size:11px">Após ativar, o botão de digital aparecerá na tela de login. Funciona com impressão digital ou Face ID.</div>
+  </div>
+</div>
+
+
 <!-- MODAL INSTALAR APP -->
 <div class="modal-overlay" id="modalInstalar" style="display:none" onclick="fecharModalInstalar()">
   <div class="modal-box" style="max-width:400px" onclick="event.stopPropagation()">
@@ -971,11 +1028,14 @@ document.addEventListener('click', ()=>fecharTodosOsPickers());
 window.showTab = name => {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
+  const page = document.getElementById('page-'+name);
+  if(page) page.classList.add('active');
   const tabs=['resumo','receitas','despesas','metas','graficos','anual','config'];
   const idx=tabs.indexOf(name);
-  if(idx>=0 && idx<5) document.querySelectorAll('.tab')[idx].classList.add('active');
+  if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
+  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); }
+  if(name==='config') initCfgAlertas();
 };
 
 // ============ RENDER ============
@@ -1315,7 +1375,15 @@ function renderGraficos(){
 }
 
 // ============ AÇÕES ============
-window.mudarMes = v => { mesSelecionado=v; renderMesBtn(); renderAll(); };
+window.mudarMes = v => {
+  mesSelecionado = v;
+  renderMesBtn();
+  renderAll();
+  const pG = document.getElementById('page-graficos');
+  const pA = document.getElementById('page-anual');
+  if(pG && pG.classList.contains('active')) setTimeout(renderGraficos, 100);
+  if(pA && pA.classList.contains('active')){ anoAnual = parseInt(v.split('-')[0]); renderAnual(); renderComparativo(); }
+};
 
 window.salvarReceitas = () => {
   const map={r_salarioBruno:'salarioBruno',r_salarioPriscila:'salarioPriscila',r_rendaExtraBruno:'rendaExtraBruno',r_rendaExtraPriscila:'rendaExtraPriscila',r_decimoTerceiro:'decimoTerceiro',r_valeAlim:'valeAlim'};
@@ -2208,6 +2276,99 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
 
 
 // ============ ASSISTENTE FINANCEIRO IA ============
+
+
+// ============ BIOMETRIA (WebAuthn) ============
+(function(){
+  const STORAGE_KEY = 'financas_auth_ok';
+  const BIOMETRIA_KEY = 'biometria_registrada';
+
+  // Verificar suporte
+  const suportaBiometria = window.PublicKeyCredential !== undefined
+    && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
+
+  async function verificarDisponibilidade(){
+    if(!suportaBiometria) return false;
+    try {
+      return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    } catch(e){ return false; }
+  }
+
+  // Mostrar botão de biometria se disponível e já registrada
+  verificarDisponibilidade().then(disponivel => {
+    const btn = document.getElementById('btnBiometria');
+    if(!btn) return;
+    const registrada = localStorage.getItem(BIOMETRIA_KEY) === '1';
+    if(disponivel && registrada) btn.style.display = 'block';
+  });
+
+  window.loginBiometria = async function(){
+    try {
+      // Usar WebAuthn para verificar identidade local
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      const cred = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          timeout: 60000,
+          userVerification: 'required',
+          rpId: window.location.hostname
+        }
+      });
+
+      if(cred){
+        sessionStorage.setItem(STORAGE_KEY, '1');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appWrapper').style.display = 'block';
+        showToast('✓ Autenticado por biometria!');
+      }
+    } catch(e){
+      if(e.name !== 'NotAllowedError'){
+        showToast('Biometria falhou: ' + e.message, true);
+      }
+    }
+  };
+
+  // Registrar biometria após login com senha (primeira vez)
+  window.registrarBiometria = async function(){
+    const disponivel = await verificarDisponibilidade();
+    if(!disponivel){
+      showToast('Biometria não disponível neste dispositivo', true);
+      return;
+    }
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      const userId = new Uint8Array(16);
+      window.crypto.getRandomValues(userId);
+
+      await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: 'Finanças Família', id: window.location.hostname },
+          user: { id: userId, name: 'bruno.priscila', displayName: 'Bruno & Priscila' },
+          pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+          timeout: 60000,
+          authenticatorSelection: { userVerification: 'required', authenticatorAttachment: 'platform' },
+          attestation: 'none'
+        }
+      });
+
+      localStorage.setItem(BIOMETRIA_KEY, '1');
+      showToast('✓ Biometria registrada! Na próxima vez pode usar a digital.');
+      // Mostrar botão no login
+      const btn = document.getElementById('btnBiometria');
+      if(btn) btn.style.display = 'block';
+    } catch(e){
+      if(e.name === 'NotAllowedError'){
+        showToast('Registro cancelado', true);
+      } else {
+        showToast('Erro ao registrar: ' + e.message, true);
+      }
+    }
+  };
+})();
 
 // ============ BOOT ============
 buildMesSelect();
