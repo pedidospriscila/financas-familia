@@ -51,9 +51,9 @@ input[type=file]{display:none}
 
 /* NAV */
 .nav-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--gold-border);width:100%;overflow:hidden}
-.tab{flex:1;padding:.35rem .04rem;text-align:center;font-size:7.5px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
+.tab{flex:1;padding:.3rem .03rem;text-align:center;font-size:7px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
 .tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
-.tab-label{font-size:6.5px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:-.4px;text-transform:uppercase}
+.tab-label{font-size:6px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:-.5px;text-transform:uppercase}
 .tab .tab-icon{display:none}
 
 main{padding:1.25rem;max-width:1200px;margin:0 auto}
@@ -401,7 +401,7 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
 .ia-header-info{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:var(--bg2);border-radius:10px;margin-bottom:.75rem;border:1px solid var(--gold-border)}
 .ia-header-dot{width:8px;height:8px;border-radius:50%;background:var(--em);animation:syncpulse 2s ease-in-out infinite}
 
-.tab > *:first-child{font-size:13px;line-height:1.1}
+.tab > *:first-child{font-size:12px;line-height:1.1}
 @media(max-width:360px){.tab > *:first-child{font-size:12px}}
 
 /* COMPARATIVO ANUAL */
@@ -845,6 +845,57 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
   </div>
 </div>
 
+
+<!-- MODAL PDF -->
+<div class="modal-overlay" id="modalPDF" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-title">📄 Exportar Relatório PDF</div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:1.25rem">Escolha o período que deseja exportar.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+      <div>
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">De</div>
+        <div style="position:relative">
+          <button onclick="togglePickerPDF('inicio',event)" style="width:100%;background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:8px 12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent">
+            <span id="pdfInicioLabel">—</span><span style="font-size:9px;opacity:.6">▼</span>
+          </button>
+          <div id="pdfPickerInicio" style="display:none;position:absolute;top:42px;left:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:.875rem;z-index:600;width:220px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+              <button onclick="mudaAnoPDF('inicio',-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">‹</button>
+              <span id="pdfAnoInicioLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:.95rem;font-weight:700"></span>
+              <button onclick="mudaAnoPDF('inicio',1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">›</button>
+            </div>
+            <div id="pdfGridInicio" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.4rem">Até</div>
+        <div style="position:relative">
+          <button onclick="togglePickerPDF('fim',event)" style="width:100%;background:var(--bg3);border:1px solid var(--gold-border);border-radius:8px;color:var(--gold2);padding:8px 12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent">
+            <span id="pdfFimLabel">—</span><span style="font-size:9px;opacity:.6">▼</span>
+          </button>
+          <div id="pdfPickerFim" style="display:none;position:absolute;top:42px;right:0;background:var(--bg2);border:1px solid var(--gold-border);border-radius:12px;padding:.875rem;z-index:600;width:220px;box-shadow:0 8px 32px rgba(0,0,0,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+              <button onclick="mudaAnoPDF('fim',-1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">‹</button>
+              <span id="pdfAnoFimLabel" style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:.95rem;font-weight:700"></span>
+              <button onclick="mudaAnoPDF('fim',1,event)" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:15px;font-weight:700">›</button>
+            </div>
+            <div id="pdfGridFim" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="pdfResumoMeses" style="background:var(--bg3);border-radius:8px;padding:.75rem;font-size:13px;color:var(--txt2);margin-bottom:1rem;text-align:center;min-height:36px"></div>
+    <div style="padding:.75rem;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:8px;font-size:12px;color:var(--txt2)">
+      💡 Abre em nova aba. Use <strong>Ctrl+P</strong> ou compartilhar → imprimir para salvar como PDF.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-ok" onclick="gerarPDF()">📄 Gerar PDF</button>
+      <button class="btn-modal-cancel" onclick="fecharModalPDF()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR DESPESA -->
 <div class="modal-overlay" id="modalEditDesp" style="display:none">
   <div class="modal-box">
@@ -1038,7 +1089,17 @@ function renderPickerGrid(){
 }
 
 window.mudaAno = function(d,e){ if(e)e.stopPropagation(); pickerAno=Math.max(2023,Math.min(2040,pickerAno+d)); renderPickerGrid(); };
-window.selecionarMes = function(v,e){ if(e)e.stopPropagation(); mesSelecionado=v; fecharPicker(); renderMesBtn(); renderAll(); };
+window.selecionarMes = function(v,e){
+  if(e) e.stopPropagation();
+  mesSelecionado = v;
+  fecharPicker();
+  renderMesBtn();
+  renderAll();
+  const pG = document.getElementById('page-graficos');
+  const pA = document.getElementById('page-anual');
+  if(pG && pG.classList.contains('active')) setTimeout(renderGraficos, 100);
+  if(pA && pA.classList.contains('active')){ anoAnual=parseInt(v.split('-')[0]); renderAnual(); renderComparativo(); renderComparativoAnual(); }
+};
 window.togglePicker = function(e){ if(e)e.stopPropagation(); const p=document.getElementById('mesPicker'); if(p){const open=p.style.display!=='none'; fecharTodosOsPickers(); if(!open){p.style.display='block';}} };
 window.fecharPicker = function(){ const p=document.getElementById('mesPicker'); if(p)p.style.display='none'; };
 function fecharTodosOsPickers(){ document.querySelectorAll('#mesPicker,#pdfPickerInicio,#pdfPickerFim').forEach(p=>p.style.display='none'); }
@@ -1204,10 +1265,12 @@ function renderDespesas(){
     ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00'));
     setText('ft_dif','—'); return;
   }
-  const busca=(document.getElementById('buscaDespesa')||{}).value||'';
-  const filtrado = busca ? desp.filter(d=>d.nome.toLowerCase().includes(busca.toLowerCase())) : desp;
-  if(!filtrado.length && busca){
-    tb.innerHTML='<tr><td colspan="6" class="empty">Nenhuma despesa encontrada para "'+busca+'"</td></tr>';
+  const buscaEl = document.getElementById('buscaDespesa');
+  const busca = buscaEl ? buscaEl.value.trim().toLowerCase() : '';
+  const filtrado = busca ? desp.filter(d=>d.nome.toLowerCase().includes(busca)) : desp;
+  if(!filtrado.length){
+    tb.innerHTML='<tr><td colspan="6" class="empty">'+(busca?'Nenhuma despesa encontrada para "'+busca+'"':'Nenhuma despesa neste mês')+'</td></tr>';
+    ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00')); setText('ft_dif','—');
     return;
   }
   const sorted=[...filtrado].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
@@ -2327,13 +2390,133 @@ window.fecharModalHist = () => { document.getElementById('modalHistorico').style
   window.tentarInstalar = function(){
     document.getElementById('modalInstalar').style.display = 'flex';
   };
+
 })();
 
 
+window.compartilharWhatsApp = function(){
+  const dados = getDados();
+  const [y,m] = mesSelecionado.split('-').map(Number);
+  const mesNome = MES[m-1] + '/' + y;
+  const rec = totalReceitas();
+  const prev = totalCustoPrevisto();
+  const real = totalCustoReal();
+  const sp = saldoPrev();
+  const sr = saldoReal();
+  const desp = dados.despesas || [];
+  const pendentes = desp.filter(d=>!d.pago);
+  const comprPct = rec > 0 ? Math.round(real/rec*100) : 0;
+  const top3 = [...desp].sort((a,b)=>num(b.custoPrevisto)-num(a.custoPrevisto)).slice(0,3);
+  const saldoIcon = sr >= 0 ? '✅' : '❌';
+  const comprIcon = comprPct < 80 ? '🟢' : comprPct < 100 ? '🟡' : '🔴';
+  let texto = '💰 *Finanças - ' + mesNome + '*\n_Bruno & Priscila_\n\n';
+  texto += '*📊 RESUMO*\n';
+  texto += '💵 Receitas: *' + fmt(rec) + '*\n';
+  texto += '📉 Custo Previsto: ' + fmt(prev) + '\n';
+  texto += '💸 Custo Real: *' + fmt(real) + '*\n';
+  texto += saldoIcon + ' Saldo Real: *' + fmt(sr) + '*\n';
+  texto += comprIcon + ' Comprometimento: *' + comprPct + '%*\n\n';
+  if(top3.length){
+    texto += '*🏆 TOP 3 DESPESAS*\n';
+    const emojis=['🥇','🥈','🥉'];
+    top3.forEach((d,i)=>{ texto += emojis[i]+' '+d.nome+': '+fmt(d.custoPrevisto)+'\n'; });
+    texto += '\n';
+  }
+  if(pendentes.length){
+    texto += '*⏳ PENDÊNCIAS (' + pendentes.length + ')*\n';
+    pendentes.slice(0,5).forEach(d=>{ texto += '• '+d.nome+': '+fmt(d.custoPrevisto)+(d.vencimento?' (dia '+d.vencimento+')')+'\n'; });
+    if(pendentes.length>5) texto += '_...e mais '+(pendentes.length-5)+' pendências_\n';
+    texto += '\n';
+  }
+  texto += '_Gerado em ' + new Date().toLocaleDateString('pt-BR') + ' · App Finanças_';
+  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+};
 
-// ============ ASSISTENTE FINANCEIRO IA ============
 
+// ============ COMPARATIVO ANUAL ============
+let anosComparativo = [];
 
+function renderComparativoAnual(){
+  const el = document.getElementById('comparativoAnualContent');
+  const wrap = document.getElementById('anosComparativoWrap');
+  if(!el) return;
+
+  const todosAnos = [...new Set(Object.keys(allData.meses||{}).map(k=>k.split('-')[0]))].sort();
+  if(todosAnos.length < 1){ el.innerHTML='<div class="empty">Sem dados disponíveis.</div>'; return; }
+
+  if(!anosComparativo.length){
+    anosComparativo = todosAnos.slice(-2);
+  }
+
+  if(wrap){
+    wrap.innerHTML = todosAnos.map(ano =>
+      `<button class="ano-btn${anosComparativo.includes(ano)?' selected':''}" onclick="toggleAnoComp('${ano}')">${ano}</button>`
+    ).join('');
+  }
+
+  function totaisAno(ano){
+    let rec=0,gasto=0,meses=0;
+    for(let m=1;m<=12;m++){
+      const key=ano+'-'+(m<10?'0':'')+m;
+      const md=allData.meses&&allData.meses[key];
+      if(!md) continue;
+      const r=md.receitas||{};
+      const recM=['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k2)=>s+num(r[k2]),0);
+      const gastoM=(md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+      if(recM>0||gastoM>0){rec+=recM;gasto+=gastoM;meses++;}
+    }
+    return {rec,gasto,saldo:rec-gasto,meses,mediaGasto:meses>0?gasto/meses:0};
+  }
+
+  if(!anosComparativo.length){el.innerHTML='<div class="empty">Selecione ao menos 1 ano.</div>';return;}
+
+  const dados = anosComparativo.map(ano=>({ano,...totaisAno(ano)}));
+  const cores = ['#b8963e','#10b981','#4a8cdc'];
+
+  const metricas = [
+    {label:'💵 Receita Total',key:'rec'},
+    {label:'💸 Gasto Total',key:'gasto'},
+    {label:'💰 Saldo Acumulado',key:'saldo'},
+    {label:'📅 Meses com dados',key:'meses'},
+    {label:'📊 Média Mensal Gasto',key:'mediaGasto'},
+  ];
+
+  const maxPorMetrica = {};
+  metricas.forEach(mt=>{
+    maxPorMetrica[mt.key] = Math.max(...dados.map(d=>Math.abs(d[mt.key])),1);
+  });
+
+  el.innerHTML = metricas.map(mt=>`
+    <div style="background:var(--bg3);border-radius:12px;padding:.875rem;margin-bottom:.6rem">
+      <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem">${mt.label}</div>
+      ${dados.map((d,i)=>{
+        const val=d[mt.key];
+        const isMeses=mt.key==='meses';
+        const isNeg=val<0;
+        const cor=mt.key==='saldo'?(val>=0?'var(--em)':'var(--danger)'):mt.key==='gasto'?'var(--danger)':'var(--em)';
+        const pct=Math.max(Math.abs(val)/maxPorMetrica[mt.key]*100,2);
+        const prev=i>0?dados[i-1][mt.key]:null;
+        const diff=prev!==null?val-prev:null;
+        const seta=diff===null?'':diff>0?'↑':diff<0?'↓':'→';
+        const setaCor=diff===null?'':diff===0?'var(--txt3)':mt.key==='gasto'?(diff>0?'var(--danger)':'var(--em)'):(diff>0?'var(--em)':'var(--danger)');
+        return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
+          <div style="width:36px;font-size:11px;font-weight:700;color:${cores[i%3]}">${d.ano}</div>
+          <div style="flex:1;background:var(--bg4);border-radius:20px;height:7px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${cores[i%3]};border-radius:20px;transition:width .5s ease"></div>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:.82rem;font-weight:700;color:${cor};min-width:85px;text-align:right">${isMeses?val+' meses':fmt(val)}</div>
+          <div style="font-size:12px;color:${setaCor};width:14px;text-align:center">${seta}</div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+window.toggleAnoComp = function(ano){
+  const idx=anosComparativo.indexOf(ano);
+  if(idx>=0){ if(anosComparativo.length>1) anosComparativo.splice(idx,1); }
+  else { if(anosComparativo.length>=3) anosComparativo.shift(); anosComparativo.push(ano); anosComparativo.sort(); }
+  renderComparativoAnual();
+};
 
 // ============ BOOT ============
 buildMesSelect();
