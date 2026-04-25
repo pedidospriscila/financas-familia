@@ -2424,7 +2424,7 @@ window.compartilharWhatsApp = function(){
   }
   if(pendentes.length){
     texto += '*⏳ PENDÊNCIAS (' + pendentes.length + ')*\n';
-    pendentes.slice(0,5).forEach(d=>{ texto += '• '+d.nome+': '+fmt(d.custoPrevisto)+(d.vencimento?' (dia '+d.vencimento+')')+'\n'; });
+    pendentes.slice(0,5).forEach(function(d){ texto += '• '+d.nome+': '+fmt(d.custoPrevisto)+(d.vencimento?' (dia '+d.vencimento+')':'')+String.fromCharCode(10); });
     if(pendentes.length>5) texto += '_...e mais '+(pendentes.length-5)+' pendências_\n';
     texto += '\n';
   }
@@ -2486,29 +2486,30 @@ function renderComparativoAnual(){
     maxPorMetrica[mt.key] = Math.max(...dados.map(d=>Math.abs(d[mt.key])),1);
   });
 
-  el.innerHTML = metricas.map(mt=>`
-    <div style="background:var(--bg3);border-radius:12px;padding:.875rem;margin-bottom:.6rem">
-      <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem">${mt.label}</div>
-      ${dados.map((d,i)=>{
-        const val=d[mt.key];
-        const isMeses=mt.key==='meses';
-        const isNeg=val<0;
-        const cor=mt.key==='saldo'?(val>=0?'var(--em)':'var(--danger)'):mt.key==='gasto'?'var(--danger)':'var(--em)';
-        const pct=Math.max(Math.abs(val)/maxPorMetrica[mt.key]*100,2);
-        const prev=i>0?dados[i-1][mt.key]:null;
-        const diff=prev!==null?val-prev:null;
-        const seta=diff===null?'':diff>0?'↑':diff<0?'↓':'→';
-        const setaCor=diff===null?'':diff===0?'var(--txt3)':mt.key==='gasto'?(diff>0?'var(--danger)':'var(--em)'):(diff>0?'var(--em)':'var(--danger)');
-        return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
-          <div style="width:36px;font-size:11px;font-weight:700;color:${cores[i%3]}">${d.ano}</div>
-          <div style="flex:1;background:var(--bg4);border-radius:20px;height:7px;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${cores[i%3]};border-radius:20px;transition:width .5s ease"></div>
-          </div>
-          <div style="font-family:'Playfair Display',serif;font-size:.82rem;font-weight:700;color:${cor};min-width:85px;text-align:right">${isMeses?val+' meses':fmt(val)}</div>
-          <div style="font-size:12px;color:${setaCor};width:14px;text-align:center">${seta}</div>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
+  el.innerHTML = metricas.map(function(mt){
+    var cor0 = mt.key==='saldo'?'var(--em)':mt.key==='gasto'?'var(--danger)':'var(--em)';
+    var linhas = dados.map(function(d,i){
+      var val = d[mt.key];
+      var isMeses = mt.key==='meses';
+      var cor = mt.key==='saldo'?(val>=0?'var(--em)':'var(--danger)'):mt.key==='gasto'?'var(--danger)':'var(--em)';
+      var pct = Math.max(Math.abs(val)/maxPorMetrica[mt.key]*100,2);
+      var prev = i>0?dados[i-1][mt.key]:null;
+      var diff = prev!==null?val-prev:null;
+      var seta = diff===null?'':diff>0?'↑':diff<0?'↓':'→';
+      var setaCor = diff===null?'':diff===0?'var(--txt3)':mt.key==='gasto'?(diff>0?'var(--danger)':'var(--em)'):(diff>0?'var(--em)':'var(--danger)');
+      var valStr = isMeses?(val+' meses'):fmt(val);
+      return '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">'
+        +'<div style="width:36px;font-size:11px;font-weight:700;color:'+cores[i%3]+'">'+d.ano+'</div>'
+        +'<div style="flex:1;background:var(--bg4);border-radius:20px;height:7px;overflow:hidden">'
+        +'<div style="height:100%;width:'+pct+'%;background:'+cores[i%3]+';border-radius:20px;transition:width .5s ease"></div></div>'
+        +'<div style="font-family:serif;font-size:.82rem;font-weight:700;color:'+cor+';min-width:85px;text-align:right">'+valStr+'</div>'
+        +'<div style="font-size:12px;color:'+setaCor+';width:14px;text-align:center">'+seta+'</div>'
+        +'</div>';
+    }).join('');
+    return '<div style="background:var(--bg3);border-radius:12px;padding:.875rem;margin-bottom:.6rem">'
+      +'<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem">'+mt.label+'</div>'
+      +linhas+'</div>';
+  }).join('');
 }
 
 window.toggleAnoComp = function(ano){
