@@ -451,6 +451,52 @@ input:focus,select:focus,textarea:focus{
 
 /* PENDENTES */
 .pendente-item{border-left:3px solid rgba(201,168,76,.3);}
+
+/* ===== SCORE DE SAÚDE FINANCEIRA ===== */
+.score-page{padding:.75rem}
+
+/* Gauge/Termômetro */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:.5rem 0 1rem}
+.gauge-svg{width:100%;max-width:280px;overflow:visible}
+.score-numero{font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;text-align:center;line-height:1;letter-spacing:-2px;transition:color .8s}
+.score-label{font-size:.75rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-top:.25rem}
+.score-zona{font-size:.95rem;font-weight:700;text-align:center;margin:.25rem 0;padding:.35rem 1.2rem;border-radius:20px;display:inline-block}
+.score-zona.verde{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.score-zona.amarela{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+.score-zona.vermelha{background:rgba(220,85,69,.15);color:#e05545;border:1px solid rgba(220,85,69,.3)}
+
+/* Frase personalizada */
+.score-frase{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:1rem;margin:0 0 .875rem;font-size:13px;line-height:1.6;color:var(--txt);font-style:italic;position:relative}
+.score-frase::before{content:'"';font-family:'Playfair Display',serif;font-size:2.5rem;color:var(--gold);opacity:.4;position:absolute;top:-.25rem;left:.5rem;line-height:1}
+
+/* Componentes do score */
+.score-componentes{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.875rem}
+.score-comp-card{background:var(--bg2);border:1px solid rgba(201,168,76,.1);border-radius:12px;padding:.75rem;text-align:center}
+.score-comp-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;font-weight:700}
+.score-comp-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700}
+.score-comp-pts{font-size:9px;color:var(--txt3);margin-top:.1rem}
+
+/* Linha do tempo */
+.score-timeline{margin-bottom:.875rem}
+.score-tl-item{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
+.score-tl-mes{font-size:10px;color:var(--txt3);width:44px;flex-shrink:0;text-align:right}
+.score-tl-bar-wrap{flex:1;background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;position:relative}
+.score-tl-bar{height:100%;border-radius:20px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.score-tl-num{font-size:10px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+
+/* Projeção */
+.projecao-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:1rem;margin-bottom:.875rem}
+.projecao-item{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.projecao-item:last-child{border-bottom:none}
+.projecao-mes{font-size:12px;color:var(--txt2)}
+.projecao-val{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700}
+.projecao-trend{font-size:18px}
+
+@media(max-width:380px){
+  .score-numero{font-size:2.5rem}
+  .score-componentes{grid-template-columns:1fr 1fr}
+  .score-comp-label{font-size:8px}
+}
 </style>
 </head>
 <body>
@@ -526,6 +572,7 @@ input:focus,select:focus,textarea:focus{
   <div class="tab" onclick="showTab('metas')">🎯<span class="tab-label">Metas</span></div>
   <div class="tab" onclick="showTab('graficos')">📊<span class="tab-label">Gráficos</span></div>
   <div class="tab" onclick="showTab('anual')">📅<span class="tab-label">Anual</span></div>
+  <div class="tab" onclick="showTab('score')">💎<span class="tab-label">Score</span></div>
 </div>
 
 <main>
@@ -766,6 +813,55 @@ input:focus,select:focus,textarea:focus{
   </div>
 </div>
 
+
+
+<!-- SCORE DE SAÚDE FINANCEIRA -->
+<div class="page" id="page-score">
+  <div class="score-page">
+
+    <!-- Gauge animado -->
+    <div class="gauge-wrap">
+      <svg class="gauge-svg" viewBox="0 0 280 160" id="scoreGaugeSVG">
+        <!-- Trilha de fundo -->
+        <path d="M 30 140 A 110 110 0 0 1 250 140" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="18" stroke-linecap="round"/>
+        <!-- Zonas coloridas -->
+        <path d="M 30 140 A 110 110 0 0 1 86 55" fill="none" stroke="rgba(220,85,69,.3)" stroke-width="18" stroke-linecap="round"/>
+        <path d="M 86 55 A 110 110 0 0 1 194 55" fill="none" stroke="rgba(245,158,11,.3)" stroke-width="18" stroke-linecap="round"/>
+        <path d="M 194 55 A 110 110 0 0 1 250 140" fill="none" stroke="rgba(16,185,129,.3)" stroke-width="18" stroke-linecap="round"/>
+        <!-- Barra de progresso animada -->
+        <path id="gaugeBar" d="M 30 140 A 110 110 0 0 1 30 140" fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round" style="transition:all 1.2s cubic-bezier(.4,0,.2,1)"/>
+        <!-- Agulha -->
+        <line id="gaugeNeedle" x1="140" y1="140" x2="140" y2="50" stroke="var(--gold2)" stroke-width="2.5" stroke-linecap="round" style="transform-origin:140px 140px;transition:transform 1.2s cubic-bezier(.4,0,.2,1)"/>
+        <circle cx="140" cy="140" r="6" fill="var(--gold2)"/>
+        <!-- Labels das zonas -->
+        <text x="22" y="155" font-size="9" fill="rgba(220,85,69,.7)" font-family="Inter">0</text>
+        <text x="130" y="30" font-size="9" fill="rgba(245,158,11,.7)" font-family="Inter" text-anchor="middle">500</text>
+        <text x="256" y="155" font-size="9" fill="rgba(16,185,129,.7)" font-family="Inter">1000</text>
+      </svg>
+      <div class="score-numero" id="scoreNumero">0</div>
+      <div class="score-label">Score de Saúde Financeira</div>
+      <div style="margin-top:.35rem"><span class="score-zona" id="scoreZonaLabel">Calculando...</span></div>
+    </div>
+
+    <!-- Frase personalizada -->
+    <div class="score-frase" id="scoreFrase">Analisando seus dados financeiros...</div>
+
+    <!-- Componentes do score -->
+    <div style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.5rem;font-weight:700">📊 Composição do Score</div>
+    <div class="score-componentes" id="scoreComponentes"></div>
+
+    <!-- Linha do tempo -->
+    <div style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.5rem;font-weight:700">📈 Evolução do Score — Últimos 12 meses</div>
+    <div class="section" style="padding:.875rem">
+      <div class="score-timeline" id="scoreTimeline"></div>
+    </div>
+
+    <!-- Projeção -->
+    <div style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.5rem;font-weight:700">🔮 Projeção — Próximos 3 Meses</div>
+    <div class="projecao-card" id="scoreProjecao"></div>
+
+  </div>
+</div>
 
 <div class="page" id="page-config">
 
@@ -1144,12 +1240,13 @@ window.showTab = name => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   const page = document.getElementById('page-'+name);
   if(page) page.classList.add('active');
-  const tabs=['resumo','receitas','despesas','metas','graficos','anual','config'];
+  const tabs=['resumo','receitas','despesas','metas','graficos','anual','score','config'];
   const idx=tabs.indexOf(name);
   if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
   if(name==='graficos') setTimeout(renderGraficos,100);
   if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderComparativoAnual(); }
   if(name==='config') initCfgAlertas();
+  if(name==='score') setTimeout(renderScore, 100);
 };
 
 // ============ RENDER ============
@@ -1218,6 +1315,7 @@ function renderAll(){
   renderNotifBadge(); renderTop5();
   if(abaAtiva === 'graficos') setTimeout(renderGraficos, 80);
   if(abaAtiva === 'anual'){ renderAnual(); renderComparativo(); renderComparativoAnual(); }
+  if(abaAtiva === 'score') setTimeout(renderScore, 80);
 }
 
 
@@ -2509,6 +2607,299 @@ window.toggleAnoComp = function(ano){
   else { if(anosComparativo.length>=3) anosComparativo.shift(); anosComparativo.push(ano); anosComparativo.sort(); }
   renderComparativoAnual();
 };
+
+
+// ============ SCORE DE SAÚDE FINANCEIRA ============
+
+function calcularScore(){
+  const hoje = new Date();
+  const mesHoje = hoje.getFullYear()+'-'+(hoje.getMonth()+1<10?'0':'')+(hoje.getMonth()+1);
+  const meses = Object.keys(allData.meses||{}).sort();
+
+  // Função para calcular dados de um mês
+  function dadosMes(key){
+    const md = allData.meses&&allData.meses[key];
+    if(!md) return null;
+    const r = md.receitas||{};
+    const rec = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(r[k]),0);
+    const prev = (md.despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto),0);
+    const real = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+    const saldo = rec - real;
+    const comprReal = rec>0 ? real/rec : 1;
+    return {rec,prev,real,saldo,comprReal};
+  }
+
+  const ultimos12 = [];
+  for(let i=11;i>=0;i--){
+    let y=hoje.getFullYear(), m=hoje.getMonth()+1-i;
+    while(m<1){m+=12;y--;}
+    const key=y+'-'+(m<10?'0':'')+m;
+    const d = dadosMes(key);
+    if(d) ultimos12.push({key,mes:MES[m-1],ano:y,...d});
+  }
+
+  const dadosAtual = dadosMes(mesSelecionado)||{rec:0,prev:0,real:0,saldo:0,comprReal:1};
+
+  // ===== COMPONENTES DO SCORE (total 1000 pontos) =====
+
+  // 1. SALDO (0-250 pts)
+  let ptsSaldo = 0;
+  if(dadosAtual.saldo > 0){
+    const pct = dadosAtual.saldo / Math.max(dadosAtual.rec, 1);
+    ptsSaldo = Math.min(Math.round(pct * 500), 250);
+  }
+
+  // 2. COMPROMETIMENTO DA RENDA (0-200 pts)
+  let ptsCompr = 0;
+  const compr = dadosAtual.comprReal;
+  if(compr <= 0.5) ptsCompr = 200;
+  else if(compr <= 0.7) ptsCompr = Math.round(200 - (compr-0.5)/0.2*80);
+  else if(compr <= 0.9) ptsCompr = Math.round(120 - (compr-0.7)/0.2*80);
+  else if(compr <= 1.0) ptsCompr = Math.round(40 - (compr-0.9)/0.1*40);
+  ptsCompr = Math.max(0, ptsCompr);
+
+  // 3. MESES CONSECUTIVOS POSITIVOS (0-200 pts)
+  let consecutivos = 0;
+  for(let i=ultimos12.length-1;i>=0;i--){
+    if(ultimos12[i].saldo >= 0) consecutivos++;
+    else break;
+  }
+  const ptsCons = Math.min(consecutivos * 25, 200);
+
+  // 4. EVOLUÇÃO COMPARADA AO ANO ANTERIOR (0-150 pts)
+  let ptsEvolucao = 75; // neutro
+  if(ultimos12.length >= 6){
+    const metade = Math.floor(ultimos12.length/2);
+    const primeiraMetade = ultimos12.slice(0,metade);
+    const segundaMetade = ultimos12.slice(metade);
+    const mediaPrimeira = primeiraMetade.reduce((s,d)=>s+d.saldo,0)/primeiraMetade.length;
+    const mediaSegunda = segundaMetade.reduce((s,d)=>s+d.saldo,0)/segundaMetade.length;
+    if(mediaSegunda > mediaPrimeira) ptsEvolucao = Math.min(150, 75 + Math.round((mediaSegunda-mediaPrimeira)/Math.max(Math.abs(mediaPrimeira),1)*75));
+    else ptsEvolucao = Math.max(0, 75 - Math.round((mediaPrimeira-mediaSegunda)/Math.max(Math.abs(mediaPrimeira),1)*75));
+  }
+
+  // 5. DESPESAS DENTRO DO PREVISTO (0-100 pts)
+  let ptsDentro = 0;
+  const desp = (allData.meses&&allData.meses[mesSelecionado]&&allData.meses[mesSelecionado].despesas)||[];
+  const pagas = desp.filter(d=>d.pago&&num(d.custoPrevisto)>0);
+  if(pagas.length>0){
+    const dentroPrevisto = pagas.filter(d=>num(d.custoReal||d.custoPrevisto)<=num(d.custoPrevisto)*1.1).length;
+    ptsDentro = Math.round(dentroPrevisto/pagas.length*100);
+  } else {
+    ptsDentro = 50;
+  }
+
+  // 6. METAS ATINGIDAS (0-100 pts)
+  const metas = allData.aquisicoes||[];
+  let ptsMetas = 50;
+  if(metas.length>0){
+    const compradas = metas.filter(m=>m.comprado).length;
+    ptsMetas = Math.round(compradas/metas.length*100);
+  }
+
+  const total = ptsSaldo + ptsCompr + ptsCons + ptsEvolucao + ptsDentro + ptsMetas;
+  const scoreTotal = Math.min(Math.max(total, 0), 1000);
+
+  return {
+    total: scoreTotal,
+    componentes: [
+      {label:'Saldo do Mês', pts:ptsSaldo, max:250, icon:'💰'},
+      {label:'Comprometimento', pts:ptsCompr, max:200, icon:'📊'},
+      {label:'Meses Positivos', pts:ptsCons, max:200, icon:'📈'},
+      {label:'Evolução', pts:ptsEvolucao, max:150, icon:'🚀'},
+      {label:'Dentro Previsto', pts:ptsDentro, max:100, icon:'✅'},
+      {label:'Metas', pts:ptsMetas, max:100, icon:'🎯'},
+    ],
+    consecutivos,
+    dadosAtual,
+    ultimos12,
+    compr
+  };
+}
+
+function calcularScoreMes(key){
+  const md = allData.meses&&allData.meses[key];
+  if(!md) return null;
+  const r = md.receitas||{};
+  const rec = ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num(r[k]),0);
+  const real = (md.despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+  const saldo = rec - real;
+  const compr = rec>0?real/rec:1;
+  let pts = 0;
+  // Saldo
+  if(saldo>0) pts += Math.min(Math.round(saldo/Math.max(rec,1)*500),250);
+  // Comprometimento
+  if(compr<=0.5) pts+=200;
+  else if(compr<=0.9) pts+=Math.max(0,Math.round(200-(compr-0.5)/0.4*200));
+  // Básico por ter dados
+  pts += 50;
+  return Math.min(Math.max(pts,0),1000);
+}
+
+function gerarFrase(score){
+  const d = score.dadosAtual;
+  const comprPct = Math.round(score.compr*100);
+  const [y,m] = mesSelecionado.split('-').map(Number);
+  const mesNome = MES[m-1]+' '+y;
+
+  if(score.total >= 800){
+    if(score.consecutivos >= 6)
+      return 'Bruno e Priscila, estão num excelente momento! '+score.consecutivos+' meses consecutivos com saldo positivo. O comprometimento de '+comprPct+'% da renda está muito saudável. Continue assim!';
+    return 'Finanças em ótimo estado em '+mesNome+'! Saldo positivo e gastos controlados. Vocês estão no caminho certo.';
+  } else if(score.total >= 600){
+    if(comprPct > 80)
+      return 'Em '+mesNome+', o comprometimento da renda chegou a '+comprPct+'%. Vale revisar as despesas maiores para ganhar mais fôlego.';
+    return 'Situação estável em '+mesNome+'. Pequenos ajustes nas despesas variáveis podem melhorar ainda mais o score.';
+  } else if(score.total >= 400){
+    if(d.saldo < 0)
+      return 'Atenção: em '+mesNome+' o saldo ficou negativo em '+fmt(Math.abs(d.saldo))+'. O comprometimento de '+comprPct+'% da renda pede uma revisão nas despesas.';
+    return 'Momento de atenção em '+mesNome+'. O comprometimento de '+comprPct+'% está elevado. Foquem em reduzir despesas variáveis.';
+  } else {
+    return 'Em '+mesNome+', as finanças precisam de atenção urgente. Saldo negativo e alto comprometimento. Hora de rever gastos e criar um plano de ação.';
+  }
+}
+
+function animarGauge(score){
+  const pct = score/1000;
+  // Arco de 210 graus (de -105 a +105 graus partindo do topo)
+  const angInicio = Math.PI + Math.PI*0.167; // ~210° em radianos desde o centro
+  const angTotal = Math.PI * 1.333; // 240 graus de arco total
+  const angAtual = angInicio - pct * angTotal; // No sentido horário
+
+  const cx=140, cy=140, r=110;
+  const x2 = cx + r*Math.cos(angInicio);
+  const y2 = cy + r*Math.sin(angInicio);
+  const x3 = cx + r*Math.cos(angAtual);
+  const y3 = cy + r*Math.sin(angAtual);
+  const largeArc = (pct * angTotal) > Math.PI ? 1 : 0;
+
+  // Cor da barra
+  const cor = score>=700?'#10b981':score>=400?'#f59e0b':'#e05545';
+  const barEl = document.getElementById('gaugeBar');
+  if(barEl){
+    if(pct < 0.01){
+      barEl.setAttribute('d','M '+x2+' '+y2+' A '+r+' '+r+' 0 0 0 '+x2+' '+y2);
+    } else {
+      barEl.setAttribute('d','M '+x2+' '+y2+' A '+r+' '+r+' 0 '+largeArc+' 0 '+x3+' '+y3);
+    }
+    barEl.setAttribute('stroke', cor);
+  }
+
+  // Agulha
+  const needle = document.getElementById('gaugeNeedle');
+  if(needle){
+    // Ângulo da agulha em graus (0 = apontando para cima)
+    const graus = ((angAtual - (-Math.PI/2)) * 180/Math.PI + 360) % 360;
+    const rot = graus - 90;
+    needle.style.transform = 'rotate('+rot+'deg)';
+    needle.setAttribute('stroke', cor);
+  }
+
+  // Número animado
+  const numEl = document.getElementById('scoreNumero');
+  if(numEl){
+    numEl.style.color = cor;
+    let atual = 0;
+    const alvo = Math.round(score);
+    const dur = 1200;
+    const start = performance.now();
+    function animar(now){
+      const t = Math.min((now-start)/dur,1);
+      const ease = 1-Math.pow(1-t,3);
+      numEl.textContent = Math.round(ease*alvo);
+      if(t<1) requestAnimationFrame(animar);
+      else numEl.textContent = alvo;
+    }
+    requestAnimationFrame(animar);
+  }
+}
+
+function renderScore(){
+  const score = calcularScore();
+
+  // Zona
+  const zona = score.total>=700?'verde':score.total>=400?'amarela':'vermelha';
+  const zonaTexto = score.total>=700?'🟢 Zona Saudável':score.total>=400?'🟡 Zona de Atenção':'🔴 Zona Crítica';
+  const zonaEl = document.getElementById('scoreZonaLabel');
+  if(zonaEl){ zonaEl.textContent=zonaTexto; zonaEl.className='score-zona '+zona; }
+
+  // Animar gauge
+  animarGauge(score.total);
+
+  // Frase
+  const fraseEl = document.getElementById('scoreFrase');
+  if(fraseEl) fraseEl.textContent = gerarFrase(score);
+
+  // Componentes
+  const compEl = document.getElementById('scoreComponentes');
+  if(compEl){
+    compEl.innerHTML = score.componentes.map(c=>{
+      const pct = Math.round(c.pts/c.max*100);
+      const cor = pct>=70?'var(--em)':pct>=40?'#f59e0b':'var(--danger)';
+      return '<div class="score-comp-card">'
+        +'<div class="score-comp-label">'+c.icon+' '+c.label+'</div>'
+        +'<div class="score-comp-val" style="color:'+cor+'">'+c.pts+'</div>'
+        +'<div class="score-comp-pts">de '+c.max+' pts ('+pct+'%)</div>'
+        +'<div style="background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;margin-top:.35rem">'
+        +'<div style="height:100%;width:'+pct+'%;background:'+cor+';border-radius:20px;transition:width .8s ease"></div>'
+        +'</div></div>';
+    }).join('');
+  }
+
+  // Timeline
+  const tlEl = document.getElementById('scoreTimeline');
+  if(tlEl && score.ultimos12.length){
+    const maxScore = 1000;
+    tlEl.innerHTML = score.ultimos12.map(d=>{
+      const s = calcularScoreMes(d.key)||0;
+      const pct = s/maxScore*100;
+      const cor = s>=700?'#10b981':s>=400?'#f59e0b':'#e05545';
+      return '<div class="score-tl-item">'
+        +'<div class="score-tl-mes">'+d.mes+'</div>'
+        +'<div class="score-tl-bar-wrap">'
+        +'<div class="score-tl-bar" style="width:'+pct+'%;background:'+cor+'"></div>'
+        +'</div>'
+        +'<div class="score-tl-num" style="color:'+cor+'">'+Math.round(s)+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  // Projeção próximos 3 meses
+  const projEl = document.getElementById('scoreProjecao');
+  if(projEl && score.ultimos12.length >= 3){
+    const recentes = score.ultimos12.slice(-3);
+    const mediaRec = recentes.reduce((s,d)=>s+d.rec,0)/recentes.length;
+    const mediaGasto = recentes.reduce((s,d)=>s+d.real,0)/recentes.length;
+    const tendSaldo = recentes.length>=2 ? (recentes[recentes.length-1].saldo - recentes[0].saldo)/recentes.length : 0;
+
+    const hoje = new Date();
+    const projecoes = [];
+    for(let i=1;i<=3;i++){
+      let y=hoje.getFullYear(), m=hoje.getMonth()+1+i;
+      while(m>12){m-=12;y++;}
+      const recProj = mediaRec * (1 + (i-1)*0.005);
+      const gastoProj = mediaGasto + tendSaldo * 0.3 * i;
+      const saldoProj = recProj - gastoProj;
+      const trend = saldoProj > (recentes[recentes.length-1]||{saldo:0}).saldo ? '📈' : saldoProj > 0 ? '➡️' : '📉';
+      projecoes.push({mes:MES[m-1]+'/'+y, rec:recProj, gasto:gastoProj, saldo:saldoProj, trend});
+    }
+
+    projEl.innerHTML = '<div style="font-size:11px;color:var(--txt3);margin-bottom:.75rem">Baseado na média dos últimos '+recentes.length+' meses</div>'
+      + projecoes.map(p=>{
+        const cor = p.saldo>=0?'var(--em)':'var(--danger)';
+        return '<div class="projecao-item">'
+          +'<div>'
+          +'<div class="projecao-mes">'+p.mes+'</div>'
+          +'<div style="font-size:10px;color:var(--txt3);margin-top:2px">Receita ~'+fmt(p.rec)+' · Gasto ~'+fmt(p.gasto)+'</div>'
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:.4rem">'
+          +'<div class="projecao-val" style="color:'+cor+'">'+fmt(p.saldo)+'</div>'
+          +'<div class="projecao-trend">'+p.trend+'</div>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+  }
+}
 
 // ============ BOOT ============
 buildMesSelect();
