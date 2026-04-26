@@ -453,50 +453,52 @@ input:focus,select:focus,textarea:focus{
 .pendente-item{border-left:3px solid rgba(201,168,76,.3);}
 
 /* ===== SCORE DE SAÚDE FINANCEIRA ===== */
-.score-page{padding:.75rem}
+.score-page{padding:.75rem;max-width:100%;overflow-x:hidden}
 
-/* Gauge/Termômetro */
-.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:.5rem 0 1rem}
-.gauge-svg{width:100%;max-width:280px;overflow:visible}
-.score-numero{font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;text-align:center;line-height:1;letter-spacing:-2px;transition:color .8s}
-.score-label{font-size:.75rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-top:.25rem}
-.score-zona{font-size:.95rem;font-weight:700;text-align:center;margin:.25rem 0;padding:.35rem 1.2rem;border-radius:20px;display:inline-block}
+/* Gauge */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:0 0 1rem;width:100%}
+.gauge-svg{width:100%;max-width:260px;height:auto;display:block;overflow:visible}
+.score-numero{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:700;text-align:center;line-height:1;letter-spacing:-2px;transition:color .8s;margin-top:.25rem}
+.score-label{font-size:.7rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-top:.2rem}
+.score-zona{font-size:.85rem;font-weight:700;text-align:center;margin:.3rem 0;padding:.3rem 1rem;border-radius:20px;display:inline-block}
 .score-zona.verde{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
 .score-zona.amarela{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
 .score-zona.vermelha{background:rgba(220,85,69,.15);color:#e05545;border:1px solid rgba(220,85,69,.3)}
 
-/* Frase personalizada */
-.score-frase{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:1rem;margin:0 0 .875rem;font-size:13px;line-height:1.6;color:var(--txt);font-style:italic;position:relative}
-.score-frase::before{content:'"';font-family:'Playfair Display',serif;font-size:2.5rem;color:var(--gold);opacity:.4;position:absolute;top:-.25rem;left:.5rem;line-height:1}
+/* Frase */
+.score-frase{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:.875rem .875rem .875rem 1.5rem;margin:0 0 .875rem;font-size:13px;line-height:1.6;color:var(--txt);font-style:italic;position:relative;overflow:hidden}
+.score-frase::before{content:'"';font-family:'Playfair Display',serif;font-size:3rem;color:var(--gold);opacity:.3;position:absolute;top:-.3rem;left:.4rem;line-height:1;pointer-events:none}
 
-/* Componentes do score */
+/* Componentes */
 .score-componentes{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.875rem}
-.score-comp-card{background:var(--bg2);border:1px solid rgba(201,168,76,.1);border-radius:12px;padding:.75rem;text-align:center}
-.score-comp-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;font-weight:700}
-.score-comp-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700}
-.score-comp-pts{font-size:9px;color:var(--txt3);margin-top:.1rem}
+.score-comp-card{background:var(--bg2);border:1px solid rgba(201,168,76,.1);border-radius:12px;padding:.65rem;text-align:center;cursor:pointer;transition:border-color .2s;-webkit-tap-highlight-color:transparent}
+.score-comp-card:hover,.score-comp-card:active{border-color:rgba(201,168,76,.4)}
+.score-comp-label{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.25rem;font-weight:700;line-height:1.3}
+.score-comp-val{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700}
+.score-comp-pts{font-size:8.5px;color:var(--txt3);margin-top:.1rem}
+.score-comp-barra{background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;margin-top:.3rem}
+.score-comp-fill{height:100%;border-radius:20px;transition:width .8s ease}
 
-/* Linha do tempo */
-.score-timeline{margin-bottom:.875rem}
+/* Modal explicativo */
+.score-info-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center}
+.score-info-box{background:var(--bg2);border:1px solid rgba(201,168,76,.2);border-radius:20px 20px 0 0;padding:1.25rem;width:100%;max-width:480px;max-height:70vh;overflow-y:auto}
+.score-info-titulo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold2);margin-bottom:.75rem}
+.score-info-desc{font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:.75rem}
+.score-info-item{display:flex;align-items:flex-start;gap:.5rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;color:var(--txt2)}
+.score-info-item:last-child{border-bottom:none}
+
+/* Timeline */
+.score-timeline{margin:0}
 .score-tl-item{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
-.score-tl-mes{font-size:10px;color:var(--txt3);width:44px;flex-shrink:0;text-align:right}
-.score-tl-bar-wrap{flex:1;background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;position:relative}
+.score-tl-mes{font-size:10px;color:var(--txt3);width:40px;flex-shrink:0;text-align:right}
+.score-tl-bar-wrap{flex:1;background:var(--bg3);border-radius:20px;height:8px;overflow:hidden}
 .score-tl-bar{height:100%;border-radius:20px;transition:width .8s cubic-bezier(.4,0,.2,1)}
-.score-tl-num{font-size:10px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+.score-tl-num{font-size:10px;font-weight:700;width:32px;text-align:right;flex-shrink:0}
 
 /* Projeção */
-.projecao-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:1rem;margin-bottom:.875rem}
-.projecao-item{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.projecao-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .projecao-item:last-child{border-bottom:none}
-.projecao-mes{font-size:12px;color:var(--txt2)}
-.projecao-val{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700}
-.projecao-trend{font-size:18px}
-
-@media(max-width:380px){
-  .score-numero{font-size:2.5rem}
-  .score-componentes{grid-template-columns:1fr 1fr}
-  .score-comp-label{font-size:8px}
-}
+.projecao-val{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700}
 </style>
 </head>
 <body>
@@ -2823,84 +2825,173 @@ function renderScore(){
   const zonaEl = document.getElementById('scoreZonaLabel');
   if(zonaEl){ zonaEl.textContent=zonaTexto; zonaEl.className='score-zona '+zona; }
 
-  // Animar gauge
   animarGauge(score.total);
 
-  // Frase
   const fraseEl = document.getElementById('scoreFrase');
   if(fraseEl) fraseEl.textContent = gerarFrase(score);
 
-  // Componentes
+  // Componentes com clique para explicação
   const compEl = document.getElementById('scoreComponentes');
   if(compEl){
-    compEl.innerHTML = score.componentes.map(c=>{
+    compEl.innerHTML = score.componentes.map((c,i)=>{
       const pct = Math.round(c.pts/c.max*100);
       const cor = pct>=70?'var(--em)':pct>=40?'#f59e0b':'var(--danger)';
-      return '<div class="score-comp-card">'
+      return '<div class="score-comp-card" onclick="mostrarInfoScore('+i+')">'
         +'<div class="score-comp-label">'+c.icon+' '+c.label+'</div>'
         +'<div class="score-comp-val" style="color:'+cor+'">'+c.pts+'</div>'
         +'<div class="score-comp-pts">de '+c.max+' pts ('+pct+'%)</div>'
-        +'<div style="background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;margin-top:.35rem">'
-        +'<div style="height:100%;width:'+pct+'%;background:'+cor+';border-radius:20px;transition:width .8s ease"></div>'
-        +'</div></div>';
+        +'<div class="score-comp-barra"><div class="score-comp-fill" style="width:'+pct+'%;background:'+cor+'"></div></div>'
+        +'<div style="font-size:8px;color:rgba(201,168,76,.5);margin-top:.25rem">ℹ toque para entender</div>'
+        +'</div>';
     }).join('');
   }
 
   // Timeline
   const tlEl = document.getElementById('scoreTimeline');
   if(tlEl && score.ultimos12.length){
-    const maxScore = 1000;
     tlEl.innerHTML = score.ultimos12.map(d=>{
       const s = calcularScoreMes(d.key)||0;
-      const pct = s/maxScore*100;
+      const pct = s/1000*100;
       const cor = s>=700?'#10b981':s>=400?'#f59e0b':'#e05545';
       return '<div class="score-tl-item">'
         +'<div class="score-tl-mes">'+d.mes+'</div>'
-        +'<div class="score-tl-bar-wrap">'
-        +'<div class="score-tl-bar" style="width:'+pct+'%;background:'+cor+'"></div>'
-        +'</div>'
+        +'<div class="score-tl-bar-wrap"><div class="score-tl-bar" style="width:'+pct+'%;background:'+cor+'"></div></div>'
         +'<div class="score-tl-num" style="color:'+cor+'">'+Math.round(s)+'</div>'
         +'</div>';
     }).join('');
   }
 
-  // Projeção próximos 3 meses
+  // Projeção - usa receita e gasto REAIS dos últimos 3 meses com dados
   const projEl = document.getElementById('scoreProjecao');
-  if(projEl && score.ultimos12.length >= 3){
-    const recentes = score.ultimos12.slice(-3);
-    const mediaRec = recentes.reduce((s,d)=>s+d.rec,0)/recentes.length;
-    const mediaGasto = recentes.reduce((s,d)=>s+d.real,0)/recentes.length;
-    const tendSaldo = recentes.length>=2 ? (recentes[recentes.length-1].saldo - recentes[0].saldo)/recentes.length : 0;
+  if(projEl){
+    const comDados = score.ultimos12.filter(d=>d.rec>0||d.real>0);
+    if(comDados.length >= 2){
+      const recentes = comDados.slice(-3);
+      // Média REAL dos meses com dados
+      const mediaRec = recentes.reduce((s,d)=>s+d.rec,0)/recentes.length;
+      const mediaGasto = recentes.reduce((s,d)=>s+d.real,0)/recentes.length;
+      // Tendência: diferença entre o último e o primeiro dos recentes
+      const tendGasto = recentes.length>=2 ? (recentes[recentes.length-1].real - recentes[0].real)/Math.max(recentes.length-1,1) : 0;
+      const tendRec = recentes.length>=2 ? (recentes[recentes.length-1].rec - recentes[0].rec)/Math.max(recentes.length-1,1) : 0;
 
-    const hoje = new Date();
-    const projecoes = [];
-    for(let i=1;i<=3;i++){
-      let y=hoje.getFullYear(), m=hoje.getMonth()+1+i;
-      while(m>12){m-=12;y++;}
-      const recProj = mediaRec * (1 + (i-1)*0.005);
-      const gastoProj = mediaGasto + tendSaldo * 0.3 * i;
-      const saldoProj = recProj - gastoProj;
-      const trend = saldoProj > (recentes[recentes.length-1]||{saldo:0}).saldo ? '📈' : saldoProj > 0 ? '➡️' : '📉';
-      projecoes.push({mes:MES[m-1]+'/'+y, rec:recProj, gasto:gastoProj, saldo:saldoProj, trend});
+      const hoje = new Date();
+      const projecoes = [];
+      for(let i=1;i<=3;i++){
+        let y=hoje.getFullYear(), m=hoje.getMonth()+1+i;
+        while(m>12){m-=12;y++;}
+        // Projetar com tendência suavizada
+        const recProj = Math.max(mediaRec + tendRec*i*0.3, mediaRec*0.8);
+        const gastoProj = Math.max(mediaGasto + tendGasto*i*0.3, mediaGasto*0.8);
+        const saldoProj = recProj - gastoProj;
+        const trend = saldoProj > 500?'📈':saldoProj >= 0?'➡️':'📉';
+        projecoes.push({mes:MES[m-1]+'/'+y, rec:recProj, gasto:gastoProj, saldo:saldoProj, trend});
+      }
+
+      projEl.innerHTML = '<div style="font-size:11px;color:var(--txt3);margin-bottom:.75rem">Baseado na média e tendência dos últimos '+recentes.length+' meses com dados</div>'
+        + projecoes.map(p=>{
+          const cor = p.saldo>=0?'var(--em)':'var(--danger)';
+          return '<div class="projecao-item">'
+            +'<div>'
+            +'<div style="font-size:13px;font-weight:600;color:var(--txt)">'+p.mes+'</div>'
+            +'<div style="font-size:11px;color:var(--txt3);margin-top:2px">Rec. ~'+fmt(p.rec)+' · Gasto ~'+fmt(p.gasto)+'</div>'
+            +'</div>'
+            +'<div style="display:flex;align-items:center;gap:.4rem">'
+            +'<div class="projecao-val" style="color:'+cor+'">'+fmt(p.saldo)+'</div>'
+            +'<div style="font-size:16px">'+p.trend+'</div>'
+            +'</div></div>';
+        }).join('');
+    } else {
+      projEl.innerHTML = '<div style="font-size:13px;color:var(--txt3);text-align:center;padding:1rem">Dados insuficientes para projeção.<br>Precisamos de pelo menos 2 meses.</div>';
     }
-
-    projEl.innerHTML = '<div style="font-size:11px;color:var(--txt3);margin-bottom:.75rem">Baseado na média dos últimos '+recentes.length+' meses</div>'
-      + projecoes.map(p=>{
-        const cor = p.saldo>=0?'var(--em)':'var(--danger)';
-        return '<div class="projecao-item">'
-          +'<div>'
-          +'<div class="projecao-mes">'+p.mes+'</div>'
-          +'<div style="font-size:10px;color:var(--txt3);margin-top:2px">Receita ~'+fmt(p.rec)+' · Gasto ~'+fmt(p.gasto)+'</div>'
-          +'</div>'
-          +'<div style="display:flex;align-items:center;gap:.4rem">'
-          +'<div class="projecao-val" style="color:'+cor+'">'+fmt(p.saldo)+'</div>'
-          +'<div class="projecao-trend">'+p.trend+'</div>'
-          +'</div>'
-          +'</div>';
-      }).join('');
   }
 }
 
+// Descritivos explicativos de cada componente
+const SCORE_INFO = [
+  {
+    icon:'💰', titulo:'Saldo do Mês (até 250 pts)',
+    desc:'Mede o quanto sobrou da sua renda no mês atual. Quanto maior o saldo em relação à receita, maior a pontuação.',
+    itens:[
+      {pts:'250 pts',desc:'Saldo excelente — sobrou mais de 50% da renda'},
+      {pts:'150 pts',desc:'Saldo positivo — sobrou entre 20% e 50% da renda'},
+      {pts:'50 pts', desc:'Saldo positivo pequeno — sobrou menos de 20%'},
+      {pts:'0 pts',  desc:'Saldo negativo — gastou mais do que recebeu'},
+    ]
+  },
+  {
+    icon:'📊', titulo:'Comprometimento da Renda (até 200 pts)',
+    desc:'Mede quanto da sua renda está comprometida com despesas reais pagas. Quanto menos comprometida, melhor.',
+    itens:[
+      {pts:'200 pts',desc:'Até 50% da renda comprometida — muito saudável'},
+      {pts:'120 pts',desc:'Entre 50% e 70% comprometida — ok'},
+      {pts:'40 pts', desc:'Entre 70% e 90% comprometida — atenção'},
+      {pts:'0 pts',  desc:'Acima de 100% — gastou mais do que recebeu'},
+    ]
+  },
+  {
+    icon:'📈', titulo:'Meses Consecutivos Positivos (até 200 pts)',
+    desc:'Conta quantos meses seguidos vocês fecharam com saldo positivo. Consistência financeira é fundamental!',
+    itens:[
+      {pts:'200 pts',desc:'8 ou mais meses consecutivos positivos'},
+      {pts:'125 pts',desc:'5 meses consecutivos positivos'},
+      {pts:'75 pts', desc:'3 meses consecutivos positivos'},
+      {pts:'25 pts', desc:'1 mês positivo'},
+      {pts:'0 pts',  desc:'Último mês foi negativo'},
+    ]
+  },
+  {
+    icon:'🚀', titulo:'Evolução Financeira (até 150 pts)',
+    desc:'Compara a segunda metade dos últimos 12 meses com a primeira. Mostra se a tendência é de melhora ou piora.',
+    itens:[
+      {pts:'150 pts',desc:'Saldo médio crescendo significativamente'},
+      {pts:'75 pts', desc:'Estável — sem melhora nem piora'},
+      {pts:'0 pts',  desc:'Saldo médio caindo — tendência negativa'},
+    ]
+  },
+  {
+    icon:'✅', titulo:'Despesas Dentro do Previsto (até 100 pts)',
+    desc:'Percentual das despesas pagas cujo valor real não ultrapassou o previsto em mais de 10%.',
+    itens:[
+      {pts:'100 pts',desc:'100% das despesas dentro do previsto'},
+      {pts:'50 pts', desc:'50% das despesas dentro do previsto'},
+      {pts:'0 pts',  desc:'Nenhuma despesa dentro do previsto'},
+    ]
+  },
+  {
+    icon:'🎯', titulo:'Metas Atingidas (até 100 pts)',
+    desc:'Percentual das metas/aquisições cadastradas que já foram compradas/realizadas.',
+    itens:[
+      {pts:'100 pts',desc:'Todas as metas concluídas'},
+      {pts:'50 pts', desc:'Metade das metas concluídas'},
+      {pts:'0 pts',  desc:'Nenhuma meta concluída ainda'},
+    ]
+  },
+];
+
+window.mostrarInfoScore = function(idx){
+  const info = SCORE_INFO[idx];
+  if(!info) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'score-info-overlay';
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = '<div class="score-info-box">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem">'
+    +'<div class="score-info-titulo">'+info.icon+' '+info.titulo+'</div>'
+    +'<button onclick="fecharInfoScore()" style="background:transparent;border:1px solid var(--brd);color:var(--txt3);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">X</button>'
+    +'</div>'
+    +'<div class="score-info-desc">'+info.desc+'</div>'
+    +'<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.4rem">Como são distribuídos os pontos:</div>'
+    + info.itens.map(it=>'<div class="score-info-item">'
+      +'<span style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">'+it.pts+'</span>'
+      +'<span>'+it.desc+'</span>'
+      +'</div>').join('')
+    +'</div>';
+  document.body.appendChild(overlay);
+};
+
+
+
+window.fecharInfoScore = function(){ const el=document.querySelector('.score-info-overlay'); if(el) el.remove(); };
 // ============ BOOT ============
 buildMesSelect();
 setTimeout(verificarNotificacoes, 2000);
