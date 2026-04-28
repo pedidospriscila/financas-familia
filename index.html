@@ -1149,7 +1149,7 @@ const getDados = () => getMes(mesSelecionado);
 
 function totalReceitas(){ const r=getDados().receitas; return num(r.salarioBruno)+num(r.salarioPriscila)+num(r.rendaExtraBruno)+num(r.rendaExtraPriscila)+num(r.decimoTerceiro); }
 function totalCustoPrev(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto),0); }
-function totalCustoReal(){ return (getDados().despesas||[]).filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0); }
+function totalCustoReal(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoReal||0),0); }
 function saldoPrev(){ return totalReceitas()-totalCustoPrev(); }
 function saldoReal(){ return totalReceitas()-totalCustoReal(); }
 
@@ -1226,8 +1226,19 @@ window.selecionarMes = function(v,e){
   mesSelecionado = v;
   fecharPicker();
   renderMesBtn();
+  
+  // Atualizar tudo
   renderAll();
-  // renderAll já cuida de graficos e anual via abaAtiva
+  
+  // Forçar atualização específica baseada na aba ativa para garantir reatividade
+  if(abaAtiva === 'graficos') setTimeout(renderGraficos, 50);
+  if(abaAtiva === 'anual'){ 
+    anoAnual = parseInt(mesSelecionado.split('-')[0]); 
+    renderAnual(); 
+    renderComparativo(); 
+    renderComparativoAnual(); 
+  }
+  if(abaAtiva === 'score') setTimeout(renderScore, 50);
 };
 window.togglePicker = function(e){ if(e)e.stopPropagation(); const p=document.getElementById('mesPicker'); if(p){const open=p.style.display!=='none'; fecharTodosOsPickers(); if(!open){p.style.display='block';}} };
 window.fecharPicker = function(){ const p=document.getElementById('mesPicker'); if(p)p.style.display='none'; };
@@ -1316,7 +1327,7 @@ function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
   renderNotifBadge(); renderTop5();
   if(abaAtiva === 'graficos') setTimeout(renderGraficos, 80);
-  if(abaAtiva === 'anual'){ renderAnual(); renderComparativo(); renderComparativoAnual(); }
+  if(abaAtiva === 'anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderComparativoAnual(); }
   if(abaAtiva === 'score') setTimeout(renderScore, 80);
 }
 
@@ -1407,8 +1418,8 @@ function renderDespesas(){
   }
   const sorted=[...filtrado].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   tb.innerHTML=sorted.map(d=>{
-    const pr=num(d.custoPrevisto),re=d.pago?num(d.custoReal||d.custoPrevisto):0;
-    const dif=d.pago?pr-re:null;
+    const pr=num(d.custoPrevisto),re=num(d.custoReal||0);
+    const dif=re>0?(pr-re):null;
     const dc=dif===null?'var(--txt3)':dif>=0?'var(--em)':'var(--danger)';
     // Alerta só se estivermos visualizando o mês atual do calendário real
     const hoje = new Date();
@@ -1435,7 +1446,7 @@ function renderDespesas(){
     </tr>`;
   }).join('');
   const tP=desp.reduce((s,d)=>s+num(d.custoPrevisto),0);
-  const tR=desp.filter(d=>d.pago).reduce((s,d)=>s+num(d.custoReal||d.custoPrevisto),0);
+  const tR=desp.reduce((s,d)=>s+num(d.custoReal||0),0);
   setText('ft_previsto',fmt(tP)); setText('ft_real',fmt(tR));
   const dif=tP-tR;
   const fd=document.getElementById('ft_dif');
