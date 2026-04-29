@@ -521,6 +521,13 @@ input:focus,select:focus,textarea:focus{
 .projecao-mes{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:.25rem}
 .projecao-total{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold2)}
 .wealth-insight{font-size:12px;color:var(--txt2);line-height:1.5;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.7rem;margin-bottom:.85rem}
+.oportunidade-card{background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(201,168,76,.08));border:1px solid rgba(16,185,129,.2);border-radius:var(--radius);padding:.8rem;margin-bottom:.85rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s,transform .2s}
+.oportunidade-card:hover,.oportunidade-card:active{border-color:rgba(16,185,129,.42);transform:translateY(-1px)}
+.oportunidade-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.4rem}
+.oportunidade-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;font-weight:800}
+.oportunidade-titulo{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--em);line-height:1.1}
+.oportunidade-valor{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold2);white-space:nowrap}
+.oportunidade-desc{font-size:11.5px;color:var(--txt2);line-height:1.45}
 .plano-title{font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.55rem;font-weight:800}
 .plano-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem}
 .plano-card{background:rgba(8,11,16,.38);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.72rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s,transform .2s}
@@ -532,6 +539,7 @@ input:focus,select:focus,textarea:focus{
 body.light .wealth-hero,body.light .wealth-card{background:#ffffff!important;border-color:#e8d49a!important}
 body.light .projecao-box{background:#fff7dd!important;border-color:#e8d49a!important}
 body.light .wealth-insight{background:#fffaf0!important;border-color:#e8d49a!important;color:#6b5f50!important}
+body.light .oportunidade-card{background:#f0fff7!important;border-color:#bbf7d0!important}
 body.light .plano-card{background:#ffffff!important;border-color:#e8d49a!important}
 body.light .plano-alerta{background:#f0fff7!important;border-color:#bbf7d0!important;color:#4b6155!important}
 @media(max-width:420px){.wealth-head{flex-direction:column}.projecao-grid{grid-template-columns:1fr}.wealth-val{font-size:1.05rem}.plano-grid{grid-template-columns:1fr 1fr}}
@@ -820,6 +828,18 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
       <div class="projecao-box" onclick="mostrarInfoPatrimonio(6)"><div class="projecao-mes">Em 12 meses</div><div class="projecao-total" id="pat_proj12">R$ 0,00</div></div>
     </div>
     <div class="wealth-insight" id="pat_insight">Lance seus investimentos para ativar a leitura inteligente.</div>
+
+    <div class="oportunidade-card" onclick="mostrarInfoOportunidade()">
+      <div class="oportunidade-top">
+        <div>
+          <div class="oportunidade-label">✨ Alerta de oportunidade do mês</div>
+          <div class="oportunidade-titulo" id="oportunidade_titulo">Analisando...</div>
+        </div>
+        <div class="oportunidade-valor" id="oportunidade_valor">R$ 0,00</div>
+      </div>
+      <div class="oportunidade-desc" id="oportunidade_desc">Toque para entender a decisão recomendada.</div>
+      <div class="plano-sub">ℹ toque para entender</div>
+    </div>
 
     <div class="plano-title">🧭 Plano Inteligente do Mês</div>
     <div class="plano-grid" id="planoCards"></div>
@@ -1665,7 +1685,32 @@ function calcularPlanoMensalInteligente(){
   return {invest,saldoMes,patrimonio,gastoMedio,rendaMedia,economiaMedia,metasPend,reservaIdeal,reservaMeses,faltaReserva,baseSegura,manterReserva,paraMetas,investir,prioridade,prioridadeIcon};
 }
 
+function renderAlertaOportunidade(plano){
+  const titulo=document.getElementById('oportunidade_titulo');
+  const valor=document.getElementById('oportunidade_valor');
+  const desc=document.getElementById('oportunidade_desc');
+  if(!titulo || !valor || !desc) return;
+  let t='Proteger o caixa';
+  let v=fmt(Math.max(0,plano.baseSegura));
+  let d='Não apareceu sobra segura agora. O melhor movimento é evitar novos compromissos e fechar o mês no positivo.';
+  if(plano.baseSegura>0 && plano.reservaMeses<3){
+    t='Guardar para reserva';
+    v=fmt(plano.manterReserva || plano.baseSegura);
+    d='Existe sobra segura, mas a reserva ainda não cobre 3 meses. A oportunidade é transformar a sobra em segurança.';
+  } else if(plano.baseSegura>0 && plano.metasPend>0){
+    t='Acelerar uma meta';
+    v=fmt(plano.paraMetas || Math.min(plano.baseSegura,plano.metasPend));
+    d='A reserva está mais confortável e ainda há metas pendentes. A oportunidade é aproximar uma compra importante sem apertar o mês.';
+  } else if(plano.baseSegura>0){
+    t='Investir a sobra';
+    v=fmt(plano.investir || plano.baseSegura);
+    d='Com sobra segura e sem metas urgentes, o melhor uso do dinheiro extra é aumentar o patrimônio.';
+  }
+  titulo.textContent=t; valor.textContent=v; desc.textContent=d;
+}
+
 function renderPlanoMensalInteligente(plano){
+  renderAlertaOportunidade(plano);
   const cont=document.getElementById('planoCards');
   const insightEl=document.getElementById('planoInsight');
   if(!cont) return;
@@ -3349,6 +3394,45 @@ window.mostrarInfoPatrimonio = function(idx){
 window.mostrarInfoPlano = function(idx){
   const info = PLANO_MENSAL_INFO[idx];
   if(!info) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'score-info-overlay';
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = '<div class="score-info-box">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem">'
+    +'<div class="score-info-titulo">'+info.icon+' '+info.titulo+'</div>'
+    +'<button onclick="fecharInfoScore()" style="background:transparent;border:1px solid var(--brd);color:var(--txt3);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">X</button>'
+    +'</div>'
+    +'<div class="score-info-desc">'+info.desc+'</div>'
+    +'<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.4rem">Forma de pensamento:</div>'
+    + info.itens.map(it=>'<div class="score-info-item">'
+      +'<span style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">'+it.pts+'</span>'
+      +'<span>'+it.desc+'</span>'
+      +'</div>').join('')
+    +'</div>';
+  document.body.appendChild(overlay);
+};
+
+
+window.mostrarInfoOportunidade = function(){
+  const plano = calcularPlanoMensalInteligente();
+  let info = {icon:'✨',titulo:'Alerta de oportunidade do mês',desc:'Transforma os números do mês em uma ação simples: guardar reserva, acelerar meta, investir ou proteger o caixa.',itens:[{pts:'Sobra segura',desc:'Usa o menor valor entre saldo real positivo e economia média histórica.'},{pts:'Ordem',desc:'Primeiro protege reserva, depois metas pendentes e só então investimento.'},{pts:'Objetivo',desc:'Mostrar uma decisão prática sem complicar a análise da carteira.'}]};
+  if(plano.baseSegura<=0){
+    info.titulo='Proteger o caixa';
+    info.desc='Quando não existe sobra segura, o alerta evita sugerir investimentos ou metas que poderiam apertar o mês.';
+    info.itens=[{pts:'Sinal',desc:'Saldo real ou economia média não mostram folga suficiente.'},{pts:'Ação',desc:'Segurar gastos, revisar despesas e buscar fechar o mês positivo.'},{pts:'Por quê',desc:'Antes de investir, o caixa precisa estar saudável.'}];
+  } else if(plano.reservaMeses<3){
+    info.titulo='Guardar para reserva';
+    info.desc='Existe uma sobra aproveitável, mas a reserva estimada ainda está abaixo de 3 meses de gastos.';
+    info.itens=[{pts:'Sobra',desc:'Valor seguro disponível: '+fmt(plano.baseSegura)+'.'},{pts:'Reserva',desc:'Reserva atual cobre cerca de '+plano.reservaMeses.toLocaleString('pt-BR',{maximumFractionDigits:1})+' meses.'},{pts:'Decisão',desc:'Priorizar segurança antes de acelerar metas ou investir mais.'}];
+  } else if(plano.metasPend>0){
+    info.titulo='Acelerar uma meta';
+    info.desc='Com reserva mais confortável, o alerta identifica oportunidade de usar parte da sobra para realizar metas pendentes.';
+    info.itens=[{pts:'Sobra',desc:'Valor seguro disponível: '+fmt(plano.baseSegura)+'.'},{pts:'Metas',desc:'Ainda faltam '+fmt(plano.metasPend)+' em metas pendentes.'},{pts:'Regra',desc:'Separar uma parte para metas sem consumir toda a folga do mês.'}];
+  } else {
+    info.titulo='Investir a sobra';
+    info.desc='Sem pressão de reserva ou metas pendentes, a sobra do mês pode trabalhar a favor do crescimento do patrimônio.';
+    info.itens=[{pts:'Sobra',desc:'Valor seguro disponível: '+fmt(plano.baseSegura)+'.'},{pts:'Prioridade',desc:'Como não há alerta de reserva ou metas, investir vira a melhor oportunidade.'},{pts:'Efeito',desc:'Aumenta o patrimônio atual e melhora as projeções de 3, 6 e 12 meses.'}];
+  }
   const overlay = document.createElement('div');
   overlay.className = 'score-info-overlay';
   overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
