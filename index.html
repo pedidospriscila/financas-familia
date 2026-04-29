@@ -1223,22 +1223,16 @@ function renderPickerGrid(){
 window.mudaAno = function(d,e){ if(e)e.stopPropagation(); pickerAno=Math.max(2023,Math.min(2040,pickerAno+d)); renderPickerGrid(); };
 window.selecionarMes = function(v,e){
   if(e) e.stopPropagation();
+  console.log('[selecionarMes] v2 →', v, '| aba=', abaAtiva);
   mesSelecionado = v;
   fecharPicker();
   renderMesBtn();
-  
-  // Atualizar tudo
+  // renderAll já chama atualizarAbasDinamicas internamente
   renderAll();
-  
-  // Forçar atualização específica baseada na aba ativa para garantir reatividade
-  if(abaAtiva === 'graficos') setTimeout(renderGraficos, 50);
-  if(abaAtiva === 'anual'){ 
-    anoAnual = parseInt(mesSelecionado.split('-')[0]); 
-    renderAnual(); 
-    renderComparativo(); 
-    renderComparativoAnual(); 
+  // Para Gráficos: se a aba já está visível, re-render imediato após DOM atualizar
+  if(abaAtiva === 'graficos'){
+    requestAnimationFrame(()=>{ try{ renderGraficos(); }catch(e2){ console.error('renderGraficos err:',e2); } });
   }
-  if(abaAtiva === 'score') setTimeout(renderScore, 50);
 };
 window.togglePicker = function(e){ if(e)e.stopPropagation(); const p=document.getElementById('mesPicker'); if(p){const open=p.style.display!=='none'; fecharTodosOsPickers(); if(!open){p.style.display='block';}} };
 window.fecharPicker = function(){ const p=document.getElementById('mesPicker'); if(p)p.style.display='none'; };
@@ -1253,13 +1247,12 @@ window.showTab = name => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   const page = document.getElementById('page-'+name);
   if(page) page.classList.add('active');
-  const tabs=['resumo','receitas','despesas','metas','graficos','anual','score','config'];
+  const tabs=['resumo','receitas','despesas','metas','graficos','anual','score'];
   const idx=tabs.indexOf(name);
-  if(idx>=0 && idx<6) document.querySelectorAll('.tab')[idx].classList.add('active');
-  if(name==='graficos') setTimeout(renderGraficos,100);
-  if(name==='anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderComparativoAnual(); }
+  const tabEls=document.querySelectorAll('.tab');
+  if(idx>=0 && idx<tabEls.length) tabEls[idx].classList.add('active');
+  atualizarAbasDinamicas({grafDelay:100, scoreDelay:100});
   if(name==='config') initCfgAlertas();
-  if(name==='score') setTimeout(renderScore, 100);
 };
 
 // ============ RENDER ============
@@ -1323,12 +1316,35 @@ function renderTop5(){
 
 
 
+function atualizarAbasDinamicas(opts={}){
+  // Anual (HTML) — sempre executa, funciona mesmo com a aba oculta
+  try {
+    anoAnual = parseInt(mesSelecionado.split('-')[0]);
+    if(typeof renderAnual === 'function') renderAnual();
+    if(typeof renderComparativo === 'function') renderComparativo();
+    if(typeof renderComparativoAnual === 'function') renderComparativoAnual();
+  } catch(err){ console.error('Anual auto-update erro:', err); }
+
+  // Score (SVG) — sempre executa
+  try {
+    if(typeof renderScore === 'function') renderScore();
+  } catch(err){ console.error('Score auto-update erro:', err); }
+
+  // Gráficos (Chart.js) — só renderiza se a aba estiver visível,
+  // pois canvas oculto fica com width=0 e o gráfico nasce quebrado.
+  // Quando o usuário abrir a aba, showTab() chama esta função de novo.
+  const pageGraficos = document.getElementById('page-graficos');
+  const visivel = pageGraficos && pageGraficos.classList.contains('active');
+  if(visivel){
+    try { if(typeof renderGraficos === 'function') requestAnimationFrame(renderGraficos); }
+    catch(err){ console.error('Graficos auto-update erro:', err); }
+  }
+}
+
 function renderAll(){
   renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
   renderNotifBadge(); renderTop5();
-  if(abaAtiva === 'graficos') setTimeout(renderGraficos, 80);
-  if(abaAtiva === 'anual'){ anoAnual=parseInt(mesSelecionado.split('-')[0]); renderAnual(); renderComparativo(); renderComparativoAnual(); }
-  if(abaAtiva === 'score') setTimeout(renderScore, 80);
+  atualizarAbasDinamicas();
 }
 
 
@@ -1489,7 +1505,13 @@ function renderAquisicoes(){
 // ============ GRÁFICOS ============
 let charts={};
 function isDarkTheme(){ return temaAtual !== 'light'; }
-const destroyChart = id => { if(charts[id]){charts[id].destroy();delete charts[id];} };
+const chartCanvasIds = {evolucao:'chartEvolucao',barra:'chartBarra',roscaDespPrev:'chartRoscaDespPrev',roscaDespReal:'chartRoscaDespReal',roscaRec:'chartRoscaReceitas',comp:'chartComparativo'};
+const destroyChart = id => {
+  if(charts[id]){ charts[id].destroy(); delete charts[id]; }
+  const canvas = document.getElementById(chartCanvasIds[id] || id);
+  const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+  if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
 const GOLD_PAL=['#c9a84c','#e8c97a','#f5e4b0','#a07830','#7a5820','#4a3010','#d4a84c','#b89040','#8a6820'];
 const gridColor='#1a1a1f';
 const tickColor='#5a5550';
@@ -1934,7 +1956,7 @@ function renderNotifBadge(){
   let count = 0;
 
   if(saldoReal() < cfg.saldo) count++;
-  const totPrev=totalCustoPrevisto(), totReal=totalCustoReal();
+  const totPrev=totalCustoPrev(), totReal=totalCustoReal();
   if(totPrev>0 && totReal>0 && ((totReal-totPrev)/totPrev*100) > cfg.pct) count++;
   (dados.despesas||[]).filter(d=>!d.pago && d.vencimento).forEach(d=>{
     if(parseInt(d.vencimento)-hoje <= cfg.dias && parseInt(d.vencimento)-hoje >= 0) count++;
@@ -2084,12 +2106,7 @@ function verificarNotificacoes(){
   }
 }
 
-// ============ PATCH showTab para anual ============
-const _showTabOrig = window.showTab;
-
-// ============ PATCH renderDespesas para mostrar badge fixo/var ============
-const _renderDespOrig = renderDespesas;
-// (já vamos sobrescrever inline abaixo via patch do tipo no push)
+// ============ PATCH showTab/renderDespesas removidos (causavam sobrescrita silenciosa) ============
 
 
 // ============ EXPORTAR PDF ============
@@ -2625,8 +2642,7 @@ window.toggleAnoComp = function(ano){
 // ============ SCORE DE SAÚDE FINANCEIRA ============
 
 function calcularScore(){
-  const hoje = new Date();
-  const mesHoje = hoje.getFullYear()+'-'+(hoje.getMonth()+1<10?'0':'')+(hoje.getMonth()+1);
+  const [anoRef, mesRef] = mesSelecionado.split('-').map(Number);
   const meses = Object.keys(allData.meses||{}).sort();
 
   // Função para calcular dados de um mês
@@ -2644,7 +2660,7 @@ function calcularScore(){
 
   const ultimos12 = [];
   for(let i=11;i>=0;i--){
-    let y=hoje.getFullYear(), m=hoje.getMonth()+1-i;
+    let y=anoRef, m=mesRef-i;
     while(m<1){m+=12;y--;}
     const key=y+'-'+(m<10?'0':'')+m;
     const d = dadosMes(key);
@@ -2772,7 +2788,9 @@ function gerarFrase(score){
   }
 }
 
+let scoreAnimSeq = 0;
 function animarGauge(score){
+  const seq = ++scoreAnimSeq;
   const pct = score/1000;
   // Arco de 210 graus (de -105 a +105 graus partindo do topo)
   const angInicio = Math.PI + Math.PI*0.167; // ~210° em radianos desde o centro
@@ -2817,6 +2835,7 @@ function animarGauge(score){
     const dur = 1200;
     const start = performance.now();
     function animar(now){
+      if(seq !== scoreAnimSeq) return;
       const t = Math.min((now-start)/dur,1);
       const ease = 1-Math.pow(1-t,3);
       numEl.textContent = Math.round(ease*alvo);
@@ -2885,10 +2904,10 @@ function renderScore(){
       const tendGasto = recentes.length>=2 ? (recentes[recentes.length-1].real - recentes[0].real)/Math.max(recentes.length-1,1) : 0;
       const tendRec = recentes.length>=2 ? (recentes[recentes.length-1].rec - recentes[0].rec)/Math.max(recentes.length-1,1) : 0;
 
-      const hoje = new Date();
+      const [anoBase, mesBase] = mesSelecionado.split('-').map(Number);
       const projecoes = [];
       for(let i=1;i<=3;i++){
-        let y=hoje.getFullYear(), m=hoje.getMonth()+1+i;
+        let y=anoBase, m=mesBase+i;
         while(m>12){m-=12;y++;}
         // Projetar com tendência suavizada
         const recProj = Math.max(mediaRec + tendRec*i*0.3, mediaRec*0.8);
