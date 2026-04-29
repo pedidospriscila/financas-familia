@@ -53,11 +53,12 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
 input[type=file]{display:none}
 
 /* NAV */
-.nav-tabs{display:flex;background:rgba(8,11,16,.98);border-bottom:1px solid rgba(201,168,76,.12);width:100%;overflow:hidden;}
-.tab{flex:1;padding:.3rem .03rem;text-align:center;font-size:7px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
-.tab.active{color:var(--gold2);border-bottom-color:var(--gold);}
-.tab-label{font-size:6px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:-.5px;text-transform:uppercase}
+.nav-tabs{display:flex;flex-wrap:wrap;background:rgba(8,11,16,.98);border-bottom:1px solid rgba(201,168,76,.12);width:100%;overflow:hidden;}
+.tab{flex:0 0 25%;padding:.42rem .05rem;text-align:center;font-size:13px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
+.tab.active{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(201,168,76,.05)}
+.tab-label{font-size:7px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:0;text-transform:uppercase}
 .tab .tab-icon{display:none}
+@media(min-width:900px){.tab{flex:1 1 0;padding:.55rem .1rem}.tab-label{font-size:9px}}
 
 main{padding:1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
@@ -499,6 +500,21 @@ input:focus,select:focus,textarea:focus{
 .projecao-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .projecao-item:last-child{border-bottom:none}
 .projecao-val{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700}
+
+
+/* INVESTIMENTOS */
+.inv-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1rem}
+.inv-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.12);border-radius:var(--radius-lg);padding:1rem;position:relative;overflow:hidden}
+.inv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.35}
+.inv-card-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.35rem;font-weight:700}
+.inv-card-val{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold2)}
+.inv-tag{display:inline-block;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.2px;background:var(--gold-dim);color:var(--gold2);border:1px solid var(--gold-border)}
+.inv-tag.banco{background:#0a2040;color:#60a0e0;border-color:#14345f}
+.inv-tag.poupanca{background:var(--em-dim);color:var(--em);border-color:rgba(16,185,129,.25)}
+.inv-tag.aplicacao{background:#1a0a30;color:#c084fc;border-color:#3b1b5f}
+body.light .inv-tag.banco{background:#dbeafe;color:#1d4ed8;border-color:#bfdbfe}
+body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d5ff}
+
 </style>
 </head>
 <body>
@@ -572,6 +588,7 @@ input:focus,select:focus,textarea:focus{
   <div class="tab" onclick="showTab('receitas')">💵<span class="tab-label">Receitas</span></div>
   <div class="tab" onclick="showTab('despesas')">💸<span class="tab-label">Despesas</span></div>
   <div class="tab" onclick="showTab('metas')">🎯<span class="tab-label">Metas</span></div>
+  <div class="tab" onclick="showTab('investimentos')">💰<span class="tab-label">Invest.</span></div>
   <div class="tab" onclick="showTab('graficos')">📊<span class="tab-label">Gráficos</span></div>
   <div class="tab" onclick="showTab('anual')">📅<span class="tab-label">Anual</span></div>
   <div class="tab" onclick="showTab('score')">💎<span class="tab-label">Score</span></div>
@@ -736,6 +753,38 @@ input:focus,select:focus,textarea:focus{
     <button class="btn-filtro" onclick="setFiltroAq('comprado',this)">✅ Comprados</button>
   </div>
   <div class="aq-grid" id="aquisicoesList"></div>
+</div>
+
+
+<!-- INVESTIMENTOS -->
+<div class="page" id="page-investimentos">
+  <div class="inv-summary-grid">
+    <div class="inv-card"><div class="inv-card-label">Total investido</div><div class="inv-card-val" id="inv_total">R$ 0,00</div></div>
+    <div class="inv-card"><div class="inv-card-label">Outro banco</div><div class="inv-card-val" id="inv_banco">R$ 0,00</div></div>
+    <div class="inv-card"><div class="inv-card-label">Poupança</div><div class="inv-card-val" id="inv_poupanca">R$ 0,00</div></div>
+    <div class="inv-card"><div class="inv-card-label">Aplicações</div><div class="inv-card-val" id="inv_aplicacoes">R$ 0,00</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Novo Investimento</div>
+    <div class="add-form">
+      <div class="field"><label>Nome *</label><input id="i_nome" type="text" placeholder="Ex: Nubank, Itaú, CDB..."></div>
+      <div class="field"><label>Tipo</label><select id="i_tipo"><option value="banco">🏦 Outro banco</option><option value="poupanca">🐷 Poupança</option><option value="aplicacao">📈 Aplicação</option></select></div>
+      <div class="field"><label>Valor *</label><input id="i_valor" type="number" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+      <div class="field"><label>Observação</label><input id="i_obs" type="text" placeholder="Opcional"></div>
+      <button class="btn-add" id="btn_add_investimento" type="button">+ Adicionar</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Carteira do Mês</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Tipo</th><th>Observação</th><th style="text-align:right">Valor</th><th style="text-align:center">Ações</th></tr></thead>
+        <tbody id="investimentosBody"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- GRÁFICOS -->
@@ -1134,15 +1183,17 @@ const clamp = (v,a,b) => Math.min(Math.max(v,a),b);
 const nomeMes = ym => { const [y,m]=ym.split('-'); return MES[parseInt(m)-1]+' '+y; };
 const setText = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
 const setColor = (id,c) => { const e=document.getElementById(id); if(e) e.style.color=c; };
+const esc = v => String(v??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 function getMes(mes){
   if(!allData.meses) allData.meses={};
   if(!allData.meses[mes]) allData.meses[mes]={
     receitas:{salarioBruno:0,salarioPriscila:0,rendaExtraBruno:0,rendaExtraPriscila:0,decimoTerceiro:0,valeAlim:0},
-    despesas:[],aquisicoes:[]
+    despesas:[],aquisicoes:[],investimentos:[]
   };
-  // garantir valeAlim existe
+  // garantir campos novos em meses antigos
   if(!allData.meses[mes].receitas.hasOwnProperty('valeAlim')) allData.meses[mes].receitas.valeAlim=0;
+  if(!Array.isArray(allData.meses[mes].investimentos)) allData.meses[mes].investimentos=[];
   return allData.meses[mes];
 }
 const getDados = () => getMes(mesSelecionado);
@@ -1150,6 +1201,7 @@ const getDados = () => getMes(mesSelecionado);
 function totalReceitas(){ const r=getDados().receitas; return num(r.salarioBruno)+num(r.salarioPriscila)+num(r.rendaExtraBruno)+num(r.rendaExtraPriscila)+num(r.decimoTerceiro); }
 function totalCustoPrev(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto),0); }
 function totalCustoReal(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoReal||0),0); }
+function totalInvestimentos(){ return (getDados().investimentos||[]).reduce((s,i)=>s+num(i.valor),0); }
 function saldoPrev(){ return totalReceitas()-totalCustoPrev(); }
 function saldoReal(){ return totalReceitas()-totalCustoReal(); }
 
@@ -1247,7 +1299,7 @@ window.showTab = name => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   const page = document.getElementById('page-'+name);
   if(page) page.classList.add('active');
-  const tabs=['resumo','receitas','despesas','metas','graficos','anual','score'];
+  const tabs=['resumo','receitas','despesas','metas','investimentos','graficos','anual','score'];
   const idx=tabs.indexOf(name);
   const tabEls=document.querySelectorAll('.tab');
   if(idx>=0 && idx<tabEls.length) tabEls[idx].classList.add('active');
@@ -1342,7 +1394,7 @@ function atualizarAbasDinamicas(opts={}){
 }
 
 function renderAll(){
-  renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderResumo();
+  renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderInvestimentos(); renderResumo();
   renderNotifBadge(); renderTop5();
   atualizarAbasDinamicas();
 }
@@ -1500,6 +1552,31 @@ function renderAquisicoes(){
         <button onclick="removerMeta('${a.id}')" class="btn-del">✕</button>
       </div>
     </div>`).join('');
+}
+
+
+function renderInvestimentos(){
+  const body=document.getElementById('investimentosBody');
+  const lista=getDados().investimentos||[];
+  const total=lista.reduce((s,i)=>s+num(i.valor),0);
+  const banco=lista.filter(i=>i.tipo==='banco').reduce((s,i)=>s+num(i.valor),0);
+  const poupanca=lista.filter(i=>i.tipo==='poupanca').reduce((s,i)=>s+num(i.valor),0);
+  const aplicacoes=lista.filter(i=>i.tipo==='aplicacao').reduce((s,i)=>s+num(i.valor),0);
+  setText('inv_total',fmt(total)); setText('inv_banco',fmt(banco)); setText('inv_poupanca',fmt(poupanca)); setText('inv_aplicacoes',fmt(aplicacoes));
+  if(!body)return;
+  if(!lista.length){body.innerHTML='<tr><td colspan="5" class="empty">Nenhum investimento lançado neste mês</td></tr>';return;}
+  const tipoLabel={banco:'🏦 Outro banco',poupanca:'🐷 Poupança',aplicacao:'📈 Aplicação'};
+  body.innerHTML=[...lista].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(i=>`
+    <tr class="tr-hover">
+      <td>${esc(i.nome)}</td>
+      <td><span class="inv-tag ${i.tipo||'banco'}">${tipoLabel[i.tipo||'banco']}</span></td>
+      <td style="color:var(--txt2)">${i.obs?esc(i.obs):'—'}</td>
+      <td style="text-align:right;font-family:'Playfair Display',serif;font-weight:700;color:var(--gold2)">${fmt(i.valor)}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button onclick="editarInvestimento('${i.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar">✏</button>
+        <button onclick="removerInvestimento('${i.id}')" class="btn-del">✕</button>
+      </td>
+    </tr>`).join('');
 }
 
 // ============ GRÁFICOS ============
@@ -1663,6 +1740,28 @@ document.getElementById('btn_add_despesa').addEventListener('click', () => {
   showToast(parcelas>1?`Despesa lançada em ${parcelas} meses!`:'Despesa adicionada!');
 });
 
+
+// Investimentos — listener direto
+const btnInvestimento = document.getElementById('btn_add_investimento');
+if(btnInvestimento){
+  btnInvestimento.addEventListener('click', () => {
+    const nome=document.getElementById('i_nome').value.trim();
+    const valor=document.getElementById('i_valor').value;
+    if(!nome||!valor){showToast('Preencha nome e valor',true);return;}
+    const dados=getMes(mesSelecionado);
+    if(!dados.investimentos) dados.investimentos=[];
+    dados.investimentos.push({
+      id:uid(),
+      nome,
+      tipo:document.getElementById('i_tipo').value,
+      valor:num(valor),
+      obs:document.getElementById('i_obs').value.trim()
+    });
+    ['i_nome','i_valor','i_obs'].forEach(id=>{document.getElementById(id).value='';});
+    saveData(); renderInvestimentos(); showToast('Investimento adicionado!');
+  });
+}
+
 // Metas — listener direto
 document.getElementById('btn_add_meta').addEventListener('click', () => {
   const nome=document.getElementById('a_nome').value.trim();
@@ -1673,6 +1772,26 @@ document.getElementById('btn_add_meta').addEventListener('click', () => {
   ['a_nome','a_valor','a_obs'].forEach(id=>{document.getElementById(id).value='';});
   saveData(); renderAquisicoes(); renderCards(); showToast('Meta adicionada!');
 });
+
+
+window.editarInvestimento = id => {
+  const inv=(getMes(mesSelecionado).investimentos||[]).find(x=>x.id===id);
+  if(!inv)return;
+  const nome=prompt('Nome do investimento:',inv.nome);
+  if(nome===null)return;
+  const valor=prompt('Valor atual:',inv.valor);
+  if(valor===null)return;
+  inv.nome=nome.trim()||inv.nome;
+  inv.valor=num(valor);
+  saveData(); renderInvestimentos(); showToast('Investimento atualizado!');
+};
+
+window.removerInvestimento = id => {
+  if(!confirm('Remover este investimento?'))return;
+  const mes=getMes(mesSelecionado);
+  mes.investimentos=(mes.investimentos||[]).filter(x=>x.id!==id);
+  saveData(); renderInvestimentos(); showToast('Investimento removido');
+};
 
 window.togglePago = id => {
   const d=(getMes(mesSelecionado).despesas||[]).find(x=>x.id===id);
