@@ -502,6 +502,28 @@ input:focus,select:focus,textarea:focus{
 .projecao-val{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700}
 
 
+/* PATRIMÔNIO INTELIGENTE */
+.wealth-hero{background:linear-gradient(135deg,var(--bg2),var(--bg4));border:1px solid rgba(201,168,76,.16);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1rem;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.wealth-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),var(--em),transparent);opacity:.6}
+.wealth-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.85rem}
+.wealth-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--gold2);letter-spacing:-.2px}
+.wealth-sub{font-size:11px;color:var(--txt2);margin-top:2px;line-height:1.4}
+.wealth-badge{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--em);background:var(--em-dim);border:1px solid rgba(16,185,129,.25);border-radius:999px;padding:5px 9px;white-space:nowrap}
+.wealth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.65rem;margin-bottom:.85rem}
+.wealth-card{background:rgba(8,11,16,.35);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.75rem}
+.wealth-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.65px;font-weight:800;margin-bottom:.3rem}
+.wealth-val{font-family:'Playfair Display',serif;font-size:1.18rem;font-weight:700;color:var(--gold2);line-height:1.1}
+.wealth-val.green{color:var(--em)}.wealth-val.red{color:var(--danger)}
+.projecao-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-bottom:.85rem}
+.projecao-box{background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--radius);padding:.7rem;text-align:center}
+.projecao-mes{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:.25rem}
+.projecao-total{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold2)}
+.wealth-insight{font-size:12px;color:var(--txt2);line-height:1.5;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.7rem}
+body.light .wealth-hero,body.light .wealth-card{background:#ffffff!important;border-color:#e8d49a!important}
+body.light .projecao-box{background:#fff7dd!important;border-color:#e8d49a!important}
+body.light .wealth-insight{background:#fffaf0!important;border-color:#e8d49a!important;color:#6b5f50!important}
+@media(max-width:420px){.wealth-head{flex-direction:column}.projecao-grid{grid-template-columns:1fr}.wealth-val{font-size:1.05rem}}
+
 /* INVESTIMENTOS */
 .inv-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1rem}
 .inv-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.12);border-radius:var(--radius-lg);padding:1rem;position:relative;overflow:hidden}
@@ -763,6 +785,29 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
     <div class="inv-card"><div class="inv-card-label">Outro banco</div><div class="inv-card-val" id="inv_banco">R$ 0,00</div></div>
     <div class="inv-card"><div class="inv-card-label">Poupança</div><div class="inv-card-val" id="inv_poupanca">R$ 0,00</div></div>
     <div class="inv-card"><div class="inv-card-label">Aplicações</div><div class="inv-card-val" id="inv_aplicacoes">R$ 0,00</div></div>
+  </div>
+
+
+  <div class="wealth-hero">
+    <div class="wealth-head">
+      <div>
+        <div class="wealth-title">Patrimônio Inteligente</div>
+        <div class="wealth-sub">Visão do patrimônio atual, reserva e projeção automática usando seu ritmo financeiro.</div>
+      </div>
+      <div class="wealth-badge" id="pat_badge">IA financeira</div>
+    </div>
+    <div class="wealth-grid">
+      <div class="wealth-card"><div class="wealth-label">Patrimônio total</div><div class="wealth-val" id="pat_total">R$ 0,00</div></div>
+      <div class="wealth-card"><div class="wealth-label">Crescimento do mês</div><div class="wealth-val" id="pat_crescimento">R$ 0,00</div></div>
+      <div class="wealth-card"><div class="wealth-label">Falta para metas</div><div class="wealth-val" id="pat_metas">R$ 0,00</div></div>
+      <div class="wealth-card"><div class="wealth-label">Reserva estimada</div><div class="wealth-val" id="pat_reserva">0 mês</div></div>
+    </div>
+    <div class="projecao-grid">
+      <div class="projecao-box"><div class="projecao-mes">Em 3 meses</div><div class="projecao-total" id="pat_proj3">R$ 0,00</div></div>
+      <div class="projecao-box"><div class="projecao-mes">Em 6 meses</div><div class="projecao-total" id="pat_proj6">R$ 0,00</div></div>
+      <div class="projecao-box"><div class="projecao-mes">Em 12 meses</div><div class="projecao-total" id="pat_proj12">R$ 0,00</div></div>
+    </div>
+    <div class="wealth-insight" id="pat_insight">Lance seus investimentos para ativar a leitura inteligente.</div>
   </div>
 
   <div class="section">
@@ -1394,7 +1439,7 @@ function atualizarAbasDinamicas(opts={}){
 }
 
 function renderAll(){
-  renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderInvestimentos(); renderResumo();
+  renderCards(); renderReceitas(); renderDespesas(); renderAquisicoes(); renderInvestimentos(); renderPatrimonioInteligente(); renderResumo();
   renderNotifBadge(); renderTop5();
   atualizarAbasDinamicas();
 }
@@ -1554,6 +1599,59 @@ function renderAquisicoes(){
     </div>`).join('');
 }
 
+
+
+function somaMes(md,tipo){
+  if(!md)return 0;
+  if(tipo==='receitas') return ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num((md.receitas||{})[k]),0);
+  if(tipo==='real') return (md.despesas||[]).reduce((s,d)=>s+num(d.custoReal||0),0);
+  if(tipo==='previsto') return (md.despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto||0),0);
+  if(tipo==='investimentos') return (md.investimentos||[]).reduce((s,i)=>s+num(i.valor),0);
+  return 0;
+}
+function mesOffset(ym,off){
+  let [y,m]=ym.split('-').map(Number); m+=off;
+  while(m<1){m+=12;y--;} while(m>12){m-=12;y++;}
+  return y+'-'+(m<10?'0':'')+m;
+}
+function mediaHistorica(tipo,qtd=3){
+  const vals=[];
+  for(let i=0;i<qtd;i++){
+    const md=allData.meses&&allData.meses[mesOffset(mesSelecionado,-i)];
+    if(md) vals.push(somaMes(md,tipo));
+  }
+  return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+}
+function renderPatrimonioInteligente(){
+  const atual=getDados();
+  const invest=somaMes(atual,'investimentos');
+  const saldoMes=saldoReal();
+  const patrimonio=invest+Math.max(0,saldoMes);
+  const invAnt=somaMes(allData.meses&&allData.meses[mesAnterior(mesSelecionado)],'investimentos');
+  const crescimento=invest-invAnt;
+  const metasPend=(allData.aquisicoes||[]).filter(a=>!a.comprado).reduce((s,a)=>s+num(a.valor),0);
+  const gastoMedio=mediaHistorica('real',3)||totalCustoPrev();
+  const rendaMedia=mediaHistorica('receitas',3)||totalReceitas();
+  const economiaMedia=Math.max(0,rendaMedia-gastoMedio);
+  const reservaMeses=gastoMedio>0?patrimonio/gastoMedio:0;
+  setText('pat_total',fmt(patrimonio));
+  setText('pat_crescimento',(crescimento>=0?'+ ':'- ')+fmt(Math.abs(crescimento)));
+  setColor('pat_crescimento',crescimento>=0?'var(--em)':'var(--danger)');
+  setText('pat_metas',fmt(metasPend));
+  setText('pat_reserva',reservaMeses.toLocaleString('pt-BR',{maximumFractionDigits:1})+(reservaMeses===1?' mês':' meses'));
+  setText('pat_proj3',fmt(patrimonio+economiaMedia*3));
+  setText('pat_proj6',fmt(patrimonio+economiaMedia*6));
+  setText('pat_proj12',fmt(patrimonio+economiaMedia*12));
+  const badge=document.getElementById('pat_badge');
+  if(badge) badge.textContent=economiaMedia>0?'Em crescimento':'Atenção';
+  let insight='Lance seus investimentos para ativar a leitura inteligente.';
+  if(patrimonio>0){
+    if(economiaMedia>0) insight=`Mantendo uma sobra média de ${fmt(economiaMedia)} por mês, seu patrimônio pode chegar a ${fmt(patrimonio+economiaMedia*12)} em 12 meses.`;
+    else insight='No ritmo atual, não há sobra média para crescimento. Reduzir despesas ou aumentar receitas melhora a projeção.';
+    if(metasPend>0) insight += ` Para quitar as metas pendentes faltam ${fmt(Math.max(0,metasPend-patrimonio))}.`;
+  }
+  setText('pat_insight',insight);
+}
 
 function renderInvestimentos(){
   const body=document.getElementById('investimentosBody');
@@ -1758,7 +1856,7 @@ if(btnInvestimento){
       obs:document.getElementById('i_obs').value.trim()
     });
     ['i_nome','i_valor','i_obs'].forEach(id=>{document.getElementById(id).value='';});
-    saveData(); renderInvestimentos(); showToast('Investimento adicionado!');
+    saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Investimento adicionado!');
   });
 }
 
@@ -1783,14 +1881,14 @@ window.editarInvestimento = id => {
   if(valor===null)return;
   inv.nome=nome.trim()||inv.nome;
   inv.valor=num(valor);
-  saveData(); renderInvestimentos(); showToast('Investimento atualizado!');
+  saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Investimento atualizado!');
 };
 
 window.removerInvestimento = id => {
   if(!confirm('Remover este investimento?'))return;
   const mes=getMes(mesSelecionado);
   mes.investimentos=(mes.investimentos||[]).filter(x=>x.id!==id);
-  saveData(); renderInvestimentos(); showToast('Investimento removido');
+  saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Investimento removido');
 };
 
 window.togglePago = id => {
