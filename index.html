@@ -510,19 +510,31 @@ input:focus,select:focus,textarea:focus{
 .wealth-sub{font-size:11px;color:var(--txt2);margin-top:2px;line-height:1.4}
 .wealth-badge{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--em);background:var(--em-dim);border:1px solid rgba(16,185,129,.25);border-radius:999px;padding:5px 9px;white-space:nowrap}
 .wealth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.65rem;margin-bottom:.85rem}
-.wealth-card{background:rgba(8,11,16,.35);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.75rem}
+.wealth-card{background:rgba(8,11,16,.35);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s,transform .2s}
+.wealth-card:hover,.wealth-card:active{border-color:rgba(201,168,76,.42);transform:translateY(-1px)}
 .wealth-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.65px;font-weight:800;margin-bottom:.3rem}
 .wealth-val{font-family:'Playfair Display',serif;font-size:1.18rem;font-weight:700;color:var(--gold2);line-height:1.1}
 .wealth-val.green{color:var(--em)}.wealth-val.red{color:var(--danger)}
 .projecao-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-bottom:.85rem}
-.projecao-box{background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--radius);padding:.7rem;text-align:center}
+.projecao-box{background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--radius);padding:.7rem;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s,transform .2s}
+.projecao-box:hover,.projecao-box:active{border-color:rgba(232,201,122,.55);transform:translateY(-1px)}
 .projecao-mes{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:.25rem}
 .projecao-total{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold2)}
-.wealth-insight{font-size:12px;color:var(--txt2);line-height:1.5;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.7rem}
+.wealth-insight{font-size:12px;color:var(--txt2);line-height:1.5;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.7rem;margin-bottom:.85rem}
+.plano-title{font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.55rem;font-weight:800}
+.plano-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem}
+.plano-card{background:rgba(8,11,16,.38);border:1px solid rgba(201,168,76,.1);border-radius:var(--radius);padding:.72rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s,transform .2s}
+.plano-card:hover,.plano-card:active{border-color:rgba(201,168,76,.42);transform:translateY(-1px)}
+.plano-label{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:800;line-height:1.25;margin-bottom:.3rem}
+.plano-val{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--gold2);line-height:1.08}
+.plano-sub{font-size:9px;color:rgba(201,168,76,.5);margin-top:.3rem}
+.plano-alerta{font-size:11.5px;color:var(--txt2);line-height:1.5;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.12);border-radius:var(--radius);padding:.65rem;margin-top:.65rem}
 body.light .wealth-hero,body.light .wealth-card{background:#ffffff!important;border-color:#e8d49a!important}
 body.light .projecao-box{background:#fff7dd!important;border-color:#e8d49a!important}
 body.light .wealth-insight{background:#fffaf0!important;border-color:#e8d49a!important;color:#6b5f50!important}
-@media(max-width:420px){.wealth-head{flex-direction:column}.projecao-grid{grid-template-columns:1fr}.wealth-val{font-size:1.05rem}}
+body.light .plano-card{background:#ffffff!important;border-color:#e8d49a!important}
+body.light .plano-alerta{background:#f0fff7!important;border-color:#bbf7d0!important;color:#4b6155!important}
+@media(max-width:420px){.wealth-head{flex-direction:column}.projecao-grid{grid-template-columns:1fr}.wealth-val{font-size:1.05rem}.plano-grid{grid-template-columns:1fr 1fr}}
 
 /* INVESTIMENTOS */
 .inv-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1rem}
@@ -797,17 +809,21 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
       <div class="wealth-badge" id="pat_badge">IA financeira</div>
     </div>
     <div class="wealth-grid">
-      <div class="wealth-card"><div class="wealth-label">Patrimônio total</div><div class="wealth-val" id="pat_total">R$ 0,00</div></div>
-      <div class="wealth-card"><div class="wealth-label">Crescimento do mês</div><div class="wealth-val" id="pat_crescimento">R$ 0,00</div></div>
-      <div class="wealth-card"><div class="wealth-label">Falta para metas</div><div class="wealth-val" id="pat_metas">R$ 0,00</div></div>
-      <div class="wealth-card"><div class="wealth-label">Reserva estimada</div><div class="wealth-val" id="pat_reserva">0 mês</div></div>
+      <div class="wealth-card" onclick="mostrarInfoPatrimonio(0)"><div class="wealth-label">Patrimônio total</div><div class="wealth-val" id="pat_total">R$ 0,00</div><div class="plano-sub">ℹ toque para entender</div></div>
+      <div class="wealth-card" onclick="mostrarInfoPatrimonio(1)"><div class="wealth-label">Crescimento do mês</div><div class="wealth-val" id="pat_crescimento">R$ 0,00</div><div class="plano-sub">ℹ toque para entender</div></div>
+      <div class="wealth-card" onclick="mostrarInfoPatrimonio(2)"><div class="wealth-label">Falta para metas</div><div class="wealth-val" id="pat_metas">R$ 0,00</div><div class="plano-sub">ℹ toque para entender</div></div>
+      <div class="wealth-card" onclick="mostrarInfoPatrimonio(3)"><div class="wealth-label">Reserva estimada</div><div class="wealth-val" id="pat_reserva">0 mês</div><div class="plano-sub">ℹ toque para entender</div></div>
     </div>
     <div class="projecao-grid">
-      <div class="projecao-box"><div class="projecao-mes">Em 3 meses</div><div class="projecao-total" id="pat_proj3">R$ 0,00</div></div>
-      <div class="projecao-box"><div class="projecao-mes">Em 6 meses</div><div class="projecao-total" id="pat_proj6">R$ 0,00</div></div>
-      <div class="projecao-box"><div class="projecao-mes">Em 12 meses</div><div class="projecao-total" id="pat_proj12">R$ 0,00</div></div>
+      <div class="projecao-box" onclick="mostrarInfoPatrimonio(4)"><div class="projecao-mes">Em 3 meses</div><div class="projecao-total" id="pat_proj3">R$ 0,00</div></div>
+      <div class="projecao-box" onclick="mostrarInfoPatrimonio(5)"><div class="projecao-mes">Em 6 meses</div><div class="projecao-total" id="pat_proj6">R$ 0,00</div></div>
+      <div class="projecao-box" onclick="mostrarInfoPatrimonio(6)"><div class="projecao-mes">Em 12 meses</div><div class="projecao-total" id="pat_proj12">R$ 0,00</div></div>
     </div>
     <div class="wealth-insight" id="pat_insight">Lance seus investimentos para ativar a leitura inteligente.</div>
+
+    <div class="plano-title">🧭 Plano Inteligente do Mês</div>
+    <div class="plano-grid" id="planoCards"></div>
+    <div class="plano-alerta" id="planoInsight">Analisando a melhor decisão para este mês...</div>
   </div>
 
   <div class="section">
@@ -1622,6 +1638,64 @@ function mediaHistorica(tipo,qtd=3){
   }
   return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
 }
+let PLANO_MENSAL_INFO = [];
+
+function calcularPlanoMensalInteligente(){
+  const atual=getDados();
+  const invest=somaMes(atual,'investimentos');
+  const saldoMes=saldoReal();
+  const patrimonio=invest+Math.max(0,saldoMes);
+  const gastoMedio=mediaHistorica('real',3)||totalCustoPrev();
+  const rendaMedia=mediaHistorica('receitas',3)||totalReceitas();
+  const economiaMedia=Math.max(0,rendaMedia-gastoMedio);
+  const metasPend=(allData.aquisicoes||[]).filter(a=>!a.comprado).reduce((s,a)=>s+num(a.valor),0);
+  const reservaIdeal=gastoMedio*3;
+  const reservaMeses=gastoMedio>0?patrimonio/gastoMedio:0;
+  const faltaReserva=Math.max(0,reservaIdeal-patrimonio);
+  const baseSegura=Math.max(0,Math.min(saldoMes, economiaMedia || saldoMes));
+  const manterReserva=Math.min(baseSegura, faltaReserva);
+  const restante=Math.max(0,baseSegura-manterReserva);
+  const paraMetas=metasPend>0?Math.min(metasPend, restante*0.6):0;
+  const investir=Math.max(0,restante-paraMetas);
+  let prioridade='Reduzir gastos';
+  let prioridadeIcon='🛑';
+  if(saldoMes>0 && reservaMeses<3){ prioridade='Fortalecer reserva'; prioridadeIcon='🛡️'; }
+  else if(saldoMes>0 && metasPend>0){ prioridade='Acelerar metas'; prioridadeIcon='🎯'; }
+  else if(saldoMes>0){ prioridade='Investir sobra'; prioridadeIcon='📈'; }
+  return {invest,saldoMes,patrimonio,gastoMedio,rendaMedia,economiaMedia,metasPend,reservaIdeal,reservaMeses,faltaReserva,baseSegura,manterReserva,paraMetas,investir,prioridade,prioridadeIcon};
+}
+
+function renderPlanoMensalInteligente(plano){
+  const cont=document.getElementById('planoCards');
+  const insightEl=document.getElementById('planoInsight');
+  if(!cont) return;
+  const cards=[
+    {icon:'📈',label:'Seguro para investir',valor:fmt(plano.investir),cor:plano.investir>0?'var(--em)':'var(--txt3)'},
+    {icon:'🎯',label:'Separar para metas',valor:fmt(plano.paraMetas),cor:plano.paraMetas>0?'var(--gold2)':'var(--txt3)'},
+    {icon:'🛡️',label:'Manter na reserva',valor:fmt(plano.manterReserva),cor:plano.manterReserva>0?'#60a0e0':'var(--txt3)'},
+    {icon:plano.prioridadeIcon,label:'Prioridade agora',valor:plano.prioridade,cor:plano.saldoMes>0?'var(--gold2)':'var(--danger)'}
+  ];
+  cont.innerHTML=cards.map((c,i)=>'<div class="plano-card" onclick="mostrarInfoPlano('+i+')">'
+    +'<div class="plano-label">'+c.icon+' '+c.label+'</div>'
+    +'<div class="plano-val" style="color:'+c.cor+'">'+c.valor+'</div>'
+    +'<div class="plano-sub">ℹ toque para entender</div>'
+    +'</div>').join('');
+  let insight='Sem sobra segura neste mês. A recomendação é proteger o caixa antes de investir ou acelerar metas.';
+  if(plano.baseSegura>0){
+    insight='Com base no saldo real e na média dos últimos meses, existem '+fmt(plano.baseSegura)+' de sobra segura. ';
+    if(plano.reservaMeses<3) insight+='Como a reserva ainda está abaixo de 3 meses, a prioridade é reforçar segurança.';
+    else if(plano.metasPend>0) insight+='Como a reserva está mais confortável, o plano divide a sobra entre metas e investimentos.';
+    else insight+='Como não há metas pendentes, a sobra pode ir principalmente para investimentos.';
+  }
+  if(insightEl) insightEl.textContent=insight;
+  PLANO_MENSAL_INFO=[
+    {icon:'📈',titulo:'Valor seguro para investir',desc:'É o que sobra depois de proteger a reserva e separar uma parte para metas. Ele nunca usa saldo negativo nem força investimento quando o mês está apertado.',itens:[{pts:'Base',desc:'Menor valor entre o saldo real do mês e a economia média histórica.'},{pts:'Reserva',desc:'Se a reserva está abaixo de 3 meses, ela tem prioridade antes do investimento.'},{pts:'Resultado',desc:'O que resta depois de reserva e metas vira sugestão para investir.'}]},
+    {icon:'🎯',titulo:'Valor sugerido para metas',desc:'Calcula uma parcela da sobra segura para acelerar metas pendentes sem comprometer a reserva.',itens:[{pts:'Metas',desc:'Soma apenas as metas ainda não marcadas como compradas.'},{pts:'Regra',desc:'Usa até 60% do valor restante depois da reserva.'},{pts:'Limite',desc:'Nunca sugere mais do que falta para concluir as metas.'}]},
+    {icon:'🛡️',titulo:'Valor para manter na reserva',desc:'Mostra quanto da sobra do mês deveria ficar parado para aproximar a reserva de emergência de 3 meses de gastos.',itens:[{pts:'Reserva ideal',desc:'Gasto médio mensal × 3.'},{pts:'Reserva atual',desc:'Patrimônio total dividido pelo gasto médio.'},{pts:'Prioridade',desc:'Se estiver abaixo de 3 meses, a reserva recebe dinheiro antes das metas e investimentos.'}]},
+    {icon:plano.prioridadeIcon,titulo:'Prioridade do mês',desc:'Traduz os números em uma decisão prática: guardar reserva, acelerar metas, investir ou reduzir gastos.',itens:[{pts:'1º',desc:'Saldo negativo: reduzir gastos e proteger caixa.'},{pts:'2º',desc:'Reserva abaixo de 3 meses: fortalecer reserva.'},{pts:'3º',desc:'Reserva ok e metas pendentes: acelerar metas.'},{pts:'4º',desc:'Reserva ok e sem metas urgentes: investir a sobra.'}]}
+  ];
+}
+
 function renderPatrimonioInteligente(){
   const atual=getDados();
   const invest=somaMes(atual,'investimentos');
@@ -1651,6 +1725,7 @@ function renderPatrimonioInteligente(){
     if(metasPend>0) insight += ` Para quitar as metas pendentes faltam ${fmt(Math.max(0,metasPend-patrimonio))}.`;
   }
   setText('pat_insight',insight);
+  renderPlanoMensalInteligente(calcularPlanoMensalInteligente());
 }
 
 function renderInvestimentos(){
@@ -3237,6 +3312,60 @@ window.mostrarInfoScore = function(idx){
 };
 
 
+
+
+
+const PATRIMONIO_INFO = [
+  {icon:'🏛️',titulo:'Patrimônio total',desc:'Mostra o tamanho financeiro atual de vocês dentro do app. Ele junta o dinheiro lançado em investimentos com a sobra positiva do mês.',itens:[{pts:'Investimentos',desc:'Soma tudo que está lançado em Outro banco, Poupança e Aplicações.'},{pts:'Saldo positivo',desc:'Se o mês tem sobra real, essa sobra entra como dinheiro disponível.'},{pts:'Fórmula',desc:'Patrimônio total = Total investido + saldo real positivo do mês.'}]},
+  {icon:'📈',titulo:'Crescimento do mês',desc:'Compara quanto vocês têm investido no mês atual contra o mês anterior. Serve para ver se o patrimônio financeiro aumentou ou caiu.',itens:[{pts:'Mês atual',desc:'Soma os investimentos lançados no mês selecionado.'},{pts:'Mês anterior',desc:'Busca os investimentos do mês imediatamente anterior.'},{pts:'Fórmula',desc:'Crescimento = investimentos atuais − investimentos do mês anterior.'}]},
+  {icon:'🎯',titulo:'Falta para metas',desc:'Mostra quanto ainda existe em metas pendentes, considerando apenas o que não foi marcado como comprado/concluído.',itens:[{pts:'Inclui',desc:'Metas cadastradas e ainda pendentes.'},{pts:'Não inclui',desc:'Metas já marcadas como compradas.'},{pts:'Uso',desc:'Ajuda a entender quanto do patrimônio ainda precisaria ser direcionado para realizar objetivos.'}]},
+  {icon:'🛡️',titulo:'Reserva estimada',desc:'Traduz o patrimônio atual em meses de segurança. É uma estimativa de por quanto tempo o patrimônio cobriria os gastos médios.',itens:[{pts:'Base',desc:'Usa a média de despesas reais dos últimos 3 meses; se não houver, usa o custo previsto atual.'},{pts:'Fórmula',desc:'Reserva estimada = patrimônio total ÷ gasto médio mensal.'},{pts:'Leitura',desc:'3 meses ou mais costuma indicar uma reserva mais confortável.'}]},
+  {icon:'🔮',titulo:'Projeção em 3 meses',desc:'Estima o patrimônio daqui a 3 meses mantendo o ritmo médio atual de sobra mensal.',itens:[{pts:'Base',desc:'Patrimônio total de hoje.'},{pts:'Ritmo',desc:'Economia média = média de receitas − média de despesas dos últimos meses.'},{pts:'Fórmula',desc:'Projeção 3m = patrimônio atual + economia média × 3.'}]},
+  {icon:'🔮',titulo:'Projeção em 6 meses',desc:'Estima o patrimônio daqui a 6 meses, útil para enxergar metas de médio prazo.',itens:[{pts:'Base',desc:'Patrimônio total de hoje.'},{pts:'Ritmo',desc:'Mantém a mesma economia média mensal calculada pelo histórico.'},{pts:'Fórmula',desc:'Projeção 6m = patrimônio atual + economia média × 6.'}]},
+  {icon:'🔮',titulo:'Projeção em 12 meses',desc:'Mostra onde vocês podem chegar em 1 ano se mantiverem o mesmo padrão médio de receitas e despesas.',itens:[{pts:'Base',desc:'Patrimônio total de hoje.'},{pts:'Ritmo',desc:'Usa a sobra média histórica como velocidade de crescimento.'},{pts:'Fórmula',desc:'Projeção 12m = patrimônio atual + economia média × 12.'}]}
+];
+
+window.mostrarInfoPatrimonio = function(idx){
+  const info = PATRIMONIO_INFO[idx];
+  if(!info) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'score-info-overlay';
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = '<div class="score-info-box">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem">'
+    +'<div class="score-info-titulo">'+info.icon+' '+info.titulo+'</div>'
+    +'<button onclick="fecharInfoScore()" style="background:transparent;border:1px solid var(--brd);color:var(--txt3);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">X</button>'
+    +'</div>'
+    +'<div class="score-info-desc">'+info.desc+'</div>'
+    +'<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.4rem">Forma de pensamento:</div>'
+    + info.itens.map(it=>'<div class="score-info-item">'
+      +'<span style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">'+it.pts+'</span>'
+      +'<span>'+it.desc+'</span>'
+      +'</div>').join('')
+    +'</div>';
+  document.body.appendChild(overlay);
+};
+
+window.mostrarInfoPlano = function(idx){
+  const info = PLANO_MENSAL_INFO[idx];
+  if(!info) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'score-info-overlay';
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = '<div class="score-info-box">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem">'
+    +'<div class="score-info-titulo">'+info.icon+' '+info.titulo+'</div>'
+    +'<button onclick="fecharInfoScore()" style="background:transparent;border:1px solid var(--brd);color:var(--txt3);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">X</button>'
+    +'</div>'
+    +'<div class="score-info-desc">'+info.desc+'</div>'
+    +'<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:.4rem">Forma de pensamento:</div>'
+    + info.itens.map(it=>'<div class="score-info-item">'
+      +'<span style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">'+it.pts+'</span>'
+      +'<span>'+it.desc+'</span>'
+      +'</div>').join('')
+    +'</div>';
+  document.body.appendChild(overlay);
+};
 
 window.fecharInfoScore = function(){ const el=document.querySelector('.score-info-overlay'); if(el) el.remove(); };
 // ============ BOOT ============
