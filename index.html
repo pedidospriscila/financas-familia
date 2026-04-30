@@ -807,7 +807,7 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
   <div class="inv-summary-grid">
     <div class="inv-card"><div class="inv-card-label">Total investido</div><div class="inv-card-val" id="inv_total">R$ 0,00</div></div>
     <div class="inv-card"><div class="inv-card-label">Outro banco</div><div class="inv-card-val" id="inv_banco">R$ 0,00</div></div>
-    <div class="inv-card"><div class="inv-card-label">Poupança</div><div class="inv-card-val" id="inv_poupanca">R$ 0,00</div></div>
+    <div class="inv-card"><div class="inv-card-label">Cotas</div><div class="inv-card-val" id="inv_poupanca">R$ 0,00</div></div>
     <div class="inv-card"><div class="inv-card-label">Aplicações</div><div class="inv-card-val" id="inv_aplicacoes">R$ 0,00</div></div>
   </div>
 
@@ -854,7 +854,7 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
     <div class="section-title">Novo Investimento</div>
     <div class="add-form">
       <div class="field"><label>Nome *</label><input id="i_nome" type="text" placeholder="Ex: Nubank, Itaú, CDB..."></div>
-      <div class="field"><label>Tipo</label><select id="i_tipo"><option value="banco">🏦 Outro banco</option><option value="poupanca">🐷 Poupança</option><option value="aplicacao">📈 Aplicação</option></select></div>
+      <div class="field"><label>Tipo</label><select id="i_tipo"><option value="banco">🏦 Outro banco</option><option value="poupanca">📊 Cotas</option><option value="aplicacao">📈 Aplicação</option></select></div>
       <div class="field"><label>Valor *</label><input id="i_valor" type="number" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       <div class="field"><label>Observação</label><input id="i_obs" type="text" placeholder="Opcional"></div>
       <button class="btn-add" id="btn_add_investimento" type="button">+ Adicionar</button>
@@ -1816,7 +1816,7 @@ function renderInvestimentos(){
   setText('inv_total',fmt(total)); setText('inv_banco',fmt(banco)); setText('inv_poupanca',fmt(poupanca)); setText('inv_aplicacoes',fmt(aplicacoes));
   if(!body)return;
   if(!lista.length){body.innerHTML='<tr><td colspan="5" class="empty">Nenhum investimento lançado neste mês</td></tr>';return;}
-  const tipoLabel={banco:'🏦 Outro banco',poupanca:'🐷 Poupança',aplicacao:'📈 Aplicação'};
+  const tipoLabel={banco:'🏦 Outro banco',poupanca:'📊 Cotas',aplicacao:'📈 Aplicação'};
   body.innerHTML=[...lista].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(i=>`
     <tr class="tr-hover">
       <td>${esc(i.nome)}</td>
