@@ -456,11 +456,15 @@ input:focus,select:focus,textarea:focus{
 /* ===== SCORE DE SAÚDE FINANCEIRA ===== */
 .score-page{padding:.75rem;max-width:100%;overflow-x:hidden}
 
-/* Gauge */
-.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:0 0 1rem;width:100%}
-.gauge-svg{width:100%;max-width:260px;height:auto;display:block;overflow:visible}
-.score-numero{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:700;text-align:center;line-height:1;letter-spacing:-2px;transition:color .8s;margin-top:.25rem}
-.score-label{font-size:.7rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-top:.2rem}
+/* Gauge — estilo contagiros */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:0 0 1rem;width:100%;position:relative}
+.gauge-svg{width:100%;max-width:320px;height:auto;display:block;overflow:visible;filter:drop-shadow(0 8px 24px rgba(0,0,0,.5));margin-bottom:.4rem}
+.gauge-center{position:absolute;left:50%;top:74%;transform:translate(-50%,0);display:flex;flex-direction:column;align-items:center;pointer-events:none;width:60%}
+.score-numero{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:700;text-align:center;line-height:1;letter-spacing:-2px;transition:color .8s;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.score-numero-max{font-size:.7rem;color:var(--txt3);font-family:'Inter',sans-serif;letter-spacing:1px;margin-top:.15rem}
+.score-label{font-size:.7rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-top:.5rem}
+#gaugeNeedle{transition:transform 1.2s cubic-bezier(.34,1.56,.64,1);transform-origin:140px 140px}
+#gaugeBar{transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1),stroke .6s}
 .score-zona{font-size:.85rem;font-weight:700;text-align:center;margin:.3rem 0;padding:.3rem 1rem;border-radius:20px;display:inline-block}
 .score-zona.verde{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
 .score-zona.amarela{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
@@ -951,28 +955,57 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
 <div class="page" id="page-score">
   <div class="score-page">
 
-    <!-- Gauge animado -->
+    <!-- Gauge contagiros -->
     <div class="gauge-wrap">
-      <svg class="gauge-svg" viewBox="0 0 280 160" id="scoreGaugeSVG">
-        <!-- Trilha de fundo -->
-        <path d="M 30 140 A 110 110 0 0 1 250 140" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="18" stroke-linecap="round"/>
-        <!-- Zonas coloridas -->
-        <path d="M 30 140 A 110 110 0 0 1 86 55" fill="none" stroke="rgba(220,85,69,.3)" stroke-width="18" stroke-linecap="round"/>
-        <path d="M 86 55 A 110 110 0 0 1 194 55" fill="none" stroke="rgba(245,158,11,.3)" stroke-width="18" stroke-linecap="round"/>
-        <path d="M 194 55 A 110 110 0 0 1 250 140" fill="none" stroke="rgba(16,185,129,.3)" stroke-width="18" stroke-linecap="round"/>
-        <!-- Barra de progresso animada -->
-        <path id="gaugeBar" d="M 30 140 A 110 110 0 0 1 30 140" fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round" style="transition:all 1.2s cubic-bezier(.4,0,.2,1)"/>
-        <!-- Agulha -->
-        <line id="gaugeNeedle" x1="140" y1="140" x2="140" y2="50" stroke="var(--gold2)" stroke-width="2.5" stroke-linecap="round" style="transform-origin:140px 140px;transition:transform 1.2s cubic-bezier(.4,0,.2,1)"/>
-        <circle cx="140" cy="140" r="6" fill="var(--gold2)"/>
-        <!-- Labels das zonas -->
-        <text x="22" y="155" font-size="9" fill="rgba(220,85,69,.7)" font-family="Inter">0</text>
-        <text x="130" y="30" font-size="9" fill="rgba(245,158,11,.7)" font-family="Inter" text-anchor="middle">500</text>
-        <text x="256" y="155" font-size="9" fill="rgba(16,185,129,.7)" font-family="Inter">1000</text>
+      <svg class="gauge-svg" viewBox="0 0 280 210" id="scoreGaugeSVG">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#e05545"/>
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+          <radialGradient id="hubGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#f5e4b0"/>
+            <stop offset="60%" stop-color="#c9a84c"/>
+            <stop offset="100%" stop-color="#7a5e1f"/>
+          </radialGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <!-- Trilha de fundo (semicírculo 180°) -->
+        <path d="M 30 140 A 110 110 0 0 1 250 140" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="22" stroke-linecap="round"/>
+
+        <!-- Arco colorido com gradiente -->
+        <path d="M 30 140 A 110 110 0 0 1 250 140" fill="none" stroke="url(#gaugeGrad)" stroke-width="22" stroke-linecap="round" opacity=".25"/>
+
+        <!-- Barra de progresso (preenchida via dasharray) -->
+        <path id="gaugeBar" d="M 30 140 A 110 110 0 0 1 250 140" fill="none" stroke="#10b981" stroke-width="22" stroke-linecap="round" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000" filter="url(#glow)"/>
+
+        <!-- Marcações (ticks) a cada 100 pontos -->
+        <g id="gaugeTicks" stroke="rgba(240,236,228,.45)" stroke-width="1.5" stroke-linecap="round"></g>
+
+        <!-- Labels numéricos -->
+        <text x="22"  y="158" font-size="10" fill="var(--txt3)" font-family="Inter" text-anchor="middle">0</text>
+        <text x="60"  y="55"  font-size="10" fill="rgba(220,85,69,.85)" font-family="Inter" text-anchor="middle">250</text>
+        <text x="140" y="22"  font-size="10" fill="rgba(245,158,11,.9)" font-family="Inter" text-anchor="middle">500</text>
+        <text x="220" y="55"  font-size="10" fill="rgba(16,185,129,.9)" font-family="Inter" text-anchor="middle">750</text>
+        <text x="258" y="158" font-size="10" fill="var(--txt3)" font-family="Inter" text-anchor="middle">1000</text>
+
+        <!-- Agulha do contagiros -->
+        <g id="gaugeNeedle">
+          <line x1="140" y1="140" x2="140" y2="48" stroke="var(--gold2)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="140" y1="140" x2="140" y2="155" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+        </g>
+        <!-- Hub central -->
+        <circle cx="140" cy="140" r="14" fill="url(#hubGrad)" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/>
+        <circle cx="140" cy="140" r="4" fill="#1a1508"/>
+
+        <!-- Número do score (dentro do SVG, abaixo do hub) -->
+        <text id="scoreNumero" x="140" y="195" text-anchor="middle" font-family="Playfair Display,serif" font-size="26" font-weight="700" fill="#10b981" style="transition:fill .8s">0</text>
       </svg>
-      <div class="score-numero" id="scoreNumero">0</div>
+
       <div class="score-label">Score de Saúde Financeira</div>
-      <div style="margin-top:.35rem"><span class="score-zona" id="scoreZonaLabel">Calculando...</span></div>
+      <div style="margin-top:.45rem"><span class="score-zona" id="scoreZonaLabel">Calculando...</span></div>
     </div>
 
     <!-- Frase personalizada -->
@@ -3126,48 +3159,57 @@ function gerarFrase(score){
 }
 
 let scoreAnimSeq = 0;
+let gaugeTicksRendered = false;
+function renderGaugeTicks(){
+  if(gaugeTicksRendered) return;
+  const g = document.getElementById('gaugeTicks');
+  if(!g) return;
+  const cx=140, cy=140, rOut=120, rIn=108, rInBig=104;
+  let html='';
+  for(let i=0;i<=20;i++){
+    const pct = i/20;
+    const ang = Math.PI + pct*Math.PI; // 180° -> 360° (semicírculo superior)
+    const big = (i%5===0);
+    const r1 = big?rInBig:rIn;
+    const x1 = cx + r1*Math.cos(ang);
+    const y1 = cy + r1*Math.sin(ang);
+    const x2 = cx + rOut*Math.cos(ang);
+    const y2 = cy + rOut*Math.sin(ang);
+    const op = big?0.85:0.35;
+    const w  = big?2:1;
+    html += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke-width="${w}" opacity="${op}"/>`;
+  }
+  g.innerHTML = html;
+  gaugeTicksRendered = true;
+}
+
 function animarGauge(score){
   const seq = ++scoreAnimSeq;
-  const pct = score/1000;
-  // Arco de 210 graus (de -105 a +105 graus partindo do topo)
-  const angInicio = Math.PI + Math.PI*0.167; // ~210° em radianos desde o centro
-  const angTotal = Math.PI * 1.333; // 240 graus de arco total
-  const angAtual = angInicio - pct * angTotal; // No sentido horário
+  renderGaugeTicks();
+  const pct = Math.max(0, Math.min(1, score/1000));
 
-  const cx=140, cy=140, r=110;
-  const x2 = cx + r*Math.cos(angInicio);
-  const y2 = cy + r*Math.sin(angInicio);
-  const x3 = cx + r*Math.cos(angAtual);
-  const y3 = cy + r*Math.sin(angAtual);
-  const largeArc = (pct * angTotal) > Math.PI ? 1 : 0;
-
-  // Cor da barra
+  // Cor por zona
   const cor = score>=700?'#10b981':score>=400?'#f59e0b':'#e05545';
+
+  // Barra: usa stroke-dasharray (pathLength=1000)
   const barEl = document.getElementById('gaugeBar');
   if(barEl){
-    if(pct < 0.01){
-      barEl.setAttribute('d','M '+x2+' '+y2+' A '+r+' '+r+' 0 0 0 '+x2+' '+y2);
-    } else {
-      barEl.setAttribute('d','M '+x2+' '+y2+' A '+r+' '+r+' 0 '+largeArc+' 0 '+x3+' '+y3);
-    }
     barEl.setAttribute('stroke', cor);
+    barEl.setAttribute('stroke-dashoffset', String(Math.round(1000 - pct*1000)));
   }
 
-  // Agulha
+  // Agulha: -90° (esquerda, score 0) até +90° (direita, score 1000)
   const needle = document.getElementById('gaugeNeedle');
   if(needle){
-    // Ângulo da agulha em graus (0 = apontando para cima)
-    const graus = ((angAtual - (-Math.PI/2)) * 180/Math.PI + 360) % 360;
-    const rot = graus - 90;
+    const rot = -90 + pct*180;
     needle.style.transform = 'rotate('+rot+'deg)';
-    needle.setAttribute('stroke', cor);
+    needle.querySelectorAll('line').forEach(l=>l.setAttribute('stroke', cor));
   }
 
   // Número animado
   const numEl = document.getElementById('scoreNumero');
   if(numEl){
-    numEl.style.color = cor;
-    let atual = 0;
+    numEl.setAttribute('fill', cor);
     const alvo = Math.round(score);
     const dur = 1200;
     const start = performance.now();
