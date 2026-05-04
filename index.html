@@ -66,8 +66,8 @@ input[type=file]{display:none}
 }
 .tab{
   flex:1 1 0;min-width:0;
-  padding:.45rem .1rem .35rem;
-  text-align:center;font-size:18px;font-weight:600;
+  padding:.4rem .1rem .3rem;
+  text-align:center;font-size:11px;font-weight:600;
   color:var(--txt3);cursor:pointer;
   border-bottom:none;border-top:2px solid transparent;
   border-radius:8px;
@@ -80,9 +80,11 @@ input[type=file]{display:none}
   border-top-color:var(--gold);
   background:rgba(201,168,76,.08);
 }
-.tab-label{font-size:9px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:.2px;text-transform:uppercase}
+.tab-label{font-size:10px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:.2px;text-transform:uppercase}
 .tab .tab-icon{display:none}
-@media(min-width:900px){.tab{padding:.55rem .1rem}.tab-label{font-size:10px}}
+@media(max-width:380px){.tab{font-size:10px}.tab-label{font-size:9px;letter-spacing:.1px}.tab > *:first-child{font-size:11px}}
+@media(max-width:340px){.tab{font-size:9px;padding:.35rem .05rem .25rem}.tab-label{font-size:8px}.tab > *:first-child{font-size:10px}}
+@media(min-width:900px){.tab{padding:.55rem .1rem;font-size:12px}.tab-label{font-size:11px}}
 
 main{padding:1.25rem 1.25rem calc(90px + env(safe-area-inset-bottom)) 1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
@@ -432,7 +434,6 @@ body.pwa-mode .header{padding-top:env(safe-area-inset-top,0)}
 .ia-header-dot{width:8px;height:8px;border-radius:50%;background:var(--em);animation:syncpulse 2s ease-in-out infinite}
 
 .tab > *:first-child{font-size:12px;line-height:1.1}
-@media(max-width:360px){.tab > *:first-child{font-size:12px}}
 
 /* COMPARATIVO ANUAL */
 .comp-anual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin-bottom:.75rem}
