@@ -806,7 +806,7 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
   <div class="section">
     <div class="section-title">Lista de Despesas</div>
     <div class="busca-wrap">
-      <input class="busca-input" id="buscaDespesa" type="text" placeholder="🔍 Buscar despesa..." oninput="renderDespesas()">
+      <input class="busca-input" id="buscaDespesa" type="text" placeholder="🔍 Buscar despesa...">
     </div>
      <div class="table-wrap table-wrap-despesas">
        <table class="tbl-despesas">
@@ -2047,6 +2047,10 @@ window.salvarReceitas = () => {
 };
 
 // Despesas — listener direto no botão para evitar problemas com onclick inline
+// Busca de despesas (listener — handler inline não funciona em <script type="module">)
+const buscaDespEl = document.getElementById('buscaDespesa');
+if (buscaDespEl) buscaDespEl.addEventListener('input', () => renderDespesas());
+
 document.getElementById('btn_add_despesa').addEventListener('click', () => {
   const nome=document.getElementById('d_nome').value.trim();
   const prev=document.getElementById('d_previsto').value;
