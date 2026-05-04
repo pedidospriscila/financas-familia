@@ -137,6 +137,28 @@ td{padding:.6rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:
 .btn-del:hover{border-color:var(--danger);color:var(--danger)}
 .tfoot-row td{background:var(--bg3);font-weight:700;font-size:13px;border-top:1px solid var(--gold-border)}
 
+/* MOBILE: tabela de Despesas vira cards verticais (sem scroll horizontal) */
+@media(max-width:600px){
+  .table-wrap-despesas{overflow-x:hidden}
+  .tbl-despesas{min-width:0;display:block;width:100%}
+  .tbl-despesas thead{display:none}
+  .tbl-despesas tbody,.tbl-despesas tfoot{display:block;width:100%}
+  .tbl-despesas tr{display:block;background:var(--bg3);border:1px solid var(--bg4);border-left:3px solid var(--gold-border);border-radius:10px;padding:.5rem .75rem;margin-bottom:.6rem;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .tbl-despesas td{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.35rem 0;border-bottom:1px dashed rgba(255,255,255,.05);text-align:right!important;font-size:13px;white-space:normal}
+  .tbl-despesas td:last-child{border-bottom:none}
+  .tbl-despesas td[data-label]:not([data-label=""])::before{content:attr(data-label);color:var(--txt3);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;flex-shrink:0;text-align:left}
+  .tbl-despesas td[data-label="Nome"]{font-size:14px;font-weight:600;color:var(--gold2);font-family:'Playfair Display',serif;border-bottom:1px solid var(--gold-border);margin-bottom:.25rem;padding-bottom:.45rem;justify-content:flex-start;text-align:left!important;flex-wrap:wrap}
+  .tbl-despesas td[data-label="Nome"]::before{display:none}
+  .tbl-despesas td[data-label="Ações"]{justify-content:flex-end;flex-wrap:wrap;gap:.35rem;padding-top:.5rem;margin-top:.25rem;border-top:1px dashed rgba(201,168,76,.15)}
+  .tbl-despesas td[data-label="Ações"]::before{display:none}
+  .tbl-despesas td[data-label="Ações"] .btn-status{flex:1;min-width:90px}
+  .tbl-despesas .empty{display:block;text-align:center;color:var(--txt3);padding:1rem;border-bottom:none}
+  .tbl-despesas .tfoot-row{background:linear-gradient(135deg,var(--bg3),rgba(201,168,76,.05));border-color:var(--gold-border)}
+  .tbl-despesas .tfoot-row td{background:transparent;border-bottom:1px dashed rgba(201,168,76,.15)}
+  .tbl-despesas .tfoot-row td[colspan="2"]{font-family:'Playfair Display',serif;color:var(--gold2);font-size:14px;justify-content:center;border-bottom:1px solid var(--gold-border);margin-bottom:.25rem;padding-bottom:.45rem}
+  .tbl-despesas .tfoot-row td[data-label=""]:empty{display:none}
+}
+
 /* METAS */
 .aq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem}
 .aq-card{background:var(--bg3);border:1px solid var(--bg4);border-radius:var(--radius-lg);padding:1rem;display:flex;justify-content:space-between;align-items:start;gap:.75rem;transition:all .2s}
@@ -786,20 +808,20 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
     <div class="busca-wrap">
       <input class="busca-input" id="buscaDespesa" type="text" placeholder="🔍 Buscar despesa..." oninput="renderDespesas()">
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Nome</th><th style="text-align:center">Venc.</th>
-          <th style="text-align:right">Previsto</th><th style="text-align:right">Real</th>
-          <th style="text-align:right">Dif.</th><th style="text-align:center">Status</th>
-        </tr></thead>
-        <tbody id="despesasBody"></tbody>
+     <div class="table-wrap table-wrap-despesas">
+       <table class="tbl-despesas">
+         <thead><tr>
+           <th>Nome</th><th style="text-align:center">Venc.</th>
+           <th style="text-align:right">Previsto</th><th style="text-align:right">Real</th>
+           <th style="text-align:right">Dif.</th><th style="text-align:center">Status</th>
+         </tr></thead>
+         <tbody id="despesasBody"></tbody>
         <tfoot><tr class="tfoot-row">
-          <td colspan="2">TOTAL</td>
-          <td style="text-align:right" id="ft_previsto">R$ 0,00</td>
-          <td style="text-align:right" id="ft_real">R$ 0,00</td>
-          <td style="text-align:right" id="ft_dif">—</td>
-          <td></td>
+          <td colspan="2" data-label="">TOTAL</td>
+          <td data-label="Previsto" style="text-align:right" id="ft_previsto">R$ 0,00</td>
+          <td data-label="Real" style="text-align:right" id="ft_real">R$ 0,00</td>
+          <td data-label="Dif." style="text-align:right" id="ft_dif">—</td>
+          <td data-label=""></td>
         </tr></tfoot>
       </table>
     </div>
@@ -1672,12 +1694,12 @@ function renderDespesas(){
     const vencCor = !d.pago && df!==null ? (df<0?'var(--danger)':df<=3?'#f59e0b':'var(--txt3)') : 'var(--txt3)';
     const vencLabel = d.vencimento ? (!d.pago&&df!==null&&df<0?`⚠ ${d.vencimento}`:(!d.pago&&df===0?`🔴 ${d.vencimento}`:d.vencimento)) : '—';
     return `<tr class="tr-hover" style="background:${rowBg}">
-      <td>${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}${d.recorrente?'<span class="badge-rec">🔄</span>':''}</td>
-      <td style="text-align:center;color:${vencCor};font-weight:${(!d.pago&&df!==null&&df<=3)?'700':'400'}">${vencLabel}</td>
-      <td style="text-align:right">${fmt(pr)}</td>
-      <td style="text-align:right">${d.custoReal?fmt(d.custoReal):'—'}</td>
-      <td style="text-align:right;color:${dc}">${dif!==null?fmt(dif):'—'}</td>
-      <td style="text-align:center;white-space:nowrap">
+      <td data-label="Nome">${d.nome}${d.tipo==='fixo'?'<span class="badge-fixo">FIXO</span>':''}${d.recorrente?'<span class="badge-rec">🔄</span>':''}</td>
+      <td data-label="Venc." style="text-align:center;color:${vencCor};font-weight:${(!d.pago&&df!==null&&df<=3)?'700':'400'}">${vencLabel}</td>
+      <td data-label="Previsto" style="text-align:right">${fmt(pr)}</td>
+      <td data-label="Real" style="text-align:right">${d.custoReal?fmt(d.custoReal):'—'}</td>
+      <td data-label="Dif." style="text-align:right;color:${dc}">${dif!==null?fmt(dif):'—'}</td>
+      <td data-label="Ações" style="text-align:center;white-space:nowrap">
         <button onclick="togglePago('${d.id}')" class="btn-status ${d.pago?'pago':'pendente'}">${d.pago?'✓ Pago':'Pendente'}</button>
         <button onclick="verHistorico('${d.nome}')" class="btn-hist" title="Histórico">📈</button>
         <button onclick="editarDespesa('${d.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar">✏</button>
