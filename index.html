@@ -85,6 +85,10 @@ input[type=file]{display:none}
 .tab{padding:.55rem .1rem!important;gap:0!important;font-size:25px!important;line-height:1!important}
 @media(max-width:380px){.tab{font-size:22px!important;padding:.5rem .1rem!important}}
 @media(min-width:900px){.tab{font-size:54px!important}}
+.page-header{margin:0 0 1.25rem;padding:.9rem 1rem 1rem;background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.02));border:1px solid var(--gold-border);border-left:3px solid var(--gold);border-radius:10px}
+.page-header h2{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold2);margin:0 0 .25rem;letter-spacing:.2px}
+.page-header p{font-size:12px;color:var(--txt2);margin:0;line-height:1.45}
+@media(min-width:900px){.page-header h2{font-size:1.35rem}.page-header p{font-size:13px}}
 
 main{padding:1.25rem 1.25rem calc(90px + env(safe-area-inset-bottom)) 1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
@@ -1437,12 +1441,31 @@ document.addEventListener('click', ()=>fecharTodosOsPickers());
 
 // ============ TABS ============
 let abaAtiva = 'resumo';
+window.PAGE_INFO = {
+  resumo:{t:'Resumo',d:'Visão geral do mês: saldo, totais de receitas e despesas, e principais indicadores financeiros.'},
+  receitas:{t:'Receitas',d:'Cadastre e acompanhe todas as suas entradas de dinheiro do mês selecionado.'},
+  despesas:{t:'Despesas',d:'Registre seus gastos previstos e reais, marque como pagos e veja o quanto já foi quitado.'},
+  metas:{t:'Metas',d:'Defina objetivos financeiros e acompanhe seu progresso em direção a cada um deles.'},
+  investimentos:{t:'Investimentos',d:'Controle suas aplicações, aportes e o patrimônio acumulado em cada ativo.'},
+  graficos:{t:'Gráficos',d:'Visualize a distribuição das suas finanças em gráficos comparativos e por categoria.'},
+  anual:{t:'Visão Anual',d:'Compare receitas, despesas e saldo ao longo dos 12 meses do ano.'},
+  score:{t:'Score Financeiro',d:'Sua nota de saúde financeira calculada a partir dos seus hábitos e resultados.'},
+  config:{t:'Configurações',d:'Ajustes do sistema, alertas, backup e preferências da sua conta.'}
+};
+function injetarPageHeader(name){
+  const page=document.getElementById('page-'+name); if(!page) return;
+  const info=window.PAGE_INFO[name]; if(!info) return;
+  let h=page.querySelector(':scope > .page-header');
+  if(!h){ h=document.createElement('div'); h.className='page-header'; page.insertBefore(h, page.firstChild); }
+  h.innerHTML='<h2>'+info.t+'</h2><p>'+info.d+'</p>';
+}
 window.showTab = name => {
   abaAtiva = name;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   const page = document.getElementById('page-'+name);
   if(page) page.classList.add('active');
+  injetarPageHeader(name);
   const tabs=['resumo','receitas','despesas','metas','investimentos','graficos','anual','score'];
   const idx=tabs.indexOf(name);
   const tabEls=document.querySelectorAll('.tab');
@@ -1450,6 +1473,8 @@ window.showTab = name => {
   atualizarAbasDinamicas({grafDelay:100, scoreDelay:100});
   if(name==='config') initCfgAlertas();
 };
+// Injeta no carregamento inicial (aba ativa = resumo)
+document.addEventListener('DOMContentLoaded',()=>injetarPageHeader('resumo'));
 
 // ============ RENDER ============
 // ============ TOP 5 MAIORES DESPESAS ============
