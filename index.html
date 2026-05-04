@@ -52,19 +52,45 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
 .btn-cfg{background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold2);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;-webkit-tap-highlight-color:transparent;font-family:'Inter',sans-serif}
 input[type=file]{display:none}
 
-/* NAV */
-.nav-tabs{display:flex;flex-wrap:wrap;background:rgba(8,11,16,.98);border-bottom:1px solid rgba(201,168,76,.12);width:100%;overflow:hidden;}
-.tab{flex:0 0 25%;padding:.42rem .05rem;text-align:center;font-size:13px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;user-select:none;min-width:0}
-.tab.active{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(201,168,76,.05)}
-.tab-label{font-size:7px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:0;text-transform:uppercase}
+/* NAV - BOTTOM NAV MOBILE */
+.nav-tabs{
+  display:flex;flex-wrap:nowrap;
+  background:rgba(8,11,16,.98);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid rgba(201,168,76,.18);
+  width:100%;overflow:hidden;
+  position:fixed;left:0;right:0;bottom:0;
+  z-index:200;
+  padding:6px 2px calc(6px + env(safe-area-inset-bottom)) 2px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.6);
+}
+.tab{
+  flex:1 1 0;min-width:0;
+  padding:.45rem .1rem .35rem;
+  text-align:center;font-size:18px;font-weight:600;
+  color:var(--txt3);cursor:pointer;
+  border-bottom:none;border-top:2px solid transparent;
+  border-radius:8px;
+  transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+.tab.active{
+  color:var(--gold2);
+  border-top-color:var(--gold);
+  background:rgba(201,168,76,.08);
+}
+.tab-label{font-size:9px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:.2px;text-transform:uppercase}
 .tab .tab-icon{display:none}
-@media(min-width:900px){.tab{flex:1 1 0;padding:.55rem .1rem}.tab-label{font-size:9px}}
+@media(min-width:900px){.tab{padding:.55rem .1rem}.tab-label{font-size:10px}}
 
-main{padding:1.25rem;max-width:1200px;margin:0 auto}
+main{padding:1.25rem 1.25rem calc(90px + env(safe-area-inset-bottom)) 1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
+body{overflow-x:hidden}
 
 /* CARDS */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.cards-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin-bottom:1.5rem}
+@media(min-width:700px){.cards-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem}}
 .card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(201,168,76,.12);border-radius:var(--radius-lg);padding:1.1rem;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4}
 .card:hover{border-color:var(--gold)}
@@ -215,9 +241,9 @@ body.light #appWrapper{background:#f5f3ee!important}
 body.light main{background:#f5f3ee!important}
 body.light .page{background:#f5f3ee!important}
 body.light .header{background:#ffffff!important;border-bottom-color:#e8d49a!important}
-body.light .nav-tabs{background:#ffffff!important;border-bottom-color:#e8d49a!important}
+body.light .nav-tabs{background:#ffffff!important;border-top-color:#e8d49a!important;border-bottom:none!important;box-shadow:0 -4px 20px rgba(0,0,0,.08)!important}
 body.light .tab{color:#9a8870!important}
-body.light .tab.active{color:#6d5220!important;border-bottom-color:#8a6c2a!important}
+body.light .tab.active{color:#6d5220!important;border-top-color:#8a6c2a!important;background:rgba(138,108,42,.08)!important}
 body.light #loginScreen{background:#f5f3ee!important}
 body.light .card{background:#ffffff!important;border-color:#e8d49a!important}
 body.light .section{background:#ffffff!important;border-color:#e8d49a!important}
@@ -568,28 +594,33 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
 <!-- HEADER -->
 
 <!-- TELA DE LOGIN -->
-<div id="loginScreen" style="position:fixed;inset:0;background:#0d0f14;display:flex;align-items:center;justify-content:center;z-index:9999;padding:1.5rem">
-  <div style="width:100%;max-width:360px">
-    <div style="text-align:center;margin-bottom:2.5rem">
-      <div style="width:56px;height:56px;background:linear-gradient(135deg,#1e1a0d,#2e2410);border:1px solid #2e2410;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 1.25rem">✦</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#d4a853;letter-spacing:.3px">Finanças</div>
-      <div style="font-size:12px;color:#5a5550;margin-top:4px;letter-spacing:.5px;text-transform:uppercase">Bruno & Priscila</div>
+<div id="loginScreen" style="position:fixed;inset:0;background:radial-gradient(circle at 30% 20%,#1a1508 0%,#0d0f14 45%,#08090c 100%);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1.5rem;overflow:hidden">
+  <!-- glows decorativos -->
+  <div style="position:absolute;top:-100px;left:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,168,76,.18),transparent 70%);filter:blur(40px);pointer-events:none"></div>
+  <div style="position:absolute;bottom:-120px;right:-80px;width:340px;height:340px;background:radial-gradient(circle,rgba(232,201,122,.12),transparent 70%);filter:blur(50px);pointer-events:none"></div>
+
+  <div style="width:100%;max-width:380px;position:relative;z-index:1">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#2a2010,#1a1508);border:1.5px solid rgba(201,168,76,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 1.25rem;box-shadow:0 8px 32px rgba(201,168,76,.25),inset 0 1px 0 rgba(232,201,122,.2);color:#e8c97a">✦</div>
+      <div style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:#e8c97a;letter-spacing:.5px;line-height:1">Finanças</div>
+      <div style="font-size:11px;color:#7a7468;margin-top:8px;letter-spacing:1.2px;text-transform:uppercase;font-weight:500">Bruno & Priscila</div>
     </div>
-    <div style="background:#131720;border:1px solid #2e2410;border-radius:16px;padding:2rem">
-      <div style="font-size:12px;color:#9a9488;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Senha de acesso</div>
+    <div style="background:linear-gradient(135deg,rgba(19,23,32,.85),rgba(14,18,25,.85));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:2rem 1.75rem;box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03)">
+      <div style="font-size:11px;color:#9a9488;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;font-weight:600">Senha de acesso</div>
       <input id="loginInput" type="password" placeholder="Digite a senha..."
-        style="width:100%;background:#1c2130;border:1px solid #252b3a;border-radius:10px;color:#f2ede4;padding:12px 16px;font-size:16px;outline:none;font-family:'Inter',sans-serif;margin-bottom:.75rem;transition:border-color .2s"
+        style="width:100%;background:rgba(28,33,48,.6);border:1px solid rgba(201,168,76,.18);border-radius:12px;color:#f2ede4;padding:13px 16px;font-size:16px;outline:none;font-family:'Inter',sans-serif;margin-bottom:1rem;transition:all .2s"
         onkeydown="if(event.key==='Enter') tentarLogin()"
-        onfocus="this.style.borderColor='#b8963e'"
-        onblur="this.style.borderColor='#252b3a'">
+        onfocus="this.style.borderColor='#c9a84c';this.style.background='rgba(28,33,48,.85)'"
+        onblur="this.style.borderColor='rgba(201,168,76,.18)';this.style.background='rgba(28,33,48,.6)'">
       <button onclick="tentarLogin()"
-        style="width:100%;background:linear-gradient(135deg,#b8963e,#8a6c2a);color:#0d0f14;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.3px;transition:opacity .2s"
-        onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+        style="width:100%;background:linear-gradient(135deg,#e8c97a,#c9a84c 50%,#8a6c2a);color:#0d0f14;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;box-shadow:0 4px 16px rgba(201,168,76,.3)"
+        onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(201,168,76,.4)'"
+        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 16px rgba(201,168,76,.3)'">
         Entrar
       </button>
-      <div id="loginErro" style="color:#dc4a3d;font-size:12px;text-align:center;margin-top:.75rem;opacity:0;transition:opacity .3s">Senha incorreta. Tente novamente.</div>
+      <div id="loginErro" style="color:#dc4a3d;font-size:12px;text-align:center;margin-top:.875rem;opacity:0;transition:opacity .3s">Senha incorreta. Tente novamente.</div>
     </div>
-    <div style="text-align:center;margin-top:1.5rem;font-size:11px;color:#3a3530">Acesso privado · Bruno & Priscila</div>
+    <div style="text-align:center;margin-top:1.75rem;font-size:10.5px;color:#3a3530;letter-spacing:1px;text-transform:uppercase">🔒 Acesso privado</div>
   </div>
 </div>
 
@@ -1585,25 +1616,28 @@ function renderReceitas(){
 function renderDespesas(){
   const tb=document.getElementById('despesasBody'); if(!tb)return;
   const desp=getDados().despesas||[];
+  const buscaEl = document.getElementById('buscaDespesa');
+  const busca = buscaEl ? (buscaEl.value||'').trim().toLowerCase() : '';
   if(!desp.length){
     tb.innerHTML='<tr><td colspan="6" class="empty">Nenhuma despesa neste mês</td></tr>';
     ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00'));
     setText('ft_dif','—'); return;
   }
-  const buscaEl = document.getElementById('buscaDespesa');
-  const busca = buscaEl ? buscaEl.value.trim().toLowerCase() : '';
-  const filtrado = busca ? desp.filter(d=>d.nome.toLowerCase().includes(busca)) : desp;
+  const filtrado = busca ? desp.filter(d=>{
+    const nome = (d && d.nome ? String(d.nome) : '').toLowerCase();
+    const cat  = (d && d.categoria ? String(d.categoria) : '').toLowerCase();
+    return nome.includes(busca) || cat.includes(busca);
+  }) : desp;
   if(!filtrado.length){
-    tb.innerHTML='<tr><td colspan="6" class="empty">'+(busca?'Nenhuma despesa encontrada para "'+busca+'"':'Nenhuma despesa neste mês')+'</td></tr>';
+    tb.innerHTML='<tr><td colspan="6" class="empty">Nenhuma despesa encontrada para "'+busca+'"</td></tr>';
     ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00')); setText('ft_dif','—');
     return;
   }
-  const sorted=[...filtrado].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+  const sorted=[...filtrado].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
   tb.innerHTML=sorted.map(d=>{
     const pr=num(d.custoPrevisto),re=num(d.custoReal||0);
     const dif=re>0?(pr-re):null;
     const dc=dif===null?'var(--txt3)':dif>=0?'var(--em)':'var(--danger)';
-    // Alerta só se estivermos visualizando o mês atual do calendário real
     const hoje = new Date();
     const mesAtualReal = hoje.getFullYear()+'-'+(hoje.getMonth()+1<10?'0':'')+(hoje.getMonth()+1);
     const eMesAtual = mesSelecionado === mesAtualReal;
@@ -1627,8 +1661,9 @@ function renderDespesas(){
       </td>
     </tr>`;
   }).join('');
-  const tP=desp.reduce((s,d)=>s+num(d.custoPrevisto),0);
-  const tR=desp.reduce((s,d)=>s+num(d.custoReal||0),0);
+  // Totais refletem o que está visível (filtrado), não a lista inteira
+  const tP=filtrado.reduce((s,d)=>s+num(d.custoPrevisto),0);
+  const tR=filtrado.reduce((s,d)=>s+num(d.custoReal||0),0);
   setText('ft_previsto',fmt(tP)); setText('ft_real',fmt(tR));
   const dif=tP-tR;
   const fd=document.getElementById('ft_dif');
