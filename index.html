@@ -80,11 +80,12 @@ input[type=file]{display:none}
   border-top-color:var(--gold);
   background:rgba(201,168,76,.08);
 }
-.tab-label{font-size:8px;font-weight:700;line-height:1;white-space:nowrap;letter-spacing:.1px;text-transform:uppercase}
+.tab-label{display:none!important}
 .tab .tab-icon{display:none}
-@media(max-width:380px){.tab{font-size:8px}.tab-label{font-size:7.5px;letter-spacing:0}.tab > *:first-child{font-size:13px}}
-@media(max-width:340px){.tab{font-size:7px;padding:.35rem .05rem .25rem}.tab-label{font-size:7px}.tab > *:first-child{font-size:12px}}
-@media(min-width:900px){.tab{padding:.55rem .1rem;font-size:11px}.tab-label{font-size:10px}}
+.tab{padding:.7rem .1rem!important;gap:0!important}
+.tab > *:first-child{font-size:22px!important;line-height:1!important}
+@media(max-width:380px){.tab > *:first-child{font-size:20px!important}}
+@media(min-width:900px){.tab > *:first-child{font-size:24px!important}}
 
 main{padding:1.25rem 1.25rem calc(90px + env(safe-area-inset-bottom)) 1.25rem;max-width:1200px;margin:0 auto}
 .page{display:none}.page.active{display:block}
