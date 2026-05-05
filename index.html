@@ -82,9 +82,10 @@ input[type=file]{display:none}
 }
 .tab-label{display:none!important}
 .tab .tab-icon{display:none}
-.tab{padding:.55rem .1rem!important;gap:0!important;font-size:25px!important;line-height:1!important}
-@media(max-width:380px){.tab{font-size:22px!important;padding:.5rem .1rem!important}}
-@media(min-width:900px){.tab{font-size:27px!important}}
+.tab{padding:.5rem .05rem!important;gap:0!important;font-size:20px!important;line-height:1!important}
+@media(max-width:380px){.tab{font-size:17px!important;padding:.45rem .05rem!important}}
+@media(max-width:340px){.tab{font-size:15px!important}}
+@media(min-width:900px){.tab{font-size:24px!important}}
 .page-header{margin:0 0 1.25rem;padding:.9rem 1rem 1rem;background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.02));border:1px solid var(--gold-border);border-left:3px solid var(--gold);border-radius:10px}
 .page-header h2{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold2);margin:0 0 .25rem;letter-spacing:.2px}
 .page-header p{font-size:12px;color:var(--txt2);margin:0;line-height:1.45}
@@ -694,6 +695,7 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
   <div class="tab" onclick="showTab('graficos')">📊<span class="tab-label">Gráficos</span></div>
   <div class="tab" onclick="showTab('anual')">📅<span class="tab-label">Anual</span></div>
   <div class="tab" onclick="showTab('score')">💎<span class="tab-label">Score</span></div>
+  <div class="tab" onclick="showTab('coach')">🤖<span class="tab-label">Coach</span></div>
 </div>
 
 <main>
@@ -1084,7 +1086,39 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
   </div>
 </div>
 
+<!-- ============ COACH FINANCEIRO IA ============ -->
+<div class="page" id="page-coach">
+  <div class="page-header">
+    <h2>🤖 Coach Financeiro IA</h2>
+    <p>Consultor sério e direto. Faça perguntas sobre seus dados do mês selecionado.</p>
+  </div>
+  <div id="coachChat" style="background:var(--bg2);border:1px solid var(--gold-border);border-radius:var(--radius);padding:12px;min-height:300px;max-height:55vh;overflow-y:auto;font-size:13px;line-height:1.55;margin-bottom:12px"></div>
+  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <button class="coach-suggest" data-q="Faça um diagnóstico geral das minhas finanças deste mês.">📊 Diagnóstico</button>
+    <button class="coach-suggest" data-q="Onde estou gastando demais? Liste as 3 categorias mais críticas.">🔍 Gastos críticos</button>
+    <button class="coach-suggest" data-q="Qual minha taxa de poupança e como melhorar?">💰 Taxa poupança</button>
+    <button class="coach-suggest" data-q="Tenho folga para um gasto extra de R$ 500 este mês?">💸 Posso gastar?</button>
+  </div>
+  <div style="display:flex;gap:8px">
+    <input id="coachInput" placeholder="Pergunte algo sobre suas finanças..." style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--gold-border);background:var(--bg3);color:var(--txt);font-size:14px"/>
+    <button id="coachSend" style="padding:10px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1508;font-weight:700;cursor:pointer">Enviar</button>
+  </div>
+  <style>
+    .coach-suggest{padding:7px 11px;border-radius:18px;border:1px solid var(--gold-border);background:var(--bg3);color:var(--gold2);font-size:11.5px;cursor:pointer;transition:all .15s}
+    .coach-suggest:hover{background:var(--gold-dim);border-color:var(--gold)}
+    #coachChat .msg-u{background:linear-gradient(135deg,var(--gold-dim),rgba(201,168,76,.12));border:1px solid var(--gold-border);color:var(--txt);margin:8px 0 8px auto;padding:9px 13px;border-radius:14px 14px 4px 14px;max-width:85%;width:fit-content}
+    #coachChat .msg-c{background:var(--bg3);border:1px solid var(--brd);color:var(--txt);margin:8px auto 8px 0;padding:10px 14px;border-radius:14px 14px 14px 4px;max-width:90%;width:fit-content}
+    #coachChat .msg-c strong{color:var(--gold2)}
+    #coachChat .empty{color:var(--txt3);text-align:center;padding:30px 10px;font-size:12.5px;line-height:1.6}
+  </style>
+</div>
+
+<!-- ============ CONFIGURAÇÕES ============ -->
 <div class="page" id="page-config">
+  <div class="page-header">
+    <h2>⚙️ Configurações</h2>
+    <p>Relatórios, recorrência, alertas, backup e segurança.</p>
+  </div>
 
   <!-- RELATÓRIOS -->
   <div class="cfg-section">
@@ -3582,6 +3616,103 @@ window.fecharInfoScore = function(){ const el=document.querySelector('.score-inf
 // ============ BOOT ============
 buildMesSelect();
 setTimeout(verificarNotificacoes, 2000);
+</script>
+<script>
+/* ============ COACH FINANCEIRO IA ============ */
+(function(){
+  const COACH_URL = 'https://swsjjhrjvighppzmetyd.supabase.co/functions/v1/coach-financeiro';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3c2pqaHJqdmlnaHBwem1ldHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTIwMjAsImV4cCI6MjA5MzQ4ODAyMH0.E4lWM02gjlOtMD6HLkqusIhkLJavWC4AfZCthUD2LyY';
+  const historico = [];
+
+  function chat(){ return document.getElementById('coachChat'); }
+
+  function renderEmpty(){
+    chat().innerHTML = '<div class="empty">💼 <strong style="color:var(--gold2)">Consultor financeiro pronto.</strong><br>Pergunte sobre o mês <strong style="color:var(--gold2)">'+ (window.mesSelecionado||'') +'</strong> ou clique numa sugestão acima.</div>';
+  }
+
+  function addMsg(tipo, texto){
+    const c = chat();
+    if(c.querySelector('.empty')) c.innerHTML='';
+    const div = document.createElement('div');
+    div.className = tipo==='user' ? 'msg-u' : 'msg-c';
+    div.innerHTML = texto;
+    c.appendChild(div);
+    c.scrollTop = c.scrollHeight;
+    return div;
+  }
+
+  function coletarDados(){
+    try {
+      const mes = window.mesSelecionado;
+      const dadosMes = (typeof window.getDados === 'function') ? window.getDados() : null;
+      const all = window.allData || {};
+      // Lista os últimos 6 meses para contexto histórico
+      const meses = Object.keys(all.meses||{}).sort().slice(-6).reduce((acc,k)=>{
+        const m = all.meses[k];
+        const totReceitas = Object.values(m.receitas||{}).reduce((s,v)=>s+(+v||0),0);
+        const totDespesas = (m.despesas||[]).reduce((s,d)=>s+(+d.valor||0),0);
+        acc[k] = { totReceitas, totDespesas, saldo: totReceitas-totDespesas };
+        return acc;
+      },{});
+      return {
+        mes_atual: mes,
+        dados_mes_atual: dadosMes,
+        metas: all.metas || [],
+        historico_6_meses: meses
+      };
+    } catch(e){
+      return { erro: 'Falha ao coletar dados: '+e.message };
+    }
+  }
+
+  async function enviar(perguntaCustom){
+    const input = document.getElementById('coachInput');
+    const pergunta = perguntaCustom || input.value.trim();
+    if (!pergunta) return;
+    if (!perguntaCustom) input.value = '';
+    addMsg('user', pergunta.replace(/</g,'&lt;'));
+    const loader = addMsg('coach', '<em style="opacity:.6">Analisando seus dados...</em>');
+
+    try {
+      const r = await fetch(COACH_URL, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':'Bearer '+ANON_KEY,
+          'apikey': ANON_KEY
+        },
+        body: JSON.stringify({ pergunta, dados: coletarDados(), historico })
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || ('HTTP '+r.status));
+      const txt = j.resposta
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/^[\-\*] (.+)$/gm,'• $1')
+        .replace(/\n/g,'<br>');
+      loader.innerHTML = txt;
+      historico.push({role:'user',content:pergunta},{role:'assistant',content:j.resposta});
+      if (historico.length > 20) historico.splice(0, historico.length-20);
+    } catch(e){
+      loader.innerHTML = '⚠️ '+e.message;
+    }
+  }
+
+  document.addEventListener('click', e => {
+    if (e.target.id === 'coachSend') enviar();
+    else if (e.target.classList && e.target.classList.contains('coach-suggest')) enviar(e.target.dataset.q);
+  });
+  document.addEventListener('keypress', e => {
+    if (e.target.id === 'coachInput' && e.key === 'Enter') enviar();
+  });
+
+  // Renderiza tela vazia ao abrir a aba pela primeira vez
+  const origShowTab = window.showTab;
+  window.showTab = function(name){
+    if (typeof origShowTab === 'function') origShowTab(name);
+    if (name === 'coach' && chat() && !chat().innerHTML.trim()) renderEmpty();
+  };
+})();
 </script>
 </body>
 </html>
