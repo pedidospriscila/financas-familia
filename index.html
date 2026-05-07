@@ -1402,6 +1402,12 @@ function getMes(mes){
 }
 const getDados = () => getMes(mesSelecionado);
 
+// Expor para o Coach IA (script clássico fora deste módulo)
+window.getDados = getDados;
+window.getMes = getMes;
+Object.defineProperty(window, 'mesSelecionado', { get: () => mesSelecionado, configurable: true });
+Object.defineProperty(window, 'allData',        { get: () => allData,        configurable: true });
+
 function totalReceitas(){ const r=getDados().receitas; return num(r.salarioBruno)+num(r.salarioPriscila)+num(r.rendaExtraBruno)+num(r.rendaExtraPriscila)+num(r.decimoTerceiro); }
 function totalCustoPrev(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto),0); }
 function totalCustoReal(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoReal||0),0); }
@@ -3643,22 +3649,68 @@ setTimeout(verificarNotificacoes, 2000);
 
   function coletarDados(){
     try {
+      const n = v => +v || 0;
       const mes = window.mesSelecionado;
-      const dadosMes = (typeof window.getDados === 'function') ? window.getDados() : null;
       const all = window.allData || {};
-      // Lista os últimos 6 meses para contexto histórico
-      const meses = Object.keys(all.meses||{}).sort().slice(-6).reduce((acc,k)=>{
-        const m = all.meses[k];
-        const totReceitas = Object.values(m.receitas||{}).reduce((s,v)=>s+(+v||0),0);
-        const totDespesas = (m.despesas||[]).reduce((s,d)=>s+(+d.valor||0),0);
-        acc[k] = { totReceitas, totDespesas, saldo: totReceitas-totDespesas };
+      const dadosMes = (typeof window.getDados === 'function') ? window.getDados() : null;
+
+      // Totais do mês selecionado (mesma fórmula usada nas telas Resumo/Painel)
+      let resumoMes = null;
+      if (dadosMes) {
+        const r = dadosMes.receitas || {};
+        const totReceitas = n(r.salarioBruno)+n(r.salarioPriscila)+n(r.rendaExtraBruno)+n(r.rendaExtraPriscila)+n(r.decimoTerceiro);
+        const valeAlim = n(r.valeAlim);
+        const desp = dadosMes.despesas || [];
+        const totDespesasPrev = desp.reduce((s,d)=>s+n(d.custoPrevisto),0);
+        const totDespesasReal = desp.reduce((s,d)=>s+n(d.custoReal),0);
+        const totInvest = (dadosMes.investimentos||[]).reduce((s,i)=>s+n(i.valor),0);
+        const despesasPagas = desp.filter(d=>d.pago).length;
+        const despesasPendentes = desp.filter(d=>!d.pago);
+        const topGastos = [...desp].sort((a,b)=>n(b.custoReal||b.custoPrevisto)-n(a.custoReal||a.custoPrevisto)).slice(0,5)
+          .map(d=>({nome:d.nome, categoria:d.categoria||null, previsto:n(d.custoPrevisto), real:n(d.custoReal), pago:!!d.pago}));
+        resumoMes = {
+          receitas_detalhe: {
+            salario_bruno: n(r.salarioBruno), salario_priscila: n(r.salarioPriscila),
+            renda_extra_bruno: n(r.rendaExtraBruno), renda_extra_priscila: n(r.rendaExtraPriscila),
+            decimo_terceiro: n(r.decimoTerceiro), vale_alimentacao: valeAlim
+          },
+          total_receitas: totReceitas,
+          total_despesas_previsto: totDespesasPrev,
+          total_despesas_real: totDespesasReal,
+          total_investimentos: totInvest,
+          saldo_previsto: totReceitas - totDespesasPrev - totInvest,
+          saldo_real: totReceitas - totDespesasReal - totInvest,
+          taxa_poupanca_pct: totReceitas>0 ? +(((totInvest)/totReceitas)*100).toFixed(1) : 0,
+          qtd_despesas: desp.length,
+          despesas_pagas: despesasPagas,
+          despesas_pendentes: despesasPendentes.map(d=>({nome:d.nome, valor:n(d.custoPrevisto)})),
+          top_5_gastos: topGastos
+        };
+      }
+
+      // Histórico dos últimos 6 meses
+      const historico6 = Object.keys(all.meses||{}).sort().slice(-6).reduce((acc,k)=>{
+        const m = all.meses[k]; if(!m) return acc;
+        const r = m.receitas||{};
+        const totR = n(r.salarioBruno)+n(r.salarioPriscila)+n(r.rendaExtraBruno)+n(r.rendaExtraPriscila)+n(r.decimoTerceiro);
+        const totD = (m.despesas||[]).reduce((s,d)=>s+n(d.custoReal||d.custoPrevisto),0);
+        const totI = (m.investimentos||[]).reduce((s,i)=>s+n(i.valor),0);
+        acc[k] = { receitas: totR, despesas: totD, investimentos: totI, saldo: totR-totD-totI };
         return acc;
       },{});
+
+      // Metas/aquisições
+      const aquisicoes = (all.aquisicoes||[]).map(a=>({
+        nome:a.nome, valor:n(a.valor), prioridade:a.prio||null, comprado:!!a.comprado
+      }));
+      const metasPendentesTotal = aquisicoes.filter(a=>!a.comprado).reduce((s,a)=>s+a.valor,0);
+
       return {
         mes_atual: mes,
-        dados_mes_atual: dadosMes,
-        metas: all.metas || [],
-        historico_6_meses: meses
+        resumo_mes_atual: resumoMes,
+        historico_6_meses: historico6,
+        aquisicoes_metas: aquisicoes,
+        total_metas_pendentes: metasPendentesTotal
       };
     } catch(e){
       return { erro: 'Falha ao coletar dados: '+e.message };
@@ -3681,7 +3733,11 @@ setTimeout(verificarNotificacoes, 2000);
           'Authorization':'Bearer '+ANON_KEY,
           'apikey': ANON_KEY
         },
-        body: JSON.stringify({ pergunta, dados: coletarDados(), historico })
+        body: (() => {
+          const dados = coletarDados();
+          console.log('[Coach IA] Enviando dados:', dados);
+          return JSON.stringify({ pergunta, dados, historico });
+        })()
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || ('HTTP '+r.status));
