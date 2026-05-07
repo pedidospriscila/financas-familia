@@ -159,6 +159,22 @@ td{padding:.6rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:
   .tbl-despesas .tfoot-row td[colspan="2"]{font-family:'Playfair Display',serif;color:var(--gold2);font-size:14px;justify-content:center;border-bottom:1px solid var(--gold-border);margin-bottom:.25rem;padding-bottom:.45rem}
   .tbl-despesas .tfoot-row td[data-label=""]:empty{display:none}
 }
+@media(max-width:640px){
+  /* MOBILE: tabela de Investimentos vira cards verticais (sem scroll horizontal) */
+  .table-wrap-investimentos{overflow-x:hidden}
+  .tbl-investimentos{min-width:0;display:block;width:100%}
+  .tbl-investimentos thead{display:none}
+  .tbl-investimentos tbody,.tbl-investimentos tfoot{display:block;width:100%}
+  .tbl-investimentos tr{display:block;background:var(--bg3);border:1px solid var(--bg4);border-left:3px solid var(--gold-border);border-radius:10px;padding:.5rem .75rem;margin-bottom:.6rem;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .tbl-investimentos td{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.35rem 0;border-bottom:1px dashed rgba(255,255,255,.05);text-align:right!important;font-size:13px;white-space:normal}
+  .tbl-investimentos td:last-child{border-bottom:none}
+  .tbl-investimentos td[data-label]:not([data-label=""])::before{content:attr(data-label);color:var(--txt3);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;flex-shrink:0;text-align:left}
+  .tbl-investimentos td[data-label="Nome"]{font-size:14px;font-weight:600;color:var(--gold2);font-family:'Playfair Display',serif;border-bottom:1px solid var(--gold-border);margin-bottom:.25rem;padding-bottom:.45rem;justify-content:flex-start;text-align:left!important;flex-wrap:wrap}
+  .tbl-investimentos td[data-label="Nome"]::before{display:none}
+  .tbl-investimentos td[data-label="Ações"]{justify-content:flex-end;flex-wrap:wrap;gap:.35rem;padding-top:.5rem;margin-top:.25rem;border-top:1px dashed rgba(201,168,76,.15)}
+  .tbl-investimentos td[data-label="Ações"]::before{display:none}
+  .tbl-investimentos .empty{display:block;text-align:center;color:var(--txt3);padding:1rem;border-bottom:none}
+}
 
 /* METAS */
 .aq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem}
@@ -921,8 +937,8 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
 
   <div class="section">
     <div class="section-title">Carteira do Mês</div>
-    <div class="table-wrap">
-      <table>
+    <div class="table-wrap table-wrap-investimentos">
+      <table class="tbl-investimentos">
         <thead><tr><th>Nome</th><th>Tipo</th><th>Observação</th><th style="text-align:right">Valor</th><th style="text-align:center">Ações</th></tr></thead>
         <tbody id="investimentosBody"></tbody>
       </table>
@@ -1943,11 +1959,11 @@ function renderInvestimentos(){
   const tipoLabel={banco:'🏦 Outro banco',poupanca:'📊 Cotas',aplicacao:'📈 Aplicação'};
   body.innerHTML=[...lista].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(i=>`
     <tr class="tr-hover">
-      <td>${esc(i.nome)}</td>
-      <td><span class="inv-tag ${i.tipo||'banco'}">${tipoLabel[i.tipo||'banco']}</span></td>
-      <td style="color:var(--txt2)">${i.obs?esc(i.obs):'—'}</td>
-      <td style="text-align:right;font-family:'Playfair Display',serif;font-weight:700;color:var(--gold2)">${fmt(i.valor)}</td>
-      <td style="text-align:center;white-space:nowrap">
+      <td data-label="Nome">${esc(i.nome)}</td>
+      <td data-label="Tipo"><span class="inv-tag ${i.tipo||'banco'}">${tipoLabel[i.tipo||'banco']}</span></td>
+      <td data-label="Observação" style="color:var(--txt2)">${i.obs?esc(i.obs):'—'}</td>
+      <td data-label="Valor" style="text-align:right;font-family:'Playfair Display',serif;font-weight:700;color:var(--gold2)">${fmt(i.valor)}</td>
+      <td data-label="Ações" style="text-align:center;white-space:nowrap">
         <button onclick="editarInvestimento('${i.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar">✏</button>
         <button onclick="removerInvestimento('${i.id}')" class="btn-del">✕</button>
       </td>
