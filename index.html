@@ -3654,8 +3654,10 @@ setTimeout(verificarNotificacoes, 2000);
       const all = window.allData || {};
       const dadosMes = (typeof window.getDados === 'function') ? window.getDados() : null;
 
-      // Totais do mês selecionado (mesma fórmula usada nas telas Resumo/Painel)
+      // ===== Mês atual =====
       let resumoMes = null;
+      let estourosCategoria = [];
+      let sobrasCategoria = [];
       if (dadosMes) {
         const r = dadosMes.receitas || {};
         const totReceitas = n(r.salarioBruno)+n(r.salarioPriscila)+n(r.rendaExtraBruno)+n(r.rendaExtraPriscila)+n(r.decimoTerceiro);
@@ -3668,6 +3670,27 @@ setTimeout(verificarNotificacoes, 2000);
         const despesasPendentes = desp.filter(d=>!d.pago);
         const topGastos = [...desp].sort((a,b)=>n(b.custoReal||b.custoPrevisto)-n(a.custoReal||a.custoPrevisto)).slice(0,5)
           .map(d=>({nome:d.nome, categoria:d.categoria||null, previsto:n(d.custoPrevisto), real:n(d.custoReal), pago:!!d.pago}));
+
+        // Agrupar por categoria - estouros e sobras
+        const porCat = {};
+        desp.forEach(d=>{
+          const cat = d.categoria || 'Sem categoria';
+          if(!porCat[cat]) porCat[cat] = {previsto:0, real:0, itens:0};
+          porCat[cat].previsto += n(d.custoPrevisto);
+          porCat[cat].real += n(d.custoReal);
+          porCat[cat].itens++;
+        });
+        Object.entries(porCat).forEach(([cat,v])=>{
+          const diff = v.real - v.previsto;
+          const pct = v.previsto>0 ? +((diff/v.previsto)*100).toFixed(1) : 0;
+          const peso_pct = totDespesasReal>0 ? +((v.real/totDespesasReal)*100).toFixed(1) : 0;
+          const item = {categoria:cat, previsto:v.previsto, real:v.real, diferenca:diff, variacao_pct:pct, peso_no_total_pct:peso_pct, qtd_itens:v.itens};
+          if(diff>0 && v.previsto>0) estourosCategoria.push(item);
+          else if(diff<0 && v.previsto>0) sobrasCategoria.push(item);
+        });
+        estourosCategoria.sort((a,b)=>b.diferenca-a.diferenca);
+        sobrasCategoria.sort((a,b)=>a.diferenca-b.diferenca);
+
         resumoMes = {
           receitas_detalhe: {
             salario_bruno: n(r.salarioBruno), salario_priscila: n(r.salarioPriscila),
@@ -3680,37 +3703,111 @@ setTimeout(verificarNotificacoes, 2000);
           total_investimentos: totInvest,
           saldo_previsto: totReceitas - totDespesasPrev - totInvest,
           saldo_real: totReceitas - totDespesasReal - totInvest,
-          taxa_poupanca_pct: totReceitas>0 ? +(((totInvest)/totReceitas)*100).toFixed(1) : 0,
           qtd_despesas: desp.length,
           despesas_pagas: despesasPagas,
           despesas_pendentes: despesasPendentes.map(d=>({nome:d.nome, valor:n(d.custoPrevisto)})),
-          top_5_gastos: topGastos
+          top_5_gastos: topGastos,
+          estouros_por_categoria: estourosCategoria,
+          sobras_por_categoria: sobrasCategoria
         };
       }
 
-      // Histórico dos últimos 6 meses
-      const historico6 = Object.keys(all.meses||{}).sort().slice(-6).reduce((acc,k)=>{
-        const m = all.meses[k]; if(!m) return acc;
+      // ===== Histórico últimos 6 meses =====
+      const chavesHist = Object.keys(all.meses||{}).sort().slice(-6);
+      const historico6 = {};
+      chavesHist.forEach(k=>{
+        const m = all.meses[k]; if(!m) return;
         const r = m.receitas||{};
         const totR = n(r.salarioBruno)+n(r.salarioPriscila)+n(r.rendaExtraBruno)+n(r.rendaExtraPriscila)+n(r.decimoTerceiro);
         const totD = (m.despesas||[]).reduce((s,d)=>s+n(d.custoReal||d.custoPrevisto),0);
+        const totDPrev = (m.despesas||[]).reduce((s,d)=>s+n(d.custoPrevisto),0);
         const totI = (m.investimentos||[]).reduce((s,i)=>s+n(i.valor),0);
-        acc[k] = { receitas: totR, despesas: totD, investimentos: totI, saldo: totR-totD-totI };
-        return acc;
-      },{});
+        historico6[k] = {
+          receitas: totR, despesas: totD, despesas_previsto: totDPrev,
+          investimentos: totI, saldo: totR-totD-totI,
+          estourou_orcamento: totD > totDPrev
+        };
+      });
 
-      // Metas/aquisições
+      // ===== Tendências por categoria (últimos 6 meses) =====
+      const catHistorico = {};
+      chavesHist.forEach(k=>{
+        const m = all.meses[k]; if(!m) return;
+        (m.despesas||[]).forEach(d=>{
+          const cat = d.categoria || 'Sem categoria';
+          if(!catHistorico[cat]) catHistorico[cat] = {};
+          catHistorico[cat][k] = (catHistorico[cat][k]||0) + n(d.custoReal||d.custoPrevisto);
+        });
+      });
+      const tendenciasCategoria = Object.entries(catHistorico).map(([cat, meses])=>{
+        const valores = chavesHist.map(k=>meses[k]||0);
+        const media = valores.reduce((s,v)=>s+v,0)/(valores.length||1);
+        const ultimo = valores[valores.length-1]||0;
+        const var_vs_media = media>0 ? +(((ultimo-media)/media)*100).toFixed(1) : 0;
+        // meses consecutivos acima da média (no fim da série)
+        let consecAcima = 0;
+        for(let i=valores.length-1;i>=0;i--){ if(valores[i]>media) consecAcima++; else break; }
+        return {categoria:cat, serie:valores, media:+media.toFixed(2), ultimo, variacao_vs_media_pct:var_vs_media, meses_consecutivos_acima_media:consecAcima};
+      }).sort((a,b)=>Math.abs(b.variacao_vs_media_pct)-Math.abs(a.variacao_vs_media_pct));
+
+      // ===== Estatísticas do histórico =====
+      const valoresSaldo = Object.values(historico6).map(m=>m.saldo);
+      const valoresDesp = Object.values(historico6).map(m=>m.despesas);
+      const valoresRec = Object.values(historico6).map(m=>m.receitas);
+      const mediaDesp = valoresDesp.length ? valoresDesp.reduce((s,v)=>s+v,0)/valoresDesp.length : 0;
+      const mediaRec = valoresRec.length ? valoresRec.reduce((s,v)=>s+v,0)/valoresRec.length : 0;
+      const mesesEstouro = Object.entries(historico6).filter(([,m])=>m.estourou_orcamento).map(([k])=>k);
+      let melhorMes=null, piorMes=null;
+      Object.entries(historico6).forEach(([k,m])=>{
+        if(!melhorMes || m.saldo>melhorMes.saldo) melhorMes={mes:k, saldo:m.saldo};
+        if(!piorMes || m.saldo<piorMes.saldo) piorMes={mes:k, saldo:m.saldo};
+      });
+
+      // ===== Recorrência de despesas (aparece em quantos meses) =====
+      const recorrencia = {};
+      chavesHist.forEach(k=>{
+        const m = all.meses[k]; if(!m) return;
+        const nomes = new Set((m.despesas||[]).map(d=>(d.nome||'').toLowerCase().trim()).filter(Boolean));
+        nomes.forEach(nome=>{ recorrencia[nome] = (recorrencia[nome]||0)+1; });
+      });
+      const totMeses = chavesHist.length||1;
+      const despesasRecorrentes = Object.entries(recorrencia)
+        .filter(([,c])=>c>=Math.max(2, Math.ceil(totMeses*0.5)))
+        .map(([nome,c])=>({nome, meses_presente:c, de_meses:totMeses}))
+        .sort((a,b)=>b.meses_presente-a.meses_presente).slice(0,15);
+
+      // ===== Aquisições / Metas =====
       const aquisicoes = (all.aquisicoes||[]).map(a=>({
         nome:a.nome, valor:n(a.valor), prioridade:a.prio||null, comprado:!!a.comprado
       }));
-      const metasPendentesTotal = aquisicoes.filter(a=>!a.comprado).reduce((s,a)=>s+a.valor,0);
+      const aquisicoesPendentes = aquisicoes.filter(a=>!a.comprado);
+      const metasPendentesTotal = aquisicoesPendentes.reduce((s,a)=>s+a.valor,0);
+      const saldoMedio = valoresSaldo.length ? valoresSaldo.reduce((s,v)=>s+v,0)/valoresSaldo.length : 0;
+
+      // Viabilidade: meses estimados pra cada aquisição (com base em saldo médio)
+      const viabilidadeAquisicoes = aquisicoesPendentes.map(a=>({
+        nome:a.nome, valor:a.valor, prioridade:a.prioridade,
+        meses_para_comprar: saldoMedio>0 ? Math.ceil(a.valor/saldoMedio) : null,
+        cabe_no_saldo_medio_mensal: saldoMedio >= a.valor
+      }));
 
       return {
         mes_atual: mes,
         resumo_mes_atual: resumoMes,
         historico_6_meses: historico6,
+        estatisticas_historico: {
+          media_receitas: +mediaRec.toFixed(2),
+          media_despesas: +mediaDesp.toFixed(2),
+          media_saldo: +saldoMedio.toFixed(2),
+          meses_que_estouraram_orcamento: mesesEstouro,
+          melhor_mes: melhorMes,
+          pior_mes: piorMes
+        },
+        tendencias_por_categoria: tendenciasCategoria,
+        despesas_recorrentes: despesasRecorrentes,
         aquisicoes_metas: aquisicoes,
-        total_metas_pendentes: metasPendentesTotal
+        total_metas_pendentes: metasPendentesTotal,
+        viabilidade_aquisicoes: viabilidadeAquisicoes
       };
     } catch(e){
       return { erro: 'Falha ao coletar dados: '+e.message };
