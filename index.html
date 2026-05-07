@@ -826,6 +826,17 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
     <div class="busca-wrap">
       <input class="busca-input" id="buscaDespesa" type="text" placeholder="🔍 Buscar despesa...">
     </div>
+    <div class="busca-wrap" style="flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">
+      <span style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;align-self:center;margin-right:.25rem">Ordenar:</span>
+      <button class="btn-filtro ord-desp active" data-ord="nome-asc" onclick="setOrdDesp('nome-asc',this)">Nome A→Z</button>
+      <button class="btn-filtro ord-desp" data-ord="nome-desc" onclick="setOrdDesp('nome-desc',this)">Nome Z→A</button>
+      <button class="btn-filtro ord-desp" data-ord="venc-asc" onclick="setOrdDesp('venc-asc',this)">📅 Vencimento</button>
+      <button class="btn-filtro ord-desp" data-ord="prev-desc" onclick="setOrdDesp('prev-desc',this)">💰 Maior previsto</button>
+      <button class="btn-filtro ord-desp" data-ord="prev-asc" onclick="setOrdDesp('prev-asc',this)">Menor previsto</button>
+      <button class="btn-filtro ord-desp" data-ord="real-desc" onclick="setOrdDesp('real-desc',this)">Maior real</button>
+      <button class="btn-filtro ord-desp" data-ord="status-pend" onclick="setOrdDesp('status-pend',this)">⏳ Pendentes 1º</button>
+      <button class="btn-filtro ord-desp" data-ord="status-pago" onclick="setOrdDesp('status-pago',this)">✓ Pagos 1º</button>
+    </div>
      <div class="table-wrap table-wrap-despesas">
        <table class="tbl-despesas">
          <thead><tr>
@@ -1738,7 +1749,23 @@ function renderDespesas(){
     ['ft_previsto','ft_real'].forEach(id=>setText(id,'R$ 0,00')); setText('ft_dif','—');
     return;
   }
-  const sorted=[...filtrado].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
+  const ord = window.ordDespesa || 'nome-asc';
+  const cmpNome = (a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'});
+  const sorted=[...filtrado].sort((a,b)=>{
+    switch(ord){
+      case 'nome-desc': return cmpNome(b,a);
+      case 'venc-asc': {
+        const va=a.vencimento?parseInt(a.vencimento):99, vb=b.vencimento?parseInt(b.vencimento):99;
+        return va-vb || cmpNome(a,b);
+      }
+      case 'prev-desc': return num(b.custoPrevisto)-num(a.custoPrevisto) || cmpNome(a,b);
+      case 'prev-asc':  return num(a.custoPrevisto)-num(b.custoPrevisto) || cmpNome(a,b);
+      case 'real-desc': return num(b.custoReal||0)-num(a.custoReal||0) || cmpNome(a,b);
+      case 'status-pend': return (a.pago?1:0)-(b.pago?1:0) || cmpNome(a,b);
+      case 'status-pago': return (b.pago?1:0)-(a.pago?1:0) || cmpNome(a,b);
+      default: return cmpNome(a,b);
+    }
+  });
   tb.innerHTML=sorted.map(d=>{
     const pr=num(d.custoPrevisto),re=num(d.custoReal||0);
     const dif=re>0?(pr-re):null;
@@ -1780,6 +1807,14 @@ window.setFiltroAq = (f,btn) => {
   document.querySelectorAll('.btn-filtro').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderAquisicoes();
+};
+
+window.ordDespesa = 'nome-asc';
+window.setOrdDesp = (ord, btn) => {
+  window.ordDespesa = ord;
+  document.querySelectorAll('.btn-filtro.ord-desp').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderDespesas();
 };
 
 function renderAquisicoes(){
