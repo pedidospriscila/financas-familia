@@ -1456,23 +1456,15 @@ function getInvDoMes(md,ativoId){ return (md.investimentos||[]).find(x=>x.ativoI
 // Roda silenciosamente; só marca "changed" se realmente criou entradas novas.
 function autoPreencherCarteiraMes(mes){
   if(!Array.isArray(allData.carteira)||!allData.carteira.length) return false;
-  if(!allData.meses||!allData.meses[mes]) return false;
-  const md=allData.meses[mes];
+  const md=getMes(mes);
   if(!Array.isArray(md.investimentos)) md.investimentos=[];
-  // procura o mês anterior mais próximo (até 24 meses pra trás) com algum investimento lançado
-  let ant=null, cursor=mes;
-  for(let i=0;i<24;i++){
-    cursor=mesAnterior(cursor);
-    const c=allData.meses&&allData.meses[cursor];
-    if(c && Array.isArray(c.investimentos) && c.investimentos.some(x=>num(x.valor)>0)){ ant=c; break; }
-  }
-  if(!ant) return false;
   let changed=false;
   allData.carteira.filter(a=>a.ativo!==false).forEach(a=>{
-    if(md.investimentos.find(x=>x.ativoId===a.id)) return;
-    const prev=ant.investimentos.find(x=>x.ativoId===a.id);
-    if(!prev || num(prev.valor)<=0) return;
-    md.investimentos.push({id:uid(),ativoId:a.id,nome:a.nome,tipo:a.tipo,obs:a.obs||'',valor:num(prev.valor),aporte:0,herdado:true});
+    const inv=md.investimentos.find(x=>x.ativoId===a.id);
+    const valorAnt=valorAtivoAntesMes(a.id,mes);
+    if(inv){ if(sincronizarInvHerdado(inv,valorAnt)) changed=true; return; }
+    if(valorAnt<=0) return;
+    md.investimentos.push({id:uid(),ativoId:a.id,nome:a.nome,tipo:a.tipo,obs:a.obs||'',valor:valorAnt,aporte:0,herdado:true,valorManual:false});
     changed=true;
   });
   return changed;
@@ -1501,11 +1493,55 @@ Object.defineProperty(window, 'allData',        { get: () => allData,        con
 function totalReceitas(){ const r=getDados().receitas; return num(r.salarioBruno)+num(r.salarioPriscila)+num(r.rendaExtraBruno)+num(r.rendaExtraPriscila)+num(r.decimoTerceiro); }
 function totalCustoPrev(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto),0); }
 function totalCustoReal(){ return (getDados().despesas||[]).reduce((s,d)=>s+num(d.custoReal||0),0); }
-function totalInvestimentos(){ return (getDados().investimentos||[]).reduce((s,i)=>s+num(i.valor),0); }
+function totalInvestimentos(){
+  if(Array.isArray(allData.carteira)&&allData.carteira.length){
+    return allData.carteira.filter(a=>a.ativo!==false).reduce((s,a)=>s+valorAtivoAteMes(a.id,mesSelecionado),0);
+  }
+  return (getDados().investimentos||[]).reduce((s,i)=>s+num(i.valor),0);
+}
 function saldoPrev(){ return totalReceitas()-totalCustoPrev(); }
 function saldoReal(){ return totalReceitas()-totalCustoReal(); }
 
 function mesAnterior(ym){ let [y,m]=ym.split('-').map(Number); m--; if(m<1){m=12;y--;} return y+'-'+(m<10?'0':'')+m; }
+function mesSeguinte(ym){ let [y,m]=ym.split('-').map(Number); m++; if(m>12){m=1;y++;} return y+'-'+(m<10?'0':'')+m; }
+function valorEfetivoInv(inv, valorAnt=0){
+  if(!inv) return num(valorAnt);
+  const aporte=num(inv.aporte);
+  if(inv.valor==null || inv.valor==='') return num(valorAnt)+aporte;
+  const valor=num(inv.valor);
+  // Compatibilidade com lançamentos herdados antigos, onde o valor salvo era só o mês anterior.
+  if(inv.herdado && aporte>0 && Math.abs(valor-num(valorAnt))<0.005) return num(valorAnt)+aporte;
+  return valor;
+}
+function valorAtivoAteMes(ativoId, mes, limite=240){
+  if(!ativoId || !mes || limite<=0) return 0;
+  const valorAnt=valorAtivoAteMes(ativoId,mesAnterior(mes),limite-1);
+  const md=allData.meses&&allData.meses[mes];
+  const inv=md&&Array.isArray(md.investimentos)?md.investimentos.find(x=>x.ativoId===ativoId):null;
+  return inv?valorEfetivoInv(inv,valorAnt):valorAnt;
+}
+function valorAtivoAntesMes(ativoId, mes){ return valorAtivoAteMes(ativoId,mesAnterior(mes)); }
+function sincronizarInvHerdado(inv, valorAnt){
+  if(!inv || inv.herdado===false || inv.valorManual===true) return false;
+  const novo=num(valorAnt)+num(inv.aporte);
+  const mudou=inv.valor==null || inv.valor==='' || Math.abs(num(inv.valor)-novo)>0.005 || inv.herdado!==true || inv.valorManual!==false;
+  inv.valor=novo;
+  inv.herdado=true;
+  inv.valorManual=false;
+  return mudou;
+}
+function propagarInvestimentoFuturo(ativoId, mesBase){
+  let changed=false;
+  let cursor=mesBase;
+  for(let i=0;i<240;i++){
+    cursor=mesSeguinte(cursor);
+    const md=allData.meses&&allData.meses[cursor];
+    if(!md || !Array.isArray(md.investimentos)) continue;
+    const inv=md.investimentos.find(x=>x.ativoId===ativoId);
+    if(inv && sincronizarInvHerdado(inv,valorAtivoAntesMes(ativoId,cursor))) changed=true;
+  }
+  return changed;
+}
 
 // ============ SAVE ============
 function saveData(){
@@ -1913,8 +1949,20 @@ function somaMes(md,tipo){
   if(tipo==='receitas') return ['salarioBruno','salarioPriscila','rendaExtraBruno','rendaExtraPriscila','decimoTerceiro'].reduce((s,k)=>s+num((md.receitas||{})[k]),0);
   if(tipo==='real') return (md.despesas||[]).reduce((s,d)=>s+num(d.custoReal||0),0);
   if(tipo==='previsto') return (md.despesas||[]).reduce((s,d)=>s+num(d.custoPrevisto||0),0);
-  if(tipo==='investimentos') return (md.investimentos||[]).reduce((s,i)=>s+num(i.valor),0);
+  if(tipo==='investimentos') return totalInvestimentosMes(chaveMesPorDados(md),md);
   return 0;
+}
+function chaveMesPorDados(md){
+  const item=Object.entries(allData.meses||{}).find(([,dados])=>dados===md);
+  return item?item[0]:null;
+}
+function totalInvestimentosMes(mes,md){
+  const dados=md||(mes?allData.meses&&allData.meses[mes]:null);
+  if(!dados) return 0;
+  if(mes && Array.isArray(allData.carteira)&&allData.carteira.length){
+    return allData.carteira.filter(a=>a.ativo!==false).reduce((s,a)=>s+valorAtivoAteMes(a.id,mes),0);
+  }
+  return (dados.investimentos||[]).reduce((s,i)=>s+num(i.valor),0);
 }
 function mesOffset(ym,off){
   let [y,m]=ym.split('-').map(Number); m+=off;
@@ -2014,10 +2062,10 @@ function renderPlanoMensalInteligente(plano){
 
 function renderPatrimonioInteligente(){
   const atual=getDados();
-  const invest=somaMes(atual,'investimentos');
+  const invest=totalInvestimentos();
   const saldoMes=saldoReal();
   const patrimonio=invest+Math.max(0,saldoMes);
-  const invAnt=somaMes(allData.meses&&allData.meses[mesAnterior(mesSelecionado)],'investimentos');
+  const invAnt=Array.isArray(allData.carteira)?allData.carteira.filter(a=>a.ativo!==false).reduce((s,a)=>s+valorAtivoAntesMes(a.id,mesSelecionado),0):somaMes(allData.meses&&allData.meses[mesAnterior(mesSelecionado)],'investimentos');
   const crescimento=invest-invAnt;
   const metasPend=(allData.aquisicoes||[]).filter(a=>!a.comprado).reduce((s,a)=>s+num(a.valor),0);
   const gastoMedio=mediaHistorica('real',3)||totalCustoPrev();
@@ -2048,15 +2096,13 @@ function renderInvestimentos(){
   const body=document.getElementById('investimentosBody');
   if(!Array.isArray(allData.carteira)) allData.carteira=[];
   const md=getDados();
-  const mdAnt=allData.meses&&allData.meses[mesAnterior(mesSelecionado)];
   const ativos=(allData.carteira||[]).filter(a=>a.ativo!==false);
 
   // Totais usam valor atual de cada ativo (entrada do mês ou último valor conhecido = mês anterior)
+  // Se o ativo está "herdado" (usuário ainda não atualizou o valor atual), o aporte do mês soma ao valor herdado.
   const valorAtualDe = a => {
     const inv=getInvDoMes(md,a.id);
-    if(inv && inv.valor!=null && inv.valor!=='') return num(inv.valor);
-    const prev=mdAnt?getInvDoMes(mdAnt,a.id):null;
-    return prev?num(prev.valor):0;
+    return inv ? valorEfetivoInv(inv,valorAtivoAntesMes(a.id,mesSelecionado)) : valorAtivoAntesMes(a.id,mesSelecionado);
   };
   const total=ativos.reduce((s,a)=>s+valorAtualDe(a),0);
   const somaTipo=t=>ativos.filter(a=>(a.tipo||'banco')===t).reduce((s,a)=>s+valorAtualDe(a),0);
@@ -2073,12 +2119,22 @@ function renderInvestimentos(){
 
   body.innerHTML=[...ativos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(a=>{
     const inv=getInvDoMes(md,a.id);
-    const prev=mdAnt?getInvDoMes(mdAnt,a.id):null;
-    const valorAnt=prev?num(prev.valor):0;
+    const valorAnt=valorAtivoAntesMes(a.id,mesSelecionado);
     const aporte=inv?num(inv.aporte):0;
-    const valor=inv && inv.valor!=null && inv.valor!==''?num(inv.valor):null;
-    const valorParaRend = valor!=null?valor:valorAnt; // se ainda não atualizou, rendimento = 0
-    const rend = valor!=null ? (valor - valorAnt - aporte) : 0;
+    const herdado=!inv || inv.herdado!==false || inv.valorManual!==true;
+    let valor=inv?valorEfetivoInv(inv,valorAnt):(valorAnt>0?valorAnt:null);
+    let rend;
+    if(valor==null){
+      // ainda não há valor lançado nem herdado: aporte vira o próprio valor atual
+      valor = aporte>0 ? (valorAnt + aporte) : null;
+      rend = 0;
+    } else if(herdado){
+      // valor é o herdado do mês anterior; aporte soma e ainda não há rendimento medido
+      valor = num(valorAnt) + aporte;
+      rend = 0;
+    } else {
+      rend = valor - valorAnt - aporte;
+    }
     const rendCor = rend>0?'var(--em)':rend<0?'var(--danger)':'var(--txt3)';
     const rendTxt = valor==null && !aporte ? '—' : (rend>=0?'+':'')+fmt(rend).replace('R$ ','R$ ');
     return `
@@ -2304,7 +2360,32 @@ document.getElementById('btn_add_meta').addEventListener('click', () => {
 
 window.atualizarInvCampo = (ativoId, campo, valor) => {
   const v = valor===''||valor==null ? null : num(valor);
-  upsertInvMes(ativoId, { [campo]: v==null?0:v });
+  const patch = { [campo]: v==null?0:v };
+  if(campo==='valor'){
+    const valorAnt = valorAtivoAntesMes(ativoId,mesSelecionado);
+    const inv = (getDados().investimentos||[]).find(x=>x.ativoId===ativoId);
+    if(v==null){
+      patch.valor = valorAnt + num(inv&&inv.aporte);
+      patch.herdado = true;
+      patch.valorManual = false;
+    } else {
+      // usuário informou explicitamente o valor atual: deixa de ser recalculado automaticamente
+      patch.herdado = false;
+      patch.valorManual = true;
+    }
+  } else if(campo==='aporte'){
+    // se o valor atual ainda não foi editado manualmente, aporte ajusta o valor atual do mês
+    const md = getDados();
+    const inv = (md.investimentos||[]).find(x=>x.ativoId===ativoId);
+    const valorAnt = valorAtivoAntesMes(ativoId,mesSelecionado);
+    if(!inv || inv.herdado!==false || inv.valorManual!==true || inv.valor==null || inv.valor===''){
+      patch.valor = valorAnt + (v||0);
+      patch.herdado = true;
+      patch.valorManual = false;
+    }
+  }
+  upsertInvMes(ativoId, patch);
+  propagarInvestimentoFuturo(ativoId,mesSelecionado);
   saveData(); renderInvestimentos(); renderPatrimonioInteligente();
 };
 
