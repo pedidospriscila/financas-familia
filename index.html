@@ -936,21 +936,23 @@ body.light .inv-tag.aplicacao{background:#f3e8ff;color:#7e22ce;border-color:#e9d
   </div>
 
   <div class="section">
-    <div class="section-title">Novo Investimento</div>
+    <div class="section-title">Novo Ativo na Carteira</div>
+    <div class="plano-sub" style="margin:-.4rem 0 .6rem">Cadastre o ativo uma única vez. Todo mês ele aparece na carteira pronto para você só atualizar o valor.</div>
     <div class="add-form">
-      <div class="field"><label>Nome *</label><input id="i_nome" type="text" placeholder="Ex: Nubank, Itaú, CDB..."></div>
+      <div class="field"><label>Nome *</label><input id="i_nome" type="text" placeholder="Ex: Nubank, Tesouro IPCA, PETR4..."></div>
       <div class="field"><label>Tipo</label><select id="i_tipo"><option value="banco">🏦 Outro banco</option><option value="poupanca">📊 Cotas</option><option value="aplicacao">📈 Aplicação</option></select></div>
-      <div class="field"><label>Valor *</label><input id="i_valor" type="number" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+      <div class="field"><label>Valor inicial</label><input id="i_valor" type="number" step="0.01" inputmode="decimal" placeholder="0,00"></div>
       <div class="field"><label>Observação</label><input id="i_obs" type="text" placeholder="Opcional"></div>
-      <button class="btn-add" id="btn_add_investimento" type="button">+ Adicionar</button>
+      <button class="btn-add" id="btn_add_investimento" type="button">+ Adicionar à carteira</button>
     </div>
   </div>
 
   <div class="section">
     <div class="section-title">Carteira do Mês</div>
+    <div class="plano-sub" style="margin:-.4rem 0 .6rem">Atualize o <b>valor atual</b> de cada ativo e, se houve dinheiro novo, informe o <b>aporte</b>. O rendimento é calculado automaticamente comparando com o mês anterior.</div>
     <div class="table-wrap table-wrap-investimentos">
       <table class="tbl-investimentos">
-        <thead><tr><th>Nome</th><th>Tipo</th><th>Observação</th><th style="text-align:right">Valor</th><th style="text-align:center">Ações</th></tr></thead>
+        <thead><tr><th>Nome</th><th>Tipo</th><th style="text-align:right">Mês ant.</th><th style="text-align:right">Aporte</th><th style="text-align:right">Valor atual</th><th style="text-align:right">Rendim.</th><th style="text-align:center">Ações</th></tr></thead>
         <tbody id="investimentosBody"></tbody>
       </table>
     </div>
@@ -1430,6 +1432,64 @@ function getMes(mes){
   if(!Array.isArray(allData.meses[mes].investimentos)) allData.meses[mes].investimentos=[];
   return allData.meses[mes];
 }
+
+// ============ CARTEIRA (ativos persistentes) ============
+function migrarCarteira(){
+  if(!Array.isArray(allData.carteira)) allData.carteira=[];
+  const byKey={};
+  allData.carteira.forEach(a=>{ byKey[(a.nome||'').toLowerCase().trim()+'|'+(a.tipo||'banco')]=a; });
+  Object.values(allData.meses||{}).forEach(md=>{
+    (md.investimentos||[]).forEach(inv=>{
+      if(inv.ativoId && allData.carteira.find(a=>a.id===inv.ativoId)) return;
+      const key=(inv.nome||'').toLowerCase().trim()+'|'+(inv.tipo||'banco');
+      let ativo=byKey[key];
+      if(!ativo){
+        ativo={id:uid(),nome:inv.nome||'Sem nome',tipo:inv.tipo||'banco',obs:inv.obs||'',ativo:true};
+        allData.carteira.push(ativo); byKey[key]=ativo;
+      }
+      inv.ativoId=ativo.id;
+    });
+  });
+}
+function getInvDoMes(md,ativoId){ return (md.investimentos||[]).find(x=>x.ativoId===ativoId); }
+// Auto-herda valores do mês anterior para ativos ainda não preenchidos no mês atual.
+// Roda silenciosamente; só marca "changed" se realmente criou entradas novas.
+function autoPreencherCarteiraMes(mes){
+  if(!Array.isArray(allData.carteira)||!allData.carteira.length) return false;
+  if(!allData.meses||!allData.meses[mes]) return false;
+  const md=allData.meses[mes];
+  if(!Array.isArray(md.investimentos)) md.investimentos=[];
+  // procura o mês anterior mais próximo (até 24 meses pra trás) com algum investimento lançado
+  let ant=null, cursor=mes;
+  for(let i=0;i<24;i++){
+    cursor=mesAnterior(cursor);
+    const c=allData.meses&&allData.meses[cursor];
+    if(c && Array.isArray(c.investimentos) && c.investimentos.some(x=>num(x.valor)>0)){ ant=c; break; }
+  }
+  if(!ant) return false;
+  let changed=false;
+  allData.carteira.filter(a=>a.ativo!==false).forEach(a=>{
+    if(md.investimentos.find(x=>x.ativoId===a.id)) return;
+    const prev=ant.investimentos.find(x=>x.ativoId===a.id);
+    if(!prev || num(prev.valor)<=0) return;
+    md.investimentos.push({id:uid(),ativoId:a.id,nome:a.nome,tipo:a.tipo,obs:a.obs||'',valor:num(prev.valor),aporte:0,herdado:true});
+    changed=true;
+  });
+  return changed;
+}
+function upsertInvMes(ativoId, patch){
+  const md=getDados();
+  if(!md.investimentos) md.investimentos=[];
+  let inv=md.investimentos.find(x=>x.ativoId===ativoId);
+  const ativo=(allData.carteira||[]).find(a=>a.id===ativoId);
+  if(!inv){
+    inv={id:uid(),ativoId,nome:ativo?.nome||'',tipo:ativo?.tipo||'banco',obs:ativo?.obs||'',valor:0,aporte:0};
+    md.investimentos.push(inv);
+  }
+  Object.assign(inv,patch);
+  if(ativo){inv.nome=ativo.nome;inv.tipo=ativo.tipo;}
+  return inv;
+}
 const getDados = () => getMes(mesSelecionado);
 
 // Expor para o Coach IA (script clássico fora deste módulo)
@@ -1468,6 +1528,8 @@ onValue(dbRef, snap => {
   if(sd){ sd.style.background='#10b981'; sd.classList.remove('sync-dot-pulse'); sd.title='Firebase conectado ✓'; }
   const data = snap.val();
   if(data){ allData=data; if(!allData.meses) allData.meses={}; }
+  migrarCarteira();
+  if(autoPreencherCarteiraMes(mesSelecionado)) saveData();
   if(!fbReady){
     fbReady=true;
     aplicarRecorrentes();
@@ -1519,6 +1581,7 @@ window.selecionarMes = function(v,e){
   mesSelecionado = v;
   fecharPicker();
   renderMesBtn();
+  if(autoPreencherCarteiraMes(mesSelecionado)) saveData();
   // renderAll já chama atualizarAbasDinamicas internamente
   renderAll();
   // Para Gráficos: se a aba já está visível, re-render imediato após DOM atualizar
@@ -1983,26 +2046,59 @@ function renderPatrimonioInteligente(){
 
 function renderInvestimentos(){
   const body=document.getElementById('investimentosBody');
-  const lista=getDados().investimentos||[];
-  const total=lista.reduce((s,i)=>s+num(i.valor),0);
-  const banco=lista.filter(i=>i.tipo==='banco').reduce((s,i)=>s+num(i.valor),0);
-  const poupanca=lista.filter(i=>i.tipo==='poupanca').reduce((s,i)=>s+num(i.valor),0);
-  const aplicacoes=lista.filter(i=>i.tipo==='aplicacao').reduce((s,i)=>s+num(i.valor),0);
-  setText('inv_total',fmt(total)); setText('inv_banco',fmt(banco)); setText('inv_poupanca',fmt(poupanca)); setText('inv_aplicacoes',fmt(aplicacoes));
+  if(!Array.isArray(allData.carteira)) allData.carteira=[];
+  const md=getDados();
+  const mdAnt=allData.meses&&allData.meses[mesAnterior(mesSelecionado)];
+  const ativos=(allData.carteira||[]).filter(a=>a.ativo!==false);
+
+  // Totais usam valor atual de cada ativo (entrada do mês ou último valor conhecido = mês anterior)
+  const valorAtualDe = a => {
+    const inv=getInvDoMes(md,a.id);
+    if(inv && inv.valor!=null && inv.valor!=='') return num(inv.valor);
+    const prev=mdAnt?getInvDoMes(mdAnt,a.id):null;
+    return prev?num(prev.valor):0;
+  };
+  const total=ativos.reduce((s,a)=>s+valorAtualDe(a),0);
+  const somaTipo=t=>ativos.filter(a=>(a.tipo||'banco')===t).reduce((s,a)=>s+valorAtualDe(a),0);
+  setText('inv_total',fmt(total));
+  setText('inv_banco',fmt(somaTipo('banco')));
+  setText('inv_poupanca',fmt(somaTipo('poupanca')));
+  setText('inv_aplicacoes',fmt(somaTipo('aplicacao')));
+
   if(!body)return;
-  if(!lista.length){body.innerHTML='<tr><td colspan="5" class="empty">Nenhum investimento lançado neste mês</td></tr>';return;}
+  if(!ativos.length){body.innerHTML='<tr><td colspan="7" class="empty">Nenhum ativo na carteira. Cadastre acima — depois é só atualizar o valor a cada mês.</td></tr>';return;}
+
   const tipoLabel={banco:'🏦 Outro banco',poupanca:'📊 Cotas',aplicacao:'📈 Aplicação'};
-  body.innerHTML=[...lista].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(i=>`
+  const inputStyle="width:100%;max-width:120px;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:.35rem .5rem;border-radius:8px;font-size:13px;text-align:right;font-family:inherit";
+
+  body.innerHTML=[...ativos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(a=>{
+    const inv=getInvDoMes(md,a.id);
+    const prev=mdAnt?getInvDoMes(mdAnt,a.id):null;
+    const valorAnt=prev?num(prev.valor):0;
+    const aporte=inv?num(inv.aporte):0;
+    const valor=inv && inv.valor!=null && inv.valor!==''?num(inv.valor):null;
+    const valorParaRend = valor!=null?valor:valorAnt; // se ainda não atualizou, rendimento = 0
+    const rend = valor!=null ? (valor - valorAnt - aporte) : 0;
+    const rendCor = rend>0?'var(--em)':rend<0?'var(--danger)':'var(--txt3)';
+    const rendTxt = valor==null && !aporte ? '—' : (rend>=0?'+':'')+fmt(rend).replace('R$ ','R$ ');
+    return `
     <tr class="tr-hover">
-      <td data-label="Nome">${esc(i.nome)}</td>
-      <td data-label="Tipo"><span class="inv-tag ${i.tipo||'banco'}">${tipoLabel[i.tipo||'banco']}</span></td>
-      <td data-label="Observação" style="color:var(--txt2)">${i.obs?esc(i.obs):'—'}</td>
-      <td data-label="Valor" style="text-align:right;font-family:'Playfair Display',serif;font-weight:700;color:var(--gold2)">${fmt(i.valor)}</td>
-      <td data-label="Ações" style="text-align:center;white-space:nowrap">
-        <button onclick="editarInvestimento('${i.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar">✏</button>
-        <button onclick="removerInvestimento('${i.id}')" class="btn-del">✕</button>
+      <td data-label="Nome">${esc(a.nome)}${a.obs?`<div style="font-size:11px;color:var(--txt3);font-weight:400;font-family:'Inter',sans-serif">${esc(a.obs)}</div>`:''}</td>
+      <td data-label="Tipo"><span class="inv-tag ${a.tipo||'banco'}">${tipoLabel[a.tipo||'banco']}</span></td>
+      <td data-label="Mês ant." style="text-align:right;color:var(--txt2)">${valorAnt?fmt(valorAnt):'—'}</td>
+      <td data-label="Aporte" style="text-align:right">
+        <input type="number" step="0.01" inputmode="decimal" placeholder="0,00" value="${aporte||''}" style="${inputStyle}" onchange="atualizarInvCampo('${a.id}','aporte',this.value)">
       </td>
-    </tr>`).join('');
+      <td data-label="Valor atual" style="text-align:right">
+        <input type="number" step="0.01" inputmode="decimal" placeholder="${valorAnt?valorAnt.toFixed(2):'0,00'}" value="${valor!=null?valor:''}" style="${inputStyle};font-weight:700;color:var(--gold2)" onchange="atualizarInvCampo('${a.id}','valor',this.value)">
+      </td>
+      <td data-label="Rendim." style="text-align:right;color:${rendCor};font-weight:600">${rendTxt}</td>
+      <td data-label="Ações" style="text-align:center;white-space:nowrap">
+        <button onclick="editarAtivo('${a.id}')" class="btn-del" style="color:var(--gold);border-color:var(--gold-border)" title="Editar ativo">✏</button>
+        <button onclick="removerAtivo('${a.id}')" class="btn-del" title="Remover da carteira">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 // ============ GRÁFICOS ============
@@ -2176,19 +2272,21 @@ const btnInvestimento = document.getElementById('btn_add_investimento');
 if(btnInvestimento){
   btnInvestimento.addEventListener('click', () => {
     const nome=document.getElementById('i_nome').value.trim();
-    const valor=document.getElementById('i_valor').value;
-    if(!nome||!valor){showToast('Preencha nome e valor',true);return;}
-    const dados=getMes(mesSelecionado);
-    if(!dados.investimentos) dados.investimentos=[];
-    dados.investimentos.push({
-      id:uid(),
-      nome,
-      tipo:document.getElementById('i_tipo').value,
-      valor:num(valor),
-      obs:document.getElementById('i_obs').value.trim()
-    });
+    if(!nome){showToast('Informe o nome do ativo',true);return;}
+    if(!Array.isArray(allData.carteira)) allData.carteira=[];
+    const tipo=document.getElementById('i_tipo').value;
+    const obs=document.getElementById('i_obs').value.trim();
+    const valorIni=document.getElementById('i_valor').value;
+    // evita duplicado por nome+tipo
+    const dup=allData.carteira.find(a=>a.ativo!==false && a.nome.toLowerCase().trim()===nome.toLowerCase() && (a.tipo||'banco')===tipo);
+    if(dup){showToast('Esse ativo já está na carteira',true);return;}
+    const ativo={id:uid(),nome,tipo,obs,ativo:true};
+    allData.carteira.push(ativo);
+    if(valorIni){
+      upsertInvMes(ativo.id,{valor:num(valorIni),aporte:num(valorIni)});
+    }
     ['i_nome','i_valor','i_obs'].forEach(id=>{document.getElementById(id).value='';});
-    saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Investimento adicionado!');
+    saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Ativo adicionado à carteira!');
   });
 }
 
@@ -2204,23 +2302,46 @@ document.getElementById('btn_add_meta').addEventListener('click', () => {
 });
 
 
-window.editarInvestimento = id => {
-  const inv=(getMes(mesSelecionado).investimentos||[]).find(x=>x.id===id);
-  if(!inv)return;
-  const nome=prompt('Nome do investimento:',inv.nome);
-  if(nome===null)return;
-  const valor=prompt('Valor atual:',inv.valor);
-  if(valor===null)return;
-  inv.nome=nome.trim()||inv.nome;
-  inv.valor=num(valor);
-  saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Investimento atualizado!');
+window.atualizarInvCampo = (ativoId, campo, valor) => {
+  const v = valor===''||valor==null ? null : num(valor);
+  upsertInvMes(ativoId, { [campo]: v==null?0:v });
+  saveData(); renderInvestimentos(); renderPatrimonioInteligente();
 };
 
+window.editarAtivo = id => {
+  const ativo=(allData.carteira||[]).find(a=>a.id===id);
+  if(!ativo)return;
+  const nome=prompt('Nome do ativo:',ativo.nome);
+  if(nome===null)return;
+  const tipo=prompt('Tipo (banco / poupanca / aplicacao):',ativo.tipo||'banco');
+  if(tipo===null)return;
+  const obs=prompt('Observação:',ativo.obs||'');
+  if(obs===null)return;
+  ativo.nome=nome.trim()||ativo.nome;
+  if(['banco','poupanca','aplicacao'].includes(tipo.trim())) ativo.tipo=tipo.trim();
+  ativo.obs=obs.trim();
+  saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Ativo atualizado!');
+};
+
+window.removerAtivo = id => {
+  const ativo=(allData.carteira||[]).find(a=>a.id===id);
+  if(!ativo)return;
+  if(!confirm(`Remover "${ativo.nome}" da carteira?\n\nO histórico de meses anteriores é preservado, mas o ativo deixa de aparecer nos próximos meses.`))return;
+  ativo.ativo=false;
+  // limpa entrada do mês atual se ainda não foi atualizada
+  const md=getDados();
+  md.investimentos=(md.investimentos||[]).filter(x=>x.ativoId!==id || num(x.valor)>0 || num(x.aporte)>0);
+  saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Ativo removido da carteira');
+};
+
+// Compat com chamadas antigas eventualmente persistidas
+window.editarInvestimento = id => {
+  const inv=(getMes(mesSelecionado).investimentos||[]).find(x=>x.id===id);
+  if(inv && inv.ativoId) return window.editarAtivo(inv.ativoId);
+};
 window.removerInvestimento = id => {
-  if(!confirm('Remover este investimento?'))return;
-  const mes=getMes(mesSelecionado);
-  mes.investimentos=(mes.investimentos||[]).filter(x=>x.id!==id);
-  saveData(); renderInvestimentos(); renderPatrimonioInteligente(); showToast('Investimento removido');
+  const inv=(getMes(mesSelecionado).investimentos||[]).find(x=>x.id===id);
+  if(inv && inv.ativoId) return window.removerAtivo(inv.ativoId);
 };
 
 window.togglePago = id => {
